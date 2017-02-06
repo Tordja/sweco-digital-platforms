@@ -1857,7 +1857,7 @@ select.form-control[multiple]
       padding-top: .47rem;
       padding-bottom: .47rem;
       padding-left: $spacer-x;
-      padding-right: ($spacer-x * 1.5);
+      padding-right: $spacer-x;
       @include hover-focus
       {
         color: $btn-primary-color !important;
@@ -1907,20 +1907,6 @@ select.form-control[multiple]
         }
       }
     }
-  }
-}
-
-// Flex-row, row as flex
-.row-flex
-{
-  > div[class*='col-']
-  {
-    display: flex;
-    flex: 1 0 auto;
-  }
-  .card
-  {
-    width: 100%;
   }
 }
 
