@@ -1124,7 +1124,7 @@ fieldset
   {
     -webkit-appearance: textfield;
     min-height: $input-height;
-    // padding: .52rem $input-padding-x;
+    padding: .48rem $input-padding-x;
   }
   &[disabled],
   &[readonly],

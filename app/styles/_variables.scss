@@ -337,7 +337,7 @@ $btn-disabled-bg-color:          $disabled-bg;
 $btn-link-disabled-color:        $disabled-color;
 
 $btn-padding-x-xs:               .25rem;
-$btn-padding-y-xs:               .09rem;
+$btn-padding-y-xs:               .095rem;
 
 $btn-padding-x-sm:               .5rem;
 $btn-padding-y-sm:               .32rem;
@@ -531,11 +531,11 @@ $custom-select-sm-padding-y:                  .2rem;
 $custom-select-sm-font-size:                  75%;
 
 // Custom-file
-$custom-file-height:                          2.68rem;
+$custom-file-height:                          2.5rem;
 $custom-file-width:                           10rem;
 $custom-file-focus-box-shadow:                none;
 $custom-file-padding-x:                       .8rem;
-$custom-file-padding-y:                       $input-padding-x;
+$custom-file-padding-y:                       .65rem;
 $custom-file-line-height:                     1;
 $custom-file-color:                           $input-color-placeholder;
 $custom-file-bg:                              $white;
