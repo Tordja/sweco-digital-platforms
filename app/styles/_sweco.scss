@@ -148,25 +148,13 @@ body.navbarSouth
   overflow-y: hidden;
 }
 
-// Hide
-.hide
-{
-  display: none !important;
-}
-
-// Show
-.show
-{
-  display: block !important;
-}
-
 // Typography
 h1, h2, h3, h4, h5, h6,
 .h1, .h2, .h3, .h4, .h5, .h6,
 legend,
 label,
 strong, b, dt, th,
-.btn, .nav, .pagination, .tag, .breadcrumb, .list-group
+.btn, .nav, .pagination, .badge , .breadcrumb, .list-group
 {
   font-family: $headings-font-family;
   font-weight: normal !important;
@@ -180,7 +168,7 @@ h1, h2, h3, h4, h5, h6,
 legend,
 label,
 th,
-.btn, .nav, .pagination, .tag, .breadcrumb, .list-group
+.btn, .nav, .pagination, .badge, .breadcrumb, .list-group
 {
   text-transform: uppercase;
 }
@@ -723,6 +711,12 @@ header.header-image
   text-transform: uppercase;
   text-decoration: none;
   outline: 0 !important;
+  @include hover-focus
+  {
+    outline: 0 !important;
+    box-shadow: $btn-focus-box-shadow;
+    cursor: pointer;
+  }
   &.btn-secondary
   {
     &:hover,
@@ -891,7 +885,7 @@ header.header-image
 {
   .caret
   {
-    @extend .hide;
+    @extend .d-none;
   }
   &:after
   {
@@ -1041,7 +1035,7 @@ ul.dropdown-menu
   .close
   {
     position: absolute;
-    top: 8px;
+    top: 9px;
     z-index: ($zindex-popover + 1);
     right: $spacer-x;
     color: $white;
@@ -1110,12 +1104,17 @@ fieldset
 .col-form-label
 {
   padding-right: 0 !important;
+  &.text-right
+  {
+    padding-top: $input-padding-y;
+  }
 }
 
 // Form-control
 .form-control
 {
   transition: $transition;
+  font-family: $font-family-base;
   // ios fix
   &[type="date"],
   &[type="month"],
@@ -1125,7 +1124,7 @@ fieldset
   {
     -webkit-appearance: textfield;
     min-height: $input-height;
-    padding: .52rem $input-padding-x;
+    // padding: .52rem $input-padding-x;
   }
   &[disabled],
   &[readonly],
@@ -1149,22 +1148,26 @@ fieldset
 {
   .form-control
   {
-    min-height: 2.67rem;
+    /*
+    min-height: 2.6rem;
     &.form-control-lg
     {
-      min-height: 3.34rem;
+      min-height: 3.3rem;
     }
     &.form-control-sm
     {
       min-height: 2rem;
     }
+    */
   }
   &.input-group-lg
   {
+    /*
     .btn
     {
       min-height: $input-height-lg;
     }
+    */
   }
 }
 .ie .input-group .form-control
@@ -1202,6 +1205,7 @@ input[type="radio"]
     padding-top: .3rem;
     padding-bottom: .3rem;
   }
+  /*
   .input-group-btn .btn
   {
     font-size: $font-size-base;
@@ -1210,6 +1214,7 @@ input[type="radio"]
     height: $input-height-sm;
     max-height: 2rem;
   }
+  */
 }
 
 // Textarea
@@ -1229,17 +1234,17 @@ select.form-control:not([size]):not([multiple])
   @extend .custom-select;
   &.form-control
   {
-    height: 2.67rem;
+    height: 2.5rem;
   }
   &.form-control-lg
   {
-    height: 3.34rem;
+    height: 3.13rem;
   }
   &.form-control-sm
   {
-    height: 2rem;
-    padding-top: .34rem;
-    padding-bottom: .34rem;
+    height: 1.88rem;
+    padding-top: .31rem;
+    padding-bottom: .32rem;
   }
 }
 
@@ -1332,7 +1337,7 @@ select.form-control[multiple]
   }
   input
   {
-    @extend .hide;
+    @extend .d-none;
   }
   input + label:before,
   input + label:after
@@ -1553,7 +1558,6 @@ select.form-control[multiple]
   {
     > li
     {
-      float: left;
       &:first-child
       {
         a,
@@ -1595,7 +1599,7 @@ select.form-control[multiple]
       &:before
       {
         position: absolute;
-        top: 9px;
+        top: 8px;
         left: $spacer-x;
         display: inline-block;
         font-family: FontAwesome;
@@ -1607,12 +1611,10 @@ select.form-control[multiple]
         margin: -3px 0;
       }
     }
-    &.nav-stacked
+    &.flex-column
     {
       > li
       {
-        float: none;
-        display: block;
         &:first-child
         {
           .nav-link,
@@ -1718,14 +1720,14 @@ select.form-control[multiple]
   }
 }
 
-// Tags
-.tag
+// Badge
+.badge
 {
   text-transform: uppercase;
   min-height: 20px;
-  &.tag-pill
+  &.badge-pill
   {
-    border-radius: $tag-pill-border-radius;
+    border-radius: $badge-pill-border-radius;
   }
 }
 
@@ -1977,6 +1979,7 @@ select.form-control[multiple]
     {
       position: relative;
       background-color: $modal-header-bg;
+      padding: $modal-title-padding;
       .modal-title
       {
         color: $modal-header-color;
@@ -2044,7 +2047,6 @@ select.form-control[multiple]
       border-top: 1px $modal-footer-border-color solid;
       padding: 0;
       @extend .flexbox-row;
-      @include clearfix;
       .btn
       {
         flex: 1;
@@ -2128,7 +2130,7 @@ select.form-control[multiple]
 
 .modal.fade:not(.in).modal-page .modal-dialog
 {
-  transform: translate3d(25%, 0, 0);
+  transform: translate3d(0, 0, 0);
   .project-header
   {
     opacity: 0;
