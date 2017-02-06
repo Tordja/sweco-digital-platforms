@@ -1,28 +1,37 @@
-  <div class="navbar navbar-fixed-top navbar-north" role="navigation" id="navbarNorth">
+
+  <div class="navbar fixed-top navbar-north" role="navigation" id="navbarNorth">
     <div class="container">
       <div class="row">
 <!-- LOGOTYPE START -->
-        <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12">
+        <div class="col-sm-12 col-md-3 col-lg-3">
           <a href="./" class="logotype-white logotype" {{action 'start'}} role="banner">SWECO</a>
         </div>
 <!-- LOGOTYPE STOP -->
-        <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+        <div class="col-sm-12 col-md-6 col-lg-6">
 <!-- SEARCH START -->
           {{sweco-search value=query search='search' clear='clear'}}
 <!-- SEARCH STOP -->
         </div>
-        <div class="col-lg-3 col-md-3">
 <!-- NAV START -->
-          <ul class="nav navbar-nav nav-top-right">
-            <li class="nav-item active">
-              <a class="nav-link" href="./" {{action 'start'}}>Start</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="javascript:;" {{action 'frontPage'}}>Sweco Digital<span class="hidden-lg-down"> Platforms</span></a>
-            </li>
-          </ul>
+        <ul class="nav nav-top-right">
+          <li class="nav-item">
+            <a class="nav-link active" href="./" {{action 'start'}}>Start</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="javascript:;" {{action 'frontPage'}}>Sweco Digital<span class="hidden-lg-down"> Platforms</span></a>
+          </li>
+        </ul>
+        <!--
+        <ul class="nav navbar-nav nav-top-right">
+          <li class="nav-item active">
+            <a class="nav-link" href="./" {{action 'start'}}>Start</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="javascript:;" {{action 'frontPage'}}>Sweco Digital<span class="hidden-lg-down"> Platforms</span></a>
+          </li>
+        </ul>
+        -->
 <!-- NAV STOP -->
-        </div>
       </div>
     </div>
 <!-- PROGRESS START -->

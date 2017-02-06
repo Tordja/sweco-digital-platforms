@@ -472,9 +472,8 @@ h1, h2, h3, h4, h5, h6,
   {
     z-index: $zindex-navbar-dropdown;
   }
-  // Nav
-  .nav,
-  .nav.navbar-nav
+  // Navbar navigation
+  .nav
   {
     padding-top: 15px;
     &.nav-top-right
@@ -483,46 +482,47 @@ h1, h2, h3, h4, h5, h6,
       top: 0;
       right: $spacer-y;
     }
-    .nav-item
+    .nav-item + .nav-item
     {
-      .nav-link
+      margin-left: $spacer-x;
+    }
+    .nav-link
+    {
+      position: relative;
+      color: $white;
+      white-space: nowrap;
+      padding: 5px 0 2px !important;
+      min-height: 30px !important;
+      @include hover-focus-active
       {
-        position: relative;
         color: $white;
-        padding-top: 5px !important;
-        padding-bottom: 2px !important;
-        min-height: 30px !important;
-        @include hover-focus-active
-        {
-          color: $white;
-          text-decoration: none;
-          background-color: transparent;
-        }
-        &:after,
-        &:focus:after
-        {
-          position: absolute;
-          bottom: 0px;
-          left: 0;
-          width: 100%;
-          height: 1px;
-          background: $white;
-          content: '';
-          opacity: 0;
-          transition: height .2s, opacity .2s, transform .2s;
-          transform: translateY(-5px);
-        }
-        &:hover:after,
-        &:focus:after
-        {
-          height: 2px;
-          opacity: 1;
-          transform: translateY(0)
-        }
-        .fa
-        {
-          margin-right: 10px;
-        }
+        text-decoration: none;
+        background-color: transparent;
+      }
+      &:after,
+      &:focus:after
+      {
+        position: absolute;
+        bottom: 0px;
+        left: 0;
+        width: 100%;
+        height: 1px;
+        background: $white;
+        content: '';
+        opacity: 0;
+        transition: height .2s, opacity .2s, transform .2s;
+        transform: translateY(-5px);
+      }
+      &:hover:after,
+      &:focus:after
+      {
+        height: 2px;
+        opacity: 1;
+        transform: translateY(0)
+      }
+      .fa
+      {
+        margin-right: 10px;
       }
     }
   }
