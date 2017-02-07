@@ -581,6 +581,11 @@ h1, h2, h3, h4, h5, h6,
     .btn-search
     {
       @extend .btn-info;
+      @include hover-focus
+      {
+        outline: 0 !important;
+        box-shadow: $btn-focus-box-shadow;
+      }
       margin-left: 0 !important;
       padding-left: 15px;
       padding-right: 14px;
