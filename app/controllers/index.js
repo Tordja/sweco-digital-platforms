@@ -9,18 +9,19 @@ export default Ember.Controller.extend({
       $('.front-page').fadeOut(200);
       window.scrollTo(0,0);
       $('body').removeClass('body-front-page');
+      $('body').removeClass('navbarSouth');
       $('.search').fadeIn(200);
-      $('.navbar-south').removeClass('in');
+      $('.navbar-south').addClass('fade show');
     },
 
     start: function() {
       $('.front-page').fadeIn(200);
       window.scrollTo(0,0);
       $('body').addClass('body-front-page');
+      $('body').addClass('navbarSouth');
       $('.search').fadeOut(200);
-      $('.navbar-south').addClass('in');
+      $('.navbar-south').removeClass('fade show');
     },
-
     // Modal
     openModal: function() {
       this.set('isModalVisible', true);
