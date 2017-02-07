@@ -99,29 +99,37 @@ var runningTests = false;
     this.deps      = !deps.length && callback.length ? defaultDeps : deps;
     this.module    = { exports: {} };
     this.callback  = callback;
-    this.finalized = false;
     this.hasExportsAsDep = false;
     this.isAlias = alias;
     this.reified = new Array(deps.length);
-    this._foundDeps = false;
-    this.isPending = false;
+
+    /*
+       Each module normally passes through these states, in order:
+         new       : initial state
+         pending   : this module is scheduled to be executed
+         reifying  : this module's dependencies are being executed
+         reified   : this module's dependencies finished executing successfully
+         errored   : this module's dependencies failed to execute
+         finalized : this module executed successfully
+     */
+    this.state = 'new';
+
   }
 
   Module.prototype.makeDefaultExport = function() {
     var exports = this.module.exports;
     if (exports !== null &&
         (typeof exports === 'object' || typeof exports === 'function') &&
-          exports['default'] === undefined) {
+          exports['default'] === undefined && !Object.isFrozen(exports)) {
       exports['default'] = exports;
     }
   };
 
   Module.prototype.exports = function() {
-    if (this.finalized) { return this.module.exports; }
+    // if finalized, there is no work to do. If reifying, there is a
+    // circular dependency so we must return our (partial) exports.
+    if (this.state === 'finalized' || this.state === 'reifying') { return this.module.exports; }
     stats.exports++;
-
-    this.finalized = true;
-    this.isPending = false;
 
     if (loader.wrapModules) {
       this.callback = loader.wrapModules(this.name, this.callback);
@@ -130,6 +138,7 @@ var runningTests = false;
     this.reify();
 
     var result = this.callback.apply(this, this.reified);
+    this.state = 'finalized';
 
     if (!(this.hasExportsAsDep && result === undefined)) {
       this.module.exports = result;
@@ -139,29 +148,40 @@ var runningTests = false;
   };
 
   Module.prototype.unsee = function() {
-    this.finalized = false;
-    this._foundDeps = false;
-    this.isPending = false;
+    this.state = 'new';
     this.module = { exports: {} };
   };
 
   Module.prototype.reify = function() {
+    if (this.state === 'reified') { return; }
+    this.state = 'reifying';
+    try {
+      this.reified = this._reify();
+      this.state = 'reified';
+    } finally {
+      if (this.state === 'reifying') {
+        this.state = 'errored';
+      }
+    }
+  };
+
+  Module.prototype._reify = function() {
     stats.reify++;
-    var reified = this.reified;
+    var reified = this.reified.slice();
     for (var i = 0; i < reified.length; i++) {
       var mod = reified[i];
       reified[i] = mod.exports ? mod.exports : mod.module.exports();
     }
+    return reified;
   };
 
   Module.prototype.findDeps = function(pending) {
-    if (this._foundDeps) {
+    if (this.state !== 'new') {
       return;
     }
 
     stats.findDeps++;
-    this._foundDeps = true;
-    this.isPending = true;
+    this.state = 'pending';
 
     var deps = this.deps;
 
@@ -238,7 +258,7 @@ var runningTests = false;
 
     if (!mod) { missingModule(name, referrer); }
 
-    if (pending && !mod.finalized && !mod.isPending) {
+    if (pending && mod.state !== 'pending' && mod.state !== 'finalized') {
       mod.findDeps(pending);
       pending.push(mod);
       stats.pendingQueueLength++;
@@ -65707,14 +65727,14 @@ window.Modernizr = (function( window, document, undefined ) {
 
 })(jQuery);
 
-;!function(t,e){"function"==typeof define&&define.amd?define(e):"object"==typeof exports?module.exports=e(require,exports,module):t.Tether=e()}(this,function(t,e,o){"use strict";function n(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}function i(t){var e=t.getBoundingClientRect(),o={};for(var n in e)o[n]=e[n];if(t.ownerDocument!==document){var r=t.ownerDocument.defaultView.frameElement;if(r){var s=i(r);o.top+=s.top,o.bottom+=s.top,o.left+=s.left,o.right+=s.left}}return o}function r(t){var e=getComputedStyle(t)||{},o=e.position,n=[];if("fixed"===o)return[t];for(var i=t;(i=i.parentNode)&&i&&1===i.nodeType;){var r=void 0;try{r=getComputedStyle(i)}catch(s){}if("undefined"==typeof r||null===r)return n.push(i),n;var a=r,f=a.overflow,l=a.overflowX,h=a.overflowY;/(auto|scroll)/.test(f+h+l)&&("absolute"!==o||["relative","absolute","fixed"].indexOf(r.position)>=0)&&n.push(i)}return n.push(t.ownerDocument.body),t.ownerDocument!==document&&n.push(t.ownerDocument.defaultView),n}function s(){A&&document.body.removeChild(A),A=null}function a(t){var e=void 0;t===document?(e=document,t=document.documentElement):e=t.ownerDocument;var o=e.documentElement,n=i(t),r=P();return n.top-=r.top,n.left-=r.left,"undefined"==typeof n.width&&(n.width=document.body.scrollWidth-n.left-n.right),"undefined"==typeof n.height&&(n.height=document.body.scrollHeight-n.top-n.bottom),n.top=n.top-o.clientTop,n.left=n.left-o.clientLeft,n.right=e.body.clientWidth-n.width-n.left,n.bottom=e.body.clientHeight-n.height-n.top,n}function f(t){return t.offsetParent||document.documentElement}function l(){if(M)return M;var t=document.createElement("div");t.style.width="100%",t.style.height="200px";var e=document.createElement("div");h(e.style,{position:"absolute",top:0,left:0,pointerEvents:"none",visibility:"hidden",width:"200px",height:"150px",overflow:"hidden"}),e.appendChild(t),document.body.appendChild(e);var o=t.offsetWidth;e.style.overflow="scroll";var n=t.offsetWidth;o===n&&(n=e.clientWidth),document.body.removeChild(e);var i=o-n;return M={width:i,height:i}}function h(){var t=arguments.length<=0||void 0===arguments[0]?{}:arguments[0],e=[];return Array.prototype.push.apply(e,arguments),e.slice(1).forEach(function(e){if(e)for(var o in e)({}).hasOwnProperty.call(e,o)&&(t[o]=e[o])}),t}function d(t,e){if("undefined"!=typeof t.classList)e.split(" ").forEach(function(e){e.trim()&&t.classList.remove(e)});else{var o=new RegExp("(^| )"+e.split(" ").join("|")+"( |$)","gi"),n=c(t).replace(o," ");g(t,n)}}function u(t,e){if("undefined"!=typeof t.classList)e.split(" ").forEach(function(e){e.trim()&&t.classList.add(e)});else{d(t,e);var o=c(t)+(" "+e);g(t,o)}}function p(t,e){if("undefined"!=typeof t.classList)return t.classList.contains(e);var o=c(t);return new RegExp("(^| )"+e+"( |$)","gi").test(o)}function c(t){return t.className instanceof t.ownerDocument.defaultView.SVGAnimatedString?t.className.baseVal:t.className}function g(t,e){t.setAttribute("class",e)}function m(t,e,o){o.forEach(function(o){-1===e.indexOf(o)&&p(t,o)&&d(t,o)}),e.forEach(function(e){p(t,e)||u(t,e)})}function n(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}function v(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e)}function y(t,e){var o=arguments.length<=2||void 0===arguments[2]?1:arguments[2];return t+o>=e&&e>=t-o}function b(){return"undefined"!=typeof performance&&"undefined"!=typeof performance.now?performance.now():+new Date}function w(){for(var t={top:0,left:0},e=arguments.length,o=Array(e),n=0;e>n;n++)o[n]=arguments[n];return o.forEach(function(e){var o=e.top,n=e.left;"string"==typeof o&&(o=parseFloat(o,10)),"string"==typeof n&&(n=parseFloat(n,10)),t.top+=o,t.left+=n}),t}function C(t,e){return"string"==typeof t.left&&-1!==t.left.indexOf("%")&&(t.left=parseFloat(t.left,10)/100*e.width),"string"==typeof t.top&&-1!==t.top.indexOf("%")&&(t.top=parseFloat(t.top,10)/100*e.height),t}function O(t,e){return"scrollParent"===e?e=t.scrollParents[0]:"window"===e&&(e=[pageXOffset,pageYOffset,innerWidth+pageXOffset,innerHeight+pageYOffset]),e===document&&(e=e.documentElement),"undefined"!=typeof e.nodeType&&!function(){var t=e,o=a(e),n=o,i=getComputedStyle(e);if(e=[n.left,n.top,o.width+n.left,o.height+n.top],t.ownerDocument!==document){var r=t.ownerDocument.defaultView;e[0]+=r.pageXOffset,e[1]+=r.pageYOffset,e[2]+=r.pageXOffset,e[3]+=r.pageYOffset}G.forEach(function(t,o){t=t[0].toUpperCase()+t.substr(1),"Top"===t||"Left"===t?e[o]+=parseFloat(i["border"+t+"Width"]):e[o]-=parseFloat(i["border"+t+"Width"])})}(),e}var E=function(){function t(t,e){for(var o=0;o<e.length;o++){var n=e[o];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n)}}return function(e,o,n){return o&&t(e.prototype,o),n&&t(e,n),e}}(),x=void 0;"undefined"==typeof x&&(x={modules:[]});var A=null,T=function(){var t=0;return function(){return++t}}(),S={},P=function(){var t=A;t||(t=document.createElement("div"),t.setAttribute("data-tether-id",T()),h(t.style,{top:0,left:0,position:"absolute"}),document.body.appendChild(t),A=t);var e=t.getAttribute("data-tether-id");return"undefined"==typeof S[e]&&(S[e]=i(t),k(function(){delete S[e]})),S[e]},M=null,W=[],k=function(t){W.push(t)},_=function(){for(var t=void 0;t=W.pop();)t()},B=function(){function t(){n(this,t)}return E(t,[{key:"on",value:function(t,e,o){var n=arguments.length<=3||void 0===arguments[3]?!1:arguments[3];"undefined"==typeof this.bindings&&(this.bindings={}),"undefined"==typeof this.bindings[t]&&(this.bindings[t]=[]),this.bindings[t].push({handler:e,ctx:o,once:n})}},{key:"once",value:function(t,e,o){this.on(t,e,o,!0)}},{key:"off",value:function(t,e){if("undefined"!=typeof this.bindings&&"undefined"!=typeof this.bindings[t])if("undefined"==typeof e)delete this.bindings[t];else for(var o=0;o<this.bindings[t].length;)this.bindings[t][o].handler===e?this.bindings[t].splice(o,1):++o}},{key:"trigger",value:function(t){if("undefined"!=typeof this.bindings&&this.bindings[t]){for(var e=0,o=arguments.length,n=Array(o>1?o-1:0),i=1;o>i;i++)n[i-1]=arguments[i];for(;e<this.bindings[t].length;){var r=this.bindings[t][e],s=r.handler,a=r.ctx,f=r.once,l=a;"undefined"==typeof l&&(l=this),s.apply(l,n),f?this.bindings[t].splice(e,1):++e}}}}]),t}();x.Utils={getActualBoundingClientRect:i,getScrollParents:r,getBounds:a,getOffsetParent:f,extend:h,addClass:u,removeClass:d,hasClass:p,updateClasses:m,defer:k,flush:_,uniqueId:T,Evented:B,getScrollBarSize:l,removeUtilElements:s};var z=function(){function t(t,e){var o=[],n=!0,i=!1,r=void 0;try{for(var s,a=t[Symbol.iterator]();!(n=(s=a.next()).done)&&(o.push(s.value),!e||o.length!==e);n=!0);}catch(f){i=!0,r=f}finally{try{!n&&a["return"]&&a["return"]()}finally{if(i)throw r}}return o}return function(e,o){if(Array.isArray(e))return e;if(Symbol.iterator in Object(e))return t(e,o);throw new TypeError("Invalid attempt to destructure non-iterable instance")}}(),E=function(){function t(t,e){for(var o=0;o<e.length;o++){var n=e[o];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n)}}return function(e,o,n){return o&&t(e.prototype,o),n&&t(e,n),e}}(),j=function(t,e,o){for(var n=!0;n;){var i=t,r=e,s=o;n=!1,null===i&&(i=Function.prototype);var a=Object.getOwnPropertyDescriptor(i,r);if(void 0!==a){if("value"in a)return a.value;var f=a.get;if(void 0===f)return;return f.call(s)}var l=Object.getPrototypeOf(i);if(null===l)return;t=l,e=r,o=s,n=!0,a=l=void 0}};if("undefined"==typeof x)throw new Error("You must include the utils.js file before tether.js");var Y=x.Utils,r=Y.getScrollParents,a=Y.getBounds,f=Y.getOffsetParent,h=Y.extend,u=Y.addClass,d=Y.removeClass,m=Y.updateClasses,k=Y.defer,_=Y.flush,l=Y.getScrollBarSize,s=Y.removeUtilElements,L=function(){if("undefined"==typeof document)return"";for(var t=document.createElement("div"),e=["transform","WebkitTransform","OTransform","MozTransform","msTransform"],o=0;o<e.length;++o){var n=e[o];if(void 0!==t.style[n])return n}}(),D=[],X=function(){D.forEach(function(t){t.position(!1)}),_()};!function(){var t=null,e=null,o=null,n=function i(){return"undefined"!=typeof e&&e>16?(e=Math.min(e-16,250),void(o=setTimeout(i,250))):void("undefined"!=typeof t&&b()-t<10||(null!=o&&(clearTimeout(o),o=null),t=b(),X(),e=b()-t))};"undefined"!=typeof window&&"undefined"!=typeof window.addEventListener&&["resize","scroll","touchmove"].forEach(function(t){window.addEventListener(t,n)})}();var F={center:"center",left:"right",right:"left"},H={middle:"middle",top:"bottom",bottom:"top"},N={top:0,left:0,middle:"50%",center:"50%",bottom:"100%",right:"100%"},U=function(t,e){var o=t.left,n=t.top;return"auto"===o&&(o=F[e.left]),"auto"===n&&(n=H[e.top]),{left:o,top:n}},V=function(t){var e=t.left,o=t.top;return"undefined"!=typeof N[t.left]&&(e=N[t.left]),"undefined"!=typeof N[t.top]&&(o=N[t.top]),{left:e,top:o}},R=function(t){var e=t.split(" "),o=z(e,2),n=o[0],i=o[1];return{top:n,left:i}},q=R,I=function(t){function e(t){var o=this;n(this,e),j(Object.getPrototypeOf(e.prototype),"constructor",this).call(this),this.position=this.position.bind(this),D.push(this),this.history=[],this.setOptions(t,!1),x.modules.forEach(function(t){"undefined"!=typeof t.initialize&&t.initialize.call(o)}),this.position()}return v(e,t),E(e,[{key:"getClass",value:function(){var t=arguments.length<=0||void 0===arguments[0]?"":arguments[0],e=this.options.classes;return"undefined"!=typeof e&&e[t]?this.options.classes[t]:this.options.classPrefix?this.options.classPrefix+"-"+t:t}},{key:"setOptions",value:function(t){var e=this,o=arguments.length<=1||void 0===arguments[1]?!0:arguments[1],n={offset:"0 0",targetOffset:"0 0",targetAttachment:"auto auto",classPrefix:"tether"};this.options=h(n,t);var i=this.options,s=i.element,a=i.target,f=i.targetModifier;if(this.element=s,this.target=a,this.targetModifier=f,"viewport"===this.target?(this.target=document.body,this.targetModifier="visible"):"scroll-handle"===this.target&&(this.target=document.body,this.targetModifier="scroll-handle"),["element","target"].forEach(function(t){if("undefined"==typeof e[t])throw new Error("Tether Error: Both element and target must be defined");"undefined"!=typeof e[t].jquery?e[t]=e[t][0]:"string"==typeof e[t]&&(e[t]=document.querySelector(e[t]))}),u(this.element,this.getClass("element")),this.options.addTargetClasses!==!1&&u(this.target,this.getClass("target")),!this.options.attachment)throw new Error("Tether Error: You must provide an attachment");this.targetAttachment=q(this.options.targetAttachment),this.attachment=q(this.options.attachment),this.offset=R(this.options.offset),this.targetOffset=R(this.options.targetOffset),"undefined"!=typeof this.scrollParents&&this.disable(),"scroll-handle"===this.targetModifier?this.scrollParents=[this.target]:this.scrollParents=r(this.target),this.options.enabled!==!1&&this.enable(o)}},{key:"getTargetBounds",value:function(){if("undefined"==typeof this.targetModifier)return a(this.target);if("visible"===this.targetModifier){if(this.target===document.body)return{top:pageYOffset,left:pageXOffset,height:innerHeight,width:innerWidth};var t=a(this.target),e={height:t.height,width:t.width,top:t.top,left:t.left};return e.height=Math.min(e.height,t.height-(pageYOffset-t.top)),e.height=Math.min(e.height,t.height-(t.top+t.height-(pageYOffset+innerHeight))),e.height=Math.min(innerHeight,e.height),e.height-=2,e.width=Math.min(e.width,t.width-(pageXOffset-t.left)),e.width=Math.min(e.width,t.width-(t.left+t.width-(pageXOffset+innerWidth))),e.width=Math.min(innerWidth,e.width),e.width-=2,e.top<pageYOffset&&(e.top=pageYOffset),e.left<pageXOffset&&(e.left=pageXOffset),e}if("scroll-handle"===this.targetModifier){var t=void 0,o=this.target;o===document.body?(o=document.documentElement,t={left:pageXOffset,top:pageYOffset,height:innerHeight,width:innerWidth}):t=a(o);var n=getComputedStyle(o),i=o.scrollWidth>o.clientWidth||[n.overflow,n.overflowX].indexOf("scroll")>=0||this.target!==document.body,r=0;i&&(r=15);var s=t.height-parseFloat(n.borderTopWidth)-parseFloat(n.borderBottomWidth)-r,e={width:15,height:.975*s*(s/o.scrollHeight),left:t.left+t.width-parseFloat(n.borderLeftWidth)-15},f=0;408>s&&this.target===document.body&&(f=-11e-5*Math.pow(s,2)-.00727*s+22.58),this.target!==document.body&&(e.height=Math.max(e.height,24));var l=this.target.scrollTop/(o.scrollHeight-s);return e.top=l*(s-e.height-f)+t.top+parseFloat(n.borderTopWidth),this.target===document.body&&(e.height=Math.max(e.height,24)),e}}},{key:"clearCache",value:function(){this._cache={}}},{key:"cache",value:function(t,e){return"undefined"==typeof this._cache&&(this._cache={}),"undefined"==typeof this._cache[t]&&(this._cache[t]=e.call(this)),this._cache[t]}},{key:"enable",value:function(){var t=this,e=arguments.length<=0||void 0===arguments[0]?!0:arguments[0];this.options.addTargetClasses!==!1&&u(this.target,this.getClass("enabled")),u(this.element,this.getClass("enabled")),this.enabled=!0,this.scrollParents.forEach(function(e){e!==t.target.ownerDocument&&e.addEventListener("scroll",t.position)}),e&&this.position()}},{key:"disable",value:function(){var t=this;d(this.target,this.getClass("enabled")),d(this.element,this.getClass("enabled")),this.enabled=!1,"undefined"!=typeof this.scrollParents&&this.scrollParents.forEach(function(e){e.removeEventListener("scroll",t.position)})}},{key:"destroy",value:function(){var t=this;this.disable(),D.forEach(function(e,o){e===t&&D.splice(o,1)}),0===D.length&&s()}},{key:"updateAttachClasses",value:function(t,e){var o=this;t=t||this.attachment,e=e||this.targetAttachment;var n=["left","top","bottom","right","middle","center"];"undefined"!=typeof this._addAttachClasses&&this._addAttachClasses.length&&this._addAttachClasses.splice(0,this._addAttachClasses.length),"undefined"==typeof this._addAttachClasses&&(this._addAttachClasses=[]);var i=this._addAttachClasses;t.top&&i.push(this.getClass("element-attached")+"-"+t.top),t.left&&i.push(this.getClass("element-attached")+"-"+t.left),e.top&&i.push(this.getClass("target-attached")+"-"+e.top),e.left&&i.push(this.getClass("target-attached")+"-"+e.left);var r=[];n.forEach(function(t){r.push(o.getClass("element-attached")+"-"+t),r.push(o.getClass("target-attached")+"-"+t)}),k(function(){"undefined"!=typeof o._addAttachClasses&&(m(o.element,o._addAttachClasses,r),o.options.addTargetClasses!==!1&&m(o.target,o._addAttachClasses,r),delete o._addAttachClasses)})}},{key:"position",value:function(){var t=this,e=arguments.length<=0||void 0===arguments[0]?!0:arguments[0];if(this.enabled){this.clearCache();var o=U(this.targetAttachment,this.attachment);this.updateAttachClasses(this.attachment,o);var n=this.cache("element-bounds",function(){return a(t.element)}),i=n.width,r=n.height;if(0===i&&0===r&&"undefined"!=typeof this.lastSize){var s=this.lastSize;i=s.width,r=s.height}else this.lastSize={width:i,height:r};var h=this.cache("target-bounds",function(){return t.getTargetBounds()}),d=h,u=C(V(this.attachment),{width:i,height:r}),p=C(V(o),d),c=C(this.offset,{width:i,height:r}),g=C(this.targetOffset,d);u=w(u,c),p=w(p,g);for(var m=h.left+p.left-u.left,v=h.top+p.top-u.top,y=0;y<x.modules.length;++y){var b=x.modules[y],O=b.position.call(this,{left:m,top:v,targetAttachment:o,targetPos:h,elementPos:n,offset:u,targetOffset:p,manualOffset:c,manualTargetOffset:g,scrollbarSize:S,attachment:this.attachment});if(O===!1)return!1;"undefined"!=typeof O&&"object"==typeof O&&(v=O.top,m=O.left)}var E={page:{top:v,left:m},viewport:{top:v-pageYOffset,bottom:pageYOffset-v-r+innerHeight,left:m-pageXOffset,right:pageXOffset-m-i+innerWidth}},A=this.target.ownerDocument,T=A.defaultView,S=void 0;return T.innerHeight>A.documentElement.clientHeight&&(S=this.cache("scrollbar-size",l),E.viewport.bottom-=S.height),T.innerWidth>A.documentElement.clientWidth&&(S=this.cache("scrollbar-size",l),E.viewport.right-=S.width),(-1===["","static"].indexOf(A.body.style.position)||-1===["","static"].indexOf(A.body.parentElement.style.position))&&(E.page.bottom=A.body.scrollHeight-v-r,E.page.right=A.body.scrollWidth-m-i),"undefined"!=typeof this.options.optimizations&&this.options.optimizations.moveElement!==!1&&"undefined"==typeof this.targetModifier&&!function(){var e=t.cache("target-offsetparent",function(){return f(t.target)}),o=t.cache("target-offsetparent-bounds",function(){return a(e)}),n=getComputedStyle(e),i=o,r={};if(["Top","Left","Bottom","Right"].forEach(function(t){r[t.toLowerCase()]=parseFloat(n["border"+t+"Width"])}),o.right=A.body.scrollWidth-o.left-i.width+r.right,o.bottom=A.body.scrollHeight-o.top-i.height+r.bottom,E.page.top>=o.top+r.top&&E.page.bottom>=o.bottom&&E.page.left>=o.left+r.left&&E.page.right>=o.right){var s=e.scrollTop,l=e.scrollLeft;E.offset={top:E.page.top-o.top+s-r.top,left:E.page.left-o.left+l-r.left}}}(),this.move(E),this.history.unshift(E),this.history.length>3&&this.history.pop(),e&&_(),!0}}},{key:"move",value:function(t){var e=this;if("undefined"!=typeof this.element.parentNode){var o={};for(var n in t){o[n]={};for(var i in t[n]){for(var r=!1,s=0;s<this.history.length;++s){var a=this.history[s];if("undefined"!=typeof a[n]&&!y(a[n][i],t[n][i])){r=!0;break}}r||(o[n][i]=!0)}}var l={top:"",left:"",right:"",bottom:""},d=function(t,o){var n="undefined"!=typeof e.options.optimizations,i=n?e.options.optimizations.gpu:null;if(i!==!1){var r=void 0,s=void 0;if(t.top?(l.top=0,r=o.top):(l.bottom=0,r=-o.bottom),t.left?(l.left=0,s=o.left):(l.right=0,s=-o.right),window.matchMedia){var a=window.matchMedia("only screen and (min-resolution: 1.3dppx)").matches||window.matchMedia("only screen and (-webkit-min-device-pixel-ratio: 1.3)").matches;a||(s=Math.round(s),r=Math.round(r))}l[L]="translateX("+s+"px) translateY("+r+"px)","msTransform"!==L&&(l[L]+=" translateZ(0)")}else t.top?l.top=o.top+"px":l.bottom=o.bottom+"px",t.left?l.left=o.left+"px":l.right=o.right+"px"},u=!1;if((o.page.top||o.page.bottom)&&(o.page.left||o.page.right)?(l.position="absolute",d(o.page,t.page)):(o.viewport.top||o.viewport.bottom)&&(o.viewport.left||o.viewport.right)?(l.position="fixed",d(o.viewport,t.viewport)):"undefined"!=typeof o.offset&&o.offset.top&&o.offset.left?!function(){l.position="absolute";var n=e.cache("target-offsetparent",function(){return f(e.target)});f(e.element)!==n&&k(function(){e.element.parentNode.removeChild(e.element),n.appendChild(e.element)}),d(o.offset,t.offset),u=!0}():(l.position="absolute",d({top:!0,left:!0},t.page)),!u){for(var p=!0,c=this.element.parentNode;c&&1===c.nodeType&&"BODY"!==c.tagName;){if("static"!==getComputedStyle(c).position){p=!1;break}c=c.parentNode}p||(this.element.parentNode.removeChild(this.element),this.element.ownerDocument.body.appendChild(this.element))}var g={},m=!1;for(var i in l){var v=l[i],b=this.element.style[i];b!==v&&(m=!0,g[i]=v)}m&&k(function(){h(e.element.style,g),e.trigger("repositioned")})}}}]),e}(B);I.modules=[],x.position=X;var $=h(I,x),z=function(){function t(t,e){var o=[],n=!0,i=!1,r=void 0;try{for(var s,a=t[Symbol.iterator]();!(n=(s=a.next()).done)&&(o.push(s.value),!e||o.length!==e);n=!0);}catch(f){i=!0,r=f}finally{try{!n&&a["return"]&&a["return"]()}finally{if(i)throw r}}return o}return function(e,o){if(Array.isArray(e))return e;if(Symbol.iterator in Object(e))return t(e,o);throw new TypeError("Invalid attempt to destructure non-iterable instance")}}(),Y=x.Utils,a=Y.getBounds,h=Y.extend,m=Y.updateClasses,k=Y.defer,G=["left","top","right","bottom"];x.modules.push({position:function(t){var e=this,o=t.top,n=t.left,i=t.targetAttachment;if(!this.options.constraints)return!0;var r=this.cache("element-bounds",function(){return a(e.element)}),s=r.height,f=r.width;if(0===f&&0===s&&"undefined"!=typeof this.lastSize){var l=this.lastSize;f=l.width,s=l.height}var d=this.cache("target-bounds",function(){return e.getTargetBounds()}),u=d.height,p=d.width,c=[this.getClass("pinned"),this.getClass("out-of-bounds")];this.options.constraints.forEach(function(t){var e=t.outOfBoundsClass,o=t.pinnedClass;e&&c.push(e),o&&c.push(o)}),c.forEach(function(t){["left","top","right","bottom"].forEach(function(e){c.push(t+"-"+e)})});var g=[],v=h({},i),y=h({},this.attachment);return this.options.constraints.forEach(function(t){var r=t.to,a=t.attachment,l=t.pin;"undefined"==typeof a&&(a="");var h=void 0,d=void 0;if(a.indexOf(" ")>=0){var c=a.split(" "),m=z(c,2);d=m[0],h=m[1]}else h=d=a;var b=O(e,r);("target"===d||"both"===d)&&(o<b[1]&&"top"===v.top&&(o+=u,v.top="bottom"),o+s>b[3]&&"bottom"===v.top&&(o-=u,v.top="top")),"together"===d&&("top"===v.top&&("bottom"===y.top&&o<b[1]?(o+=u,v.top="bottom",o+=s,y.top="top"):"top"===y.top&&o+s>b[3]&&o-(s-u)>=b[1]&&(o-=s-u,v.top="bottom",y.top="bottom")),"bottom"===v.top&&("top"===y.top&&o+s>b[3]?(o-=u,v.top="top",o-=s,y.top="bottom"):"bottom"===y.top&&o<b[1]&&o+(2*s-u)<=b[3]&&(o+=s-u,v.top="top",y.top="top")),"middle"===v.top&&(o+s>b[3]&&"top"===y.top?(o-=s,y.top="bottom"):o<b[1]&&"bottom"===y.top&&(o+=s,y.top="top"))),("target"===h||"both"===h)&&(n<b[0]&&"left"===v.left&&(n+=p,v.left="right"),n+f>b[2]&&"right"===v.left&&(n-=p,v.left="left")),"together"===h&&(n<b[0]&&"left"===v.left?"right"===y.left?(n+=p,v.left="right",n+=f,y.left="left"):"left"===y.left&&(n+=p,v.left="right",n-=f,y.left="right"):n+f>b[2]&&"right"===v.left?"left"===y.left?(n-=p,v.left="left",n-=f,y.left="right"):"right"===y.left&&(n-=p,v.left="left",n+=f,y.left="left"):"center"===v.left&&(n+f>b[2]&&"left"===y.left?(n-=f,y.left="right"):n<b[0]&&"right"===y.left&&(n+=f,y.left="left"))),("element"===d||"both"===d)&&(o<b[1]&&"bottom"===y.top&&(o+=s,y.top="top"),o+s>b[3]&&"top"===y.top&&(o-=s,y.top="bottom")),("element"===h||"both"===h)&&(n<b[0]&&("right"===y.left?(n+=f,y.left="left"):"center"===y.left&&(n+=f/2,y.left="left")),n+f>b[2]&&("left"===y.left?(n-=f,y.left="right"):"center"===y.left&&(n-=f/2,y.left="right"))),"string"==typeof l?l=l.split(",").map(function(t){return t.trim()}):l===!0&&(l=["top","left","right","bottom"]),l=l||[];var w=[],C=[];o<b[1]&&(l.indexOf("top")>=0?(o=b[1],w.push("top")):C.push("top")),o+s>b[3]&&(l.indexOf("bottom")>=0?(o=b[3]-s,w.push("bottom")):C.push("bottom")),n<b[0]&&(l.indexOf("left")>=0?(n=b[0],w.push("left")):C.push("left")),n+f>b[2]&&(l.indexOf("right")>=0?(n=b[2]-f,w.push("right")):C.push("right")),w.length&&!function(){var t=void 0;t="undefined"!=typeof e.options.pinnedClass?e.options.pinnedClass:e.getClass("pinned"),g.push(t),w.forEach(function(e){g.push(t+"-"+e)})}(),C.length&&!function(){var t=void 0;t="undefined"!=typeof e.options.outOfBoundsClass?e.options.outOfBoundsClass:e.getClass("out-of-bounds"),g.push(t),C.forEach(function(e){g.push(t+"-"+e)})}(),(w.indexOf("left")>=0||w.indexOf("right")>=0)&&(y.left=v.left=!1),(w.indexOf("top")>=0||w.indexOf("bottom")>=0)&&(y.top=v.top=!1),(v.top!==i.top||v.left!==i.left||y.top!==e.attachment.top||y.left!==e.attachment.left)&&(e.updateAttachClasses(y,v),e.trigger("update",{attachment:y,targetAttachment:v}))}),k(function(){e.options.addTargetClasses!==!1&&m(e.target,g,c),m(e.element,g,c)}),{top:o,left:n}}});var Y=x.Utils,a=Y.getBounds,m=Y.updateClasses,k=Y.defer;x.modules.push({position:function(t){var e=this,o=t.top,n=t.left,i=this.cache("element-bounds",function(){return a(e.element)}),r=i.height,s=i.width,f=this.getTargetBounds(),l=o+r,h=n+s,d=[];o<=f.bottom&&l>=f.top&&["left","right"].forEach(function(t){var e=f[t];(e===n||e===h)&&d.push(t)}),n<=f.right&&h>=f.left&&["top","bottom"].forEach(function(t){var e=f[t];(e===o||e===l)&&d.push(t)});var u=[],p=[],c=["left","top","right","bottom"];return u.push(this.getClass("abutted")),c.forEach(function(t){u.push(e.getClass("abutted")+"-"+t)}),d.length&&p.push(this.getClass("abutted")),d.forEach(function(t){p.push(e.getClass("abutted")+"-"+t)}),k(function(){e.options.addTargetClasses!==!1&&m(e.target,p,u),m(e.element,p,u)}),!0}});var z=function(){function t(t,e){var o=[],n=!0,i=!1,r=void 0;try{for(var s,a=t[Symbol.iterator]();!(n=(s=a.next()).done)&&(o.push(s.value),!e||o.length!==e);n=!0);}catch(f){i=!0,r=f}finally{try{!n&&a["return"]&&a["return"]()}finally{if(i)throw r}}return o}return function(e,o){if(Array.isArray(e))return e;if(Symbol.iterator in Object(e))return t(e,o);throw new TypeError("Invalid attempt to destructure non-iterable instance")}}();return x.modules.push({position:function(t){var e=t.top,o=t.left;if(this.options.shift){var n=this.options.shift;"function"==typeof this.options.shift&&(n=this.options.shift.call(this,{top:e,left:o}));var i=void 0,r=void 0;if("string"==typeof n){n=n.split(" "),n[1]=n[1]||n[0];var s=n,a=z(s,2);i=a[0],r=a[1],i=parseFloat(i,10),r=parseFloat(r,10)}else i=n.top,r=n.left;return e+=i,o+=r,{top:e,left:o}}}}),$});
+;!function(t,e){"function"==typeof define&&define.amd?define(e):"object"==typeof exports?module.exports=e(require,exports,module):t.Tether=e()}(this,function(t,e,o){"use strict";function i(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}function n(t){var e=t.getBoundingClientRect(),o={};for(var i in e)o[i]=e[i];if(t.ownerDocument!==document){var r=t.ownerDocument.defaultView.frameElement;if(r){var s=n(r);o.top+=s.top,o.bottom+=s.top,o.left+=s.left,o.right+=s.left}}return o}function r(t){var e=getComputedStyle(t)||{},o=e.position,i=[];if("fixed"===o)return[t];for(var n=t;(n=n.parentNode)&&n&&1===n.nodeType;){var r=void 0;try{r=getComputedStyle(n)}catch(s){}if("undefined"==typeof r||null===r)return i.push(n),i;var a=r,f=a.overflow,l=a.overflowX,h=a.overflowY;/(auto|scroll)/.test(f+h+l)&&("absolute"!==o||["relative","absolute","fixed"].indexOf(r.position)>=0)&&i.push(n)}return i.push(t.ownerDocument.body),t.ownerDocument!==document&&i.push(t.ownerDocument.defaultView),i}function s(){A&&document.body.removeChild(A),A=null}function a(t){var e=void 0;t===document?(e=document,t=document.documentElement):e=t.ownerDocument;var o=e.documentElement,i=n(t),r=P();return i.top-=r.top,i.left-=r.left,"undefined"==typeof i.width&&(i.width=document.body.scrollWidth-i.left-i.right),"undefined"==typeof i.height&&(i.height=document.body.scrollHeight-i.top-i.bottom),i.top=i.top-o.clientTop,i.left=i.left-o.clientLeft,i.right=e.body.clientWidth-i.width-i.left,i.bottom=e.body.clientHeight-i.height-i.top,i}function f(t){return t.offsetParent||document.documentElement}function l(){if(M)return M;var t=document.createElement("div");t.style.width="100%",t.style.height="200px";var e=document.createElement("div");h(e.style,{position:"absolute",top:0,left:0,pointerEvents:"none",visibility:"hidden",width:"200px",height:"150px",overflow:"hidden"}),e.appendChild(t),document.body.appendChild(e);var o=t.offsetWidth;e.style.overflow="scroll";var i=t.offsetWidth;o===i&&(i=e.clientWidth),document.body.removeChild(e);var n=o-i;return M={width:n,height:n}}function h(){var t=arguments.length<=0||void 0===arguments[0]?{}:arguments[0],e=[];return Array.prototype.push.apply(e,arguments),e.slice(1).forEach(function(e){if(e)for(var o in e)({}).hasOwnProperty.call(e,o)&&(t[o]=e[o])}),t}function d(t,e){if("undefined"!=typeof t.classList)e.split(" ").forEach(function(e){e.trim()&&t.classList.remove(e)});else{var o=new RegExp("(^| )"+e.split(" ").join("|")+"( |$)","gi"),i=c(t).replace(o," ");g(t,i)}}function p(t,e){if("undefined"!=typeof t.classList)e.split(" ").forEach(function(e){e.trim()&&t.classList.add(e)});else{d(t,e);var o=c(t)+(" "+e);g(t,o)}}function u(t,e){if("undefined"!=typeof t.classList)return t.classList.contains(e);var o=c(t);return new RegExp("(^| )"+e+"( |$)","gi").test(o)}function c(t){return t.className instanceof t.ownerDocument.defaultView.SVGAnimatedString?t.className.baseVal:t.className}function g(t,e){t.setAttribute("class",e)}function m(t,e,o){o.forEach(function(o){e.indexOf(o)===-1&&u(t,o)&&d(t,o)}),e.forEach(function(e){u(t,e)||p(t,e)})}function i(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}function v(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e)}function y(t,e){var o=arguments.length<=2||void 0===arguments[2]?1:arguments[2];return t+o>=e&&e>=t-o}function b(){return"undefined"!=typeof performance&&"undefined"!=typeof performance.now?performance.now():+new Date}function w(){for(var t={top:0,left:0},e=arguments.length,o=Array(e),i=0;i<e;i++)o[i]=arguments[i];return o.forEach(function(e){var o=e.top,i=e.left;"string"==typeof o&&(o=parseFloat(o,10)),"string"==typeof i&&(i=parseFloat(i,10)),t.top+=o,t.left+=i}),t}function C(t,e){return"string"==typeof t.left&&t.left.indexOf("%")!==-1&&(t.left=parseFloat(t.left,10)/100*e.width),"string"==typeof t.top&&t.top.indexOf("%")!==-1&&(t.top=parseFloat(t.top,10)/100*e.height),t}function O(t,e){return"scrollParent"===e?e=t.scrollParents[0]:"window"===e&&(e=[pageXOffset,pageYOffset,innerWidth+pageXOffset,innerHeight+pageYOffset]),e===document&&(e=e.documentElement),"undefined"!=typeof e.nodeType&&!function(){var t=e,o=a(e),i=o,n=getComputedStyle(e);if(e=[i.left,i.top,o.width+i.left,o.height+i.top],t.ownerDocument!==document){var r=t.ownerDocument.defaultView;e[0]+=r.pageXOffset,e[1]+=r.pageYOffset,e[2]+=r.pageXOffset,e[3]+=r.pageYOffset}G.forEach(function(t,o){t=t[0].toUpperCase()+t.substr(1),"Top"===t||"Left"===t?e[o]+=parseFloat(n["border"+t+"Width"]):e[o]-=parseFloat(n["border"+t+"Width"])})}(),e}var E=function(){function t(t,e){for(var o=0;o<e.length;o++){var i=e[o];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(t,i.key,i)}}return function(e,o,i){return o&&t(e.prototype,o),i&&t(e,i),e}}(),x=void 0;"undefined"==typeof x&&(x={modules:[]});var A=null,T=function(){var t=0;return function(){return++t}}(),S={},P=function(){var t=A;t&&document.body.contains(t)||(t=document.createElement("div"),t.setAttribute("data-tether-id",T()),h(t.style,{top:0,left:0,position:"absolute"}),document.body.appendChild(t),A=t);var e=t.getAttribute("data-tether-id");return"undefined"==typeof S[e]&&(S[e]=n(t),k(function(){delete S[e]})),S[e]},M=null,W=[],k=function(t){W.push(t)},_=function(){for(var t=void 0;t=W.pop();)t()},B=function(){function t(){i(this,t)}return E(t,[{key:"on",value:function(t,e,o){var i=!(arguments.length<=3||void 0===arguments[3])&&arguments[3];"undefined"==typeof this.bindings&&(this.bindings={}),"undefined"==typeof this.bindings[t]&&(this.bindings[t]=[]),this.bindings[t].push({handler:e,ctx:o,once:i})}},{key:"once",value:function(t,e,o){this.on(t,e,o,!0)}},{key:"off",value:function(t,e){if("undefined"!=typeof this.bindings&&"undefined"!=typeof this.bindings[t])if("undefined"==typeof e)delete this.bindings[t];else for(var o=0;o<this.bindings[t].length;)this.bindings[t][o].handler===e?this.bindings[t].splice(o,1):++o}},{key:"trigger",value:function(t){if("undefined"!=typeof this.bindings&&this.bindings[t]){for(var e=0,o=arguments.length,i=Array(o>1?o-1:0),n=1;n<o;n++)i[n-1]=arguments[n];for(;e<this.bindings[t].length;){var r=this.bindings[t][e],s=r.handler,a=r.ctx,f=r.once,l=a;"undefined"==typeof l&&(l=this),s.apply(l,i),f?this.bindings[t].splice(e,1):++e}}}}]),t}();x.Utils={getActualBoundingClientRect:n,getScrollParents:r,getBounds:a,getOffsetParent:f,extend:h,addClass:p,removeClass:d,hasClass:u,updateClasses:m,defer:k,flush:_,uniqueId:T,Evented:B,getScrollBarSize:l,removeUtilElements:s};var z=function(){function t(t,e){var o=[],i=!0,n=!1,r=void 0;try{for(var s,a=t[Symbol.iterator]();!(i=(s=a.next()).done)&&(o.push(s.value),!e||o.length!==e);i=!0);}catch(f){n=!0,r=f}finally{try{!i&&a["return"]&&a["return"]()}finally{if(n)throw r}}return o}return function(e,o){if(Array.isArray(e))return e;if(Symbol.iterator in Object(e))return t(e,o);throw new TypeError("Invalid attempt to destructure non-iterable instance")}}(),E=function(){function t(t,e){for(var o=0;o<e.length;o++){var i=e[o];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(t,i.key,i)}}return function(e,o,i){return o&&t(e.prototype,o),i&&t(e,i),e}}(),j=function(t,e,o){for(var i=!0;i;){var n=t,r=e,s=o;i=!1,null===n&&(n=Function.prototype);var a=Object.getOwnPropertyDescriptor(n,r);if(void 0!==a){if("value"in a)return a.value;var f=a.get;if(void 0===f)return;return f.call(s)}var l=Object.getPrototypeOf(n);if(null===l)return;t=l,e=r,o=s,i=!0,a=l=void 0}};if("undefined"==typeof x)throw new Error("You must include the utils.js file before tether.js");var Y=x.Utils,r=Y.getScrollParents,a=Y.getBounds,f=Y.getOffsetParent,h=Y.extend,p=Y.addClass,d=Y.removeClass,m=Y.updateClasses,k=Y.defer,_=Y.flush,l=Y.getScrollBarSize,s=Y.removeUtilElements,L=function(){if("undefined"==typeof document)return"";for(var t=document.createElement("div"),e=["transform","WebkitTransform","OTransform","MozTransform","msTransform"],o=0;o<e.length;++o){var i=e[o];if(void 0!==t.style[i])return i}}(),D=[],X=function(){D.forEach(function(t){t.position(!1)}),_()};!function(){var t=null,e=null,o=null,i=function n(){return"undefined"!=typeof e&&e>16?(e=Math.min(e-16,250),void(o=setTimeout(n,250))):void("undefined"!=typeof t&&b()-t<10||(null!=o&&(clearTimeout(o),o=null),t=b(),X(),e=b()-t))};"undefined"!=typeof window&&"undefined"!=typeof window.addEventListener&&["resize","scroll","touchmove"].forEach(function(t){window.addEventListener(t,i)})}();var F={center:"center",left:"right",right:"left"},H={middle:"middle",top:"bottom",bottom:"top"},N={top:0,left:0,middle:"50%",center:"50%",bottom:"100%",right:"100%"},U=function(t,e){var o=t.left,i=t.top;return"auto"===o&&(o=F[e.left]),"auto"===i&&(i=H[e.top]),{left:o,top:i}},V=function(t){var e=t.left,o=t.top;return"undefined"!=typeof N[t.left]&&(e=N[t.left]),"undefined"!=typeof N[t.top]&&(o=N[t.top]),{left:e,top:o}},R=function(t){var e=t.split(" "),o=z(e,2),i=o[0],n=o[1];return{top:i,left:n}},q=R,I=function(t){function e(t){var o=this;i(this,e),j(Object.getPrototypeOf(e.prototype),"constructor",this).call(this),this.position=this.position.bind(this),D.push(this),this.history=[],this.setOptions(t,!1),x.modules.forEach(function(t){"undefined"!=typeof t.initialize&&t.initialize.call(o)}),this.position()}return v(e,t),E(e,[{key:"getClass",value:function(){var t=arguments.length<=0||void 0===arguments[0]?"":arguments[0],e=this.options.classes;return"undefined"!=typeof e&&e[t]?this.options.classes[t]:this.options.classPrefix?this.options.classPrefix+"-"+t:t}},{key:"setOptions",value:function(t){var e=this,o=arguments.length<=1||void 0===arguments[1]||arguments[1],i={offset:"0 0",targetOffset:"0 0",targetAttachment:"auto auto",classPrefix:"tether"};this.options=h(i,t);var n=this.options,s=n.element,a=n.target,f=n.targetModifier;if(this.element=s,this.target=a,this.targetModifier=f,"viewport"===this.target?(this.target=document.body,this.targetModifier="visible"):"scroll-handle"===this.target&&(this.target=document.body,this.targetModifier="scroll-handle"),["element","target"].forEach(function(t){if("undefined"==typeof e[t])throw new Error("Tether Error: Both element and target must be defined");"undefined"!=typeof e[t].jquery?e[t]=e[t][0]:"string"==typeof e[t]&&(e[t]=document.querySelector(e[t]))}),p(this.element,this.getClass("element")),this.options.addTargetClasses!==!1&&p(this.target,this.getClass("target")),!this.options.attachment)throw new Error("Tether Error: You must provide an attachment");this.targetAttachment=q(this.options.targetAttachment),this.attachment=q(this.options.attachment),this.offset=R(this.options.offset),this.targetOffset=R(this.options.targetOffset),"undefined"!=typeof this.scrollParents&&this.disable(),"scroll-handle"===this.targetModifier?this.scrollParents=[this.target]:this.scrollParents=r(this.target),this.options.enabled!==!1&&this.enable(o)}},{key:"getTargetBounds",value:function(){if("undefined"==typeof this.targetModifier)return a(this.target);if("visible"===this.targetModifier){if(this.target===document.body)return{top:pageYOffset,left:pageXOffset,height:innerHeight,width:innerWidth};var t=a(this.target),e={height:t.height,width:t.width,top:t.top,left:t.left};return e.height=Math.min(e.height,t.height-(pageYOffset-t.top)),e.height=Math.min(e.height,t.height-(t.top+t.height-(pageYOffset+innerHeight))),e.height=Math.min(innerHeight,e.height),e.height-=2,e.width=Math.min(e.width,t.width-(pageXOffset-t.left)),e.width=Math.min(e.width,t.width-(t.left+t.width-(pageXOffset+innerWidth))),e.width=Math.min(innerWidth,e.width),e.width-=2,e.top<pageYOffset&&(e.top=pageYOffset),e.left<pageXOffset&&(e.left=pageXOffset),e}if("scroll-handle"===this.targetModifier){var t=void 0,o=this.target;o===document.body?(o=document.documentElement,t={left:pageXOffset,top:pageYOffset,height:innerHeight,width:innerWidth}):t=a(o);var i=getComputedStyle(o),n=o.scrollWidth>o.clientWidth||[i.overflow,i.overflowX].indexOf("scroll")>=0||this.target!==document.body,r=0;n&&(r=15);var s=t.height-parseFloat(i.borderTopWidth)-parseFloat(i.borderBottomWidth)-r,e={width:15,height:.975*s*(s/o.scrollHeight),left:t.left+t.width-parseFloat(i.borderLeftWidth)-15},f=0;s<408&&this.target===document.body&&(f=-11e-5*Math.pow(s,2)-.00727*s+22.58),this.target!==document.body&&(e.height=Math.max(e.height,24));var l=this.target.scrollTop/(o.scrollHeight-s);return e.top=l*(s-e.height-f)+t.top+parseFloat(i.borderTopWidth),this.target===document.body&&(e.height=Math.max(e.height,24)),e}}},{key:"clearCache",value:function(){this._cache={}}},{key:"cache",value:function(t,e){return"undefined"==typeof this._cache&&(this._cache={}),"undefined"==typeof this._cache[t]&&(this._cache[t]=e.call(this)),this._cache[t]}},{key:"enable",value:function(){var t=this,e=arguments.length<=0||void 0===arguments[0]||arguments[0];this.options.addTargetClasses!==!1&&p(this.target,this.getClass("enabled")),p(this.element,this.getClass("enabled")),this.enabled=!0,this.scrollParents.forEach(function(e){e!==t.target.ownerDocument&&e.addEventListener("scroll",t.position)}),e&&this.position()}},{key:"disable",value:function(){var t=this;d(this.target,this.getClass("enabled")),d(this.element,this.getClass("enabled")),this.enabled=!1,"undefined"!=typeof this.scrollParents&&this.scrollParents.forEach(function(e){e.removeEventListener("scroll",t.position)})}},{key:"destroy",value:function(){var t=this;this.disable(),D.forEach(function(e,o){e===t&&D.splice(o,1)}),0===D.length&&s()}},{key:"updateAttachClasses",value:function(t,e){var o=this;t=t||this.attachment,e=e||this.targetAttachment;var i=["left","top","bottom","right","middle","center"];"undefined"!=typeof this._addAttachClasses&&this._addAttachClasses.length&&this._addAttachClasses.splice(0,this._addAttachClasses.length),"undefined"==typeof this._addAttachClasses&&(this._addAttachClasses=[]);var n=this._addAttachClasses;t.top&&n.push(this.getClass("element-attached")+"-"+t.top),t.left&&n.push(this.getClass("element-attached")+"-"+t.left),e.top&&n.push(this.getClass("target-attached")+"-"+e.top),e.left&&n.push(this.getClass("target-attached")+"-"+e.left);var r=[];i.forEach(function(t){r.push(o.getClass("element-attached")+"-"+t),r.push(o.getClass("target-attached")+"-"+t)}),k(function(){"undefined"!=typeof o._addAttachClasses&&(m(o.element,o._addAttachClasses,r),o.options.addTargetClasses!==!1&&m(o.target,o._addAttachClasses,r),delete o._addAttachClasses)})}},{key:"position",value:function(){var t=this,e=arguments.length<=0||void 0===arguments[0]||arguments[0];if(this.enabled){this.clearCache();var o=U(this.targetAttachment,this.attachment);this.updateAttachClasses(this.attachment,o);var i=this.cache("element-bounds",function(){return a(t.element)}),n=i.width,r=i.height;if(0===n&&0===r&&"undefined"!=typeof this.lastSize){var s=this.lastSize;n=s.width,r=s.height}else this.lastSize={width:n,height:r};var h=this.cache("target-bounds",function(){return t.getTargetBounds()}),d=h,p=C(V(this.attachment),{width:n,height:r}),u=C(V(o),d),c=C(this.offset,{width:n,height:r}),g=C(this.targetOffset,d);p=w(p,c),u=w(u,g);for(var m=h.left+u.left-p.left,v=h.top+u.top-p.top,y=0;y<x.modules.length;++y){var b=x.modules[y],O=b.position.call(this,{left:m,top:v,targetAttachment:o,targetPos:h,elementPos:i,offset:p,targetOffset:u,manualOffset:c,manualTargetOffset:g,scrollbarSize:S,attachment:this.attachment});if(O===!1)return!1;"undefined"!=typeof O&&"object"==typeof O&&(v=O.top,m=O.left)}var E={page:{top:v,left:m},viewport:{top:v-pageYOffset,bottom:pageYOffset-v-r+innerHeight,left:m-pageXOffset,right:pageXOffset-m-n+innerWidth}},A=this.target.ownerDocument,T=A.defaultView,S=void 0;return T.innerHeight>A.documentElement.clientHeight&&(S=this.cache("scrollbar-size",l),E.viewport.bottom-=S.height),T.innerWidth>A.documentElement.clientWidth&&(S=this.cache("scrollbar-size",l),E.viewport.right-=S.width),["","static"].indexOf(A.body.style.position)!==-1&&["","static"].indexOf(A.body.parentElement.style.position)!==-1||(E.page.bottom=A.body.scrollHeight-v-r,E.page.right=A.body.scrollWidth-m-n),"undefined"!=typeof this.options.optimizations&&this.options.optimizations.moveElement!==!1&&"undefined"==typeof this.targetModifier&&!function(){var e=t.cache("target-offsetparent",function(){return f(t.target)}),o=t.cache("target-offsetparent-bounds",function(){return a(e)}),i=getComputedStyle(e),n=o,r={};if(["Top","Left","Bottom","Right"].forEach(function(t){r[t.toLowerCase()]=parseFloat(i["border"+t+"Width"])}),o.right=A.body.scrollWidth-o.left-n.width+r.right,o.bottom=A.body.scrollHeight-o.top-n.height+r.bottom,E.page.top>=o.top+r.top&&E.page.bottom>=o.bottom&&E.page.left>=o.left+r.left&&E.page.right>=o.right){var s=e.scrollTop,l=e.scrollLeft;E.offset={top:E.page.top-o.top+s-r.top,left:E.page.left-o.left+l-r.left}}}(),this.move(E),this.history.unshift(E),this.history.length>3&&this.history.pop(),e&&_(),!0}}},{key:"move",value:function(t){var e=this;if("undefined"!=typeof this.element.parentNode){var o={};for(var i in t){o[i]={};for(var n in t[i]){for(var r=!1,s=0;s<this.history.length;++s){var a=this.history[s];if("undefined"!=typeof a[i]&&!y(a[i][n],t[i][n])){r=!0;break}}r||(o[i][n]=!0)}}var l={top:"",left:"",right:"",bottom:""},d=function(t,o){var i="undefined"!=typeof e.options.optimizations,n=i?e.options.optimizations.gpu:null;if(n!==!1){var r=void 0,s=void 0;if(t.top?(l.top=0,r=o.top):(l.bottom=0,r=-o.bottom),t.left?(l.left=0,s=o.left):(l.right=0,s=-o.right),window.matchMedia){var a=window.matchMedia("only screen and (min-resolution: 1.3dppx)").matches||window.matchMedia("only screen and (-webkit-min-device-pixel-ratio: 1.3)").matches;a||(s=Math.round(s),r=Math.round(r))}l[L]="translateX("+s+"px) translateY("+r+"px)","msTransform"!==L&&(l[L]+=" translateZ(0)")}else t.top?l.top=o.top+"px":l.bottom=o.bottom+"px",t.left?l.left=o.left+"px":l.right=o.right+"px"},p=!1;if((o.page.top||o.page.bottom)&&(o.page.left||o.page.right)?(l.position="absolute",d(o.page,t.page)):(o.viewport.top||o.viewport.bottom)&&(o.viewport.left||o.viewport.right)?(l.position="fixed",d(o.viewport,t.viewport)):"undefined"!=typeof o.offset&&o.offset.top&&o.offset.left?!function(){l.position="absolute";var i=e.cache("target-offsetparent",function(){return f(e.target)});f(e.element)!==i&&k(function(){e.element.parentNode.removeChild(e.element),i.appendChild(e.element)}),d(o.offset,t.offset),p=!0}():(l.position="absolute",d({top:!0,left:!0},t.page)),!p)if(this.options.bodyElement)this.options.bodyElement.appendChild(this.element);else{for(var u=!0,c=this.element.parentNode;c&&1===c.nodeType&&"BODY"!==c.tagName;){if("static"!==getComputedStyle(c).position){u=!1;break}c=c.parentNode}u||(this.element.parentNode.removeChild(this.element),this.element.ownerDocument.body.appendChild(this.element))}var g={},m=!1;for(var n in l){var v=l[n],b=this.element.style[n];b!==v&&(m=!0,g[n]=v)}m&&k(function(){h(e.element.style,g),e.trigger("repositioned")})}}}]),e}(B);I.modules=[],x.position=X;var $=h(I,x),z=function(){function t(t,e){var o=[],i=!0,n=!1,r=void 0;try{for(var s,a=t[Symbol.iterator]();!(i=(s=a.next()).done)&&(o.push(s.value),!e||o.length!==e);i=!0);}catch(f){n=!0,r=f}finally{try{!i&&a["return"]&&a["return"]()}finally{if(n)throw r}}return o}return function(e,o){if(Array.isArray(e))return e;if(Symbol.iterator in Object(e))return t(e,o);throw new TypeError("Invalid attempt to destructure non-iterable instance")}}(),Y=x.Utils,a=Y.getBounds,h=Y.extend,m=Y.updateClasses,k=Y.defer,G=["left","top","right","bottom"];x.modules.push({position:function(t){var e=this,o=t.top,i=t.left,n=t.targetAttachment;if(!this.options.constraints)return!0;var r=this.cache("element-bounds",function(){return a(e.element)}),s=r.height,f=r.width;if(0===f&&0===s&&"undefined"!=typeof this.lastSize){var l=this.lastSize;f=l.width,s=l.height}var d=this.cache("target-bounds",function(){return e.getTargetBounds()}),p=d.height,u=d.width,c=[this.getClass("pinned"),this.getClass("out-of-bounds")];this.options.constraints.forEach(function(t){var e=t.outOfBoundsClass,o=t.pinnedClass;e&&c.push(e),o&&c.push(o)}),c.forEach(function(t){["left","top","right","bottom"].forEach(function(e){c.push(t+"-"+e)})});var g=[],v=h({},n),y=h({},this.attachment);return this.options.constraints.forEach(function(t){var r=t.to,a=t.attachment,l=t.pin;"undefined"==typeof a&&(a="");var h=void 0,d=void 0;if(a.indexOf(" ")>=0){var c=a.split(" "),m=z(c,2);d=m[0],h=m[1]}else h=d=a;var b=O(e,r);"target"!==d&&"both"!==d||(o<b[1]&&"top"===v.top&&(o+=p,v.top="bottom"),o+s>b[3]&&"bottom"===v.top&&(o-=p,v.top="top")),"together"===d&&("top"===v.top&&("bottom"===y.top&&o<b[1]?(o+=p,v.top="bottom",o+=s,y.top="top"):"top"===y.top&&o+s>b[3]&&o-(s-p)>=b[1]&&(o-=s-p,v.top="bottom",y.top="bottom")),"bottom"===v.top&&("top"===y.top&&o+s>b[3]?(o-=p,v.top="top",o-=s,y.top="bottom"):"bottom"===y.top&&o<b[1]&&o+(2*s-p)<=b[3]&&(o+=s-p,v.top="top",y.top="top")),"middle"===v.top&&(o+s>b[3]&&"top"===y.top?(o-=s,y.top="bottom"):o<b[1]&&"bottom"===y.top&&(o+=s,y.top="top"))),"target"!==h&&"both"!==h||(i<b[0]&&"left"===v.left&&(i+=u,v.left="right"),i+f>b[2]&&"right"===v.left&&(i-=u,v.left="left")),"together"===h&&(i<b[0]&&"left"===v.left?"right"===y.left?(i+=u,v.left="right",i+=f,y.left="left"):"left"===y.left&&(i+=u,v.left="right",i-=f,y.left="right"):i+f>b[2]&&"right"===v.left?"left"===y.left?(i-=u,v.left="left",i-=f,y.left="right"):"right"===y.left&&(i-=u,v.left="left",i+=f,y.left="left"):"center"===v.left&&(i+f>b[2]&&"left"===y.left?(i-=f,y.left="right"):i<b[0]&&"right"===y.left&&(i+=f,y.left="left"))),"element"!==d&&"both"!==d||(o<b[1]&&"bottom"===y.top&&(o+=s,y.top="top"),o+s>b[3]&&"top"===y.top&&(o-=s,y.top="bottom")),"element"!==h&&"both"!==h||(i<b[0]&&("right"===y.left?(i+=f,y.left="left"):"center"===y.left&&(i+=f/2,y.left="left")),i+f>b[2]&&("left"===y.left?(i-=f,y.left="right"):"center"===y.left&&(i-=f/2,y.left="right"))),"string"==typeof l?l=l.split(",").map(function(t){return t.trim()}):l===!0&&(l=["top","left","right","bottom"]),l=l||[];var w=[],C=[];o<b[1]&&(l.indexOf("top")>=0?(o=b[1],w.push("top")):C.push("top")),o+s>b[3]&&(l.indexOf("bottom")>=0?(o=b[3]-s,w.push("bottom")):C.push("bottom")),i<b[0]&&(l.indexOf("left")>=0?(i=b[0],w.push("left")):C.push("left")),i+f>b[2]&&(l.indexOf("right")>=0?(i=b[2]-f,w.push("right")):C.push("right")),w.length&&!function(){var t=void 0;t="undefined"!=typeof e.options.pinnedClass?e.options.pinnedClass:e.getClass("pinned"),g.push(t),w.forEach(function(e){g.push(t+"-"+e)})}(),C.length&&!function(){var t=void 0;t="undefined"!=typeof e.options.outOfBoundsClass?e.options.outOfBoundsClass:e.getClass("out-of-bounds"),g.push(t),C.forEach(function(e){g.push(t+"-"+e)})}(),(w.indexOf("left")>=0||w.indexOf("right")>=0)&&(y.left=v.left=!1),(w.indexOf("top")>=0||w.indexOf("bottom")>=0)&&(y.top=v.top=!1),v.top===n.top&&v.left===n.left&&y.top===e.attachment.top&&y.left===e.attachment.left||(e.updateAttachClasses(y,v),e.trigger("update",{attachment:y,targetAttachment:v}))}),k(function(){e.options.addTargetClasses!==!1&&m(e.target,g,c),m(e.element,g,c)}),{top:o,left:i}}});var Y=x.Utils,a=Y.getBounds,m=Y.updateClasses,k=Y.defer;x.modules.push({position:function(t){var e=this,o=t.top,i=t.left,n=this.cache("element-bounds",function(){return a(e.element)}),r=n.height,s=n.width,f=this.getTargetBounds(),l=o+r,h=i+s,d=[];o<=f.bottom&&l>=f.top&&["left","right"].forEach(function(t){var e=f[t];e!==i&&e!==h||d.push(t)}),i<=f.right&&h>=f.left&&["top","bottom"].forEach(function(t){var e=f[t];e!==o&&e!==l||d.push(t)});var p=[],u=[],c=["left","top","right","bottom"];return p.push(this.getClass("abutted")),c.forEach(function(t){p.push(e.getClass("abutted")+"-"+t)}),d.length&&u.push(this.getClass("abutted")),d.forEach(function(t){u.push(e.getClass("abutted")+"-"+t)}),k(function(){e.options.addTargetClasses!==!1&&m(e.target,u,p),m(e.element,u,p)}),!0}});var z=function(){function t(t,e){var o=[],i=!0,n=!1,r=void 0;try{for(var s,a=t[Symbol.iterator]();!(i=(s=a.next()).done)&&(o.push(s.value),!e||o.length!==e);i=!0);}catch(f){n=!0,r=f}finally{try{!i&&a["return"]&&a["return"]()}finally{if(n)throw r}}return o}return function(e,o){if(Array.isArray(e))return e;if(Symbol.iterator in Object(e))return t(e,o);throw new TypeError("Invalid attempt to destructure non-iterable instance")}}();return x.modules.push({position:function(t){var e=t.top,o=t.left;if(this.options.shift){var i=this.options.shift;"function"==typeof this.options.shift&&(i=this.options.shift.call(this,{top:e,left:o}));var n=void 0,r=void 0;if("string"==typeof i){i=i.split(" "),i[1]=i[1]||i[0];var s=i,a=z(s,2);n=a[0],r=a[1],n=parseFloat(n,10),r=parseFloat(r,10)}else n=i.top,r=i.left;return e+=n,o+=r,{top:e,left:o}}}}),$});
 ;/*!
- * Bootstrap v4.0.0-alpha.5 (https://getbootstrap.com)
- * Copyright 2011-2016 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
+ * Bootstrap v4.0.0-alpha.6 (https://getbootstrap.com)
+ * Copyright 2011-2017 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
  */
-if("undefined"==typeof jQuery)throw new Error("Bootstrap's JavaScript requires jQuery");+function(a){var b=a.fn.jquery.split(" ")[0].split(".");if(b[0]<2&&b[1]<9||1==b[0]&&9==b[1]&&b[2]<1||b[0]>=4)throw new Error("Bootstrap's JavaScript requires at least jQuery v1.9.1 but less than v4.0.0")}(jQuery),+function(){function a(a,b){if(!a)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return!b||"object"!=typeof b&&"function"!=typeof b?a:b}function b(a,b){if("function"!=typeof b&&null!==b)throw new TypeError("Super expression must either be null or a function, not "+typeof b);a.prototype=Object.create(b&&b.prototype,{constructor:{value:a,enumerable:!1,writable:!0,configurable:!0}}),b&&(Object.setPrototypeOf?Object.setPrototypeOf(a,b):a.__proto__=b)}function c(a,b){if(!(a instanceof b))throw new TypeError("Cannot call a class as a function")}var d="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(a){return typeof a}:function(a){return a&&"function"==typeof Symbol&&a.constructor===Symbol&&a!==Symbol.prototype?"symbol":typeof a},e=function(){function a(a,b){for(var c=0;c<b.length;c++){var d=b[c];d.enumerable=d.enumerable||!1,d.configurable=!0,"value"in d&&(d.writable=!0),Object.defineProperty(a,d.key,d)}}return function(b,c,d){return c&&a(b.prototype,c),d&&a(b,d),b}}(),f=function(a){function b(a){return{}.toString.call(a).match(/\s([a-zA-Z]+)/)[1].toLowerCase()}function c(a){return(a[0]||a).nodeType}function d(){return{bindType:h.end,delegateType:h.end,handle:function(b){if(a(b.target).is(this))return b.handleObj.handler.apply(this,arguments)}}}function e(){if(window.QUnit)return!1;var a=document.createElement("bootstrap");for(var b in j)if(void 0!==a.style[b])return{end:j[b]};return!1}function f(b){var c=this,d=!1;return a(this).one(k.TRANSITION_END,function(){d=!0}),setTimeout(function(){d||k.triggerTransitionEnd(c)},b),this}function g(){h=e(),a.fn.emulateTransitionEnd=f,k.supportsTransitionEnd()&&(a.event.special[k.TRANSITION_END]=d())}var h=!1,i=1e6,j={WebkitTransition:"webkitTransitionEnd",MozTransition:"transitionend",OTransition:"oTransitionEnd otransitionend",transition:"transitionend"},k={TRANSITION_END:"bsTransitionEnd",getUID:function(a){do a+=~~(Math.random()*i);while(document.getElementById(a));return a},getSelectorFromElement:function(a){var b=a.getAttribute("data-target");return b||(b=a.getAttribute("href")||"",b=/^#[a-z]/i.test(b)?b:null),b},reflow:function(a){new Function("bs","return bs")(a.offsetHeight)},triggerTransitionEnd:function(b){a(b).trigger(h.end)},supportsTransitionEnd:function(){return Boolean(h)},typeCheckConfig:function(a,d,e){for(var f in e)if(e.hasOwnProperty(f)){var g=e[f],h=d[f],i=void 0;if(i=h&&c(h)?"element":b(h),!new RegExp(g).test(i))throw new Error(a.toUpperCase()+": "+('Option "'+f+'" provided type "'+i+'" ')+('but expected type "'+g+'".'))}}};return g(),k}(jQuery),g=(function(a){var b="alert",d="4.0.0-alpha.5",g="bs.alert",h="."+g,i=".data-api",j=a.fn[b],k=150,l={DISMISS:'[data-dismiss="alert"]'},m={CLOSE:"close"+h,CLOSED:"closed"+h,CLICK_DATA_API:"click"+h+i},n={ALERT:"alert",FADE:"fade",IN:"in"},o=function(){function b(a){c(this,b),this._element=a}return b.prototype.close=function(a){a=a||this._element;var b=this._getRootElement(a),c=this._triggerCloseEvent(b);c.isDefaultPrevented()||this._removeElement(b)},b.prototype.dispose=function(){a.removeData(this._element,g),this._element=null},b.prototype._getRootElement=function(b){var c=f.getSelectorFromElement(b),d=!1;return c&&(d=a(c)[0]),d||(d=a(b).closest("."+n.ALERT)[0]),d},b.prototype._triggerCloseEvent=function(b){var c=a.Event(m.CLOSE);return a(b).trigger(c),c},b.prototype._removeElement=function(b){return a(b).removeClass(n.IN),f.supportsTransitionEnd()&&a(b).hasClass(n.FADE)?void a(b).one(f.TRANSITION_END,a.proxy(this._destroyElement,this,b)).emulateTransitionEnd(k):void this._destroyElement(b)},b.prototype._destroyElement=function(b){a(b).detach().trigger(m.CLOSED).remove()},b._jQueryInterface=function(c){return this.each(function(){var d=a(this),e=d.data(g);e||(e=new b(this),d.data(g,e)),"close"===c&&e[c](this)})},b._handleDismiss=function(a){return function(b){b&&b.preventDefault(),a.close(this)}},e(b,null,[{key:"VERSION",get:function(){return d}}]),b}();return a(document).on(m.CLICK_DATA_API,l.DISMISS,o._handleDismiss(new o)),a.fn[b]=o._jQueryInterface,a.fn[b].Constructor=o,a.fn[b].noConflict=function(){return a.fn[b]=j,o._jQueryInterface},o}(jQuery),function(a){var b="button",d="4.0.0-alpha.5",f="bs.button",g="."+f,h=".data-api",i=a.fn[b],j={ACTIVE:"active",BUTTON:"btn",FOCUS:"focus"},k={DATA_TOGGLE_CARROT:'[data-toggle^="button"]',DATA_TOGGLE:'[data-toggle="buttons"]',INPUT:"input",ACTIVE:".active",BUTTON:".btn"},l={CLICK_DATA_API:"click"+g+h,FOCUS_BLUR_DATA_API:"focus"+g+h+" "+("blur"+g+h)},m=function(){function b(a){c(this,b),this._element=a}return b.prototype.toggle=function(){var b=!0,c=a(this._element).closest(k.DATA_TOGGLE)[0];if(c){var d=a(this._element).find(k.INPUT)[0];if(d){if("radio"===d.type)if(d.checked&&a(this._element).hasClass(j.ACTIVE))b=!1;else{var e=a(c).find(k.ACTIVE)[0];e&&a(e).removeClass(j.ACTIVE)}b&&(d.checked=!a(this._element).hasClass(j.ACTIVE),a(this._element).trigger("change")),d.focus()}}else this._element.setAttribute("aria-pressed",!a(this._element).hasClass(j.ACTIVE));b&&a(this._element).toggleClass(j.ACTIVE)},b.prototype.dispose=function(){a.removeData(this._element,f),this._element=null},b._jQueryInterface=function(c){return this.each(function(){var d=a(this).data(f);d||(d=new b(this),a(this).data(f,d)),"toggle"===c&&d[c]()})},e(b,null,[{key:"VERSION",get:function(){return d}}]),b}();return a(document).on(l.CLICK_DATA_API,k.DATA_TOGGLE_CARROT,function(b){b.preventDefault();var c=b.target;a(c).hasClass(j.BUTTON)||(c=a(c).closest(k.BUTTON)),m._jQueryInterface.call(a(c),"toggle")}).on(l.FOCUS_BLUR_DATA_API,k.DATA_TOGGLE_CARROT,function(b){var c=a(b.target).closest(k.BUTTON)[0];a(c).toggleClass(j.FOCUS,/^focus(in)?$/.test(b.type))}),a.fn[b]=m._jQueryInterface,a.fn[b].Constructor=m,a.fn[b].noConflict=function(){return a.fn[b]=i,m._jQueryInterface},m}(jQuery),function(a){var b="carousel",g="4.0.0-alpha.5",h="bs.carousel",i="."+h,j=".data-api",k=a.fn[b],l=600,m=37,n=39,o={interval:5e3,keyboard:!0,slide:!1,pause:"hover",wrap:!0},p={interval:"(number|boolean)",keyboard:"boolean",slide:"(boolean|string)",pause:"(string|boolean)",wrap:"boolean"},q={NEXT:"next",PREVIOUS:"prev"},r={SLIDE:"slide"+i,SLID:"slid"+i,KEYDOWN:"keydown"+i,MOUSEENTER:"mouseenter"+i,MOUSELEAVE:"mouseleave"+i,LOAD_DATA_API:"load"+i+j,CLICK_DATA_API:"click"+i+j},s={CAROUSEL:"carousel",ACTIVE:"active",SLIDE:"slide",RIGHT:"right",LEFT:"left",ITEM:"carousel-item"},t={ACTIVE:".active",ACTIVE_ITEM:".active.carousel-item",ITEM:".carousel-item",NEXT_PREV:".next, .prev",INDICATORS:".carousel-indicators",DATA_SLIDE:"[data-slide], [data-slide-to]",DATA_RIDE:'[data-ride="carousel"]'},u=function(){function j(b,d){c(this,j),this._items=null,this._interval=null,this._activeElement=null,this._isPaused=!1,this._isSliding=!1,this._config=this._getConfig(d),this._element=a(b)[0],this._indicatorsElement=a(this._element).find(t.INDICATORS)[0],this._addEventListeners()}return j.prototype.next=function(){this._isSliding||this._slide(q.NEXT)},j.prototype.nextWhenVisible=function(){document.hidden||this.next()},j.prototype.prev=function(){this._isSliding||this._slide(q.PREVIOUS)},j.prototype.pause=function(b){b||(this._isPaused=!0),a(this._element).find(t.NEXT_PREV)[0]&&f.supportsTransitionEnd()&&(f.triggerTransitionEnd(this._element),this.cycle(!0)),clearInterval(this._interval),this._interval=null},j.prototype.cycle=function(b){b||(this._isPaused=!1),this._interval&&(clearInterval(this._interval),this._interval=null),this._config.interval&&!this._isPaused&&(this._interval=setInterval(a.proxy(document.visibilityState?this.nextWhenVisible:this.next,this),this._config.interval))},j.prototype.to=function(b){var c=this;this._activeElement=a(this._element).find(t.ACTIVE_ITEM)[0];var d=this._getItemIndex(this._activeElement);if(!(b>this._items.length-1||b<0)){if(this._isSliding)return void a(this._element).one(r.SLID,function(){return c.to(b)});if(d===b)return this.pause(),void this.cycle();var e=b>d?q.NEXT:q.PREVIOUS;this._slide(e,this._items[b])}},j.prototype.dispose=function(){a(this._element).off(i),a.removeData(this._element,h),this._items=null,this._config=null,this._element=null,this._interval=null,this._isPaused=null,this._isSliding=null,this._activeElement=null,this._indicatorsElement=null},j.prototype._getConfig=function(c){return c=a.extend({},o,c),f.typeCheckConfig(b,c,p),c},j.prototype._addEventListeners=function(){this._config.keyboard&&a(this._element).on(r.KEYDOWN,a.proxy(this._keydown,this)),"hover"!==this._config.pause||"ontouchstart"in document.documentElement||a(this._element).on(r.MOUSEENTER,a.proxy(this.pause,this)).on(r.MOUSELEAVE,a.proxy(this.cycle,this))},j.prototype._keydown=function(a){if(a.preventDefault(),!/input|textarea/i.test(a.target.tagName))switch(a.which){case m:this.prev();break;case n:this.next();break;default:return}},j.prototype._getItemIndex=function(b){return this._items=a.makeArray(a(b).parent().find(t.ITEM)),this._items.indexOf(b)},j.prototype._getItemByDirection=function(a,b){var c=a===q.NEXT,d=a===q.PREVIOUS,e=this._getItemIndex(b),f=this._items.length-1,g=d&&0===e||c&&e===f;if(g&&!this._config.wrap)return b;var h=a===q.PREVIOUS?-1:1,i=(e+h)%this._items.length;return i===-1?this._items[this._items.length-1]:this._items[i]},j.prototype._triggerSlideEvent=function(b,c){var d=a.Event(r.SLIDE,{relatedTarget:b,direction:c});return a(this._element).trigger(d),d},j.prototype._setActiveIndicatorElement=function(b){if(this._indicatorsElement){a(this._indicatorsElement).find(t.ACTIVE).removeClass(s.ACTIVE);var c=this._indicatorsElement.children[this._getItemIndex(b)];c&&a(c).addClass(s.ACTIVE)}},j.prototype._slide=function(b,c){var d=this,e=a(this._element).find(t.ACTIVE_ITEM)[0],g=c||e&&this._getItemByDirection(b,e),h=Boolean(this._interval),i=b===q.NEXT?s.LEFT:s.RIGHT;if(g&&a(g).hasClass(s.ACTIVE))return void(this._isSliding=!1);var j=this._triggerSlideEvent(g,i);if(!j.isDefaultPrevented()&&e&&g){this._isSliding=!0,h&&this.pause(),this._setActiveIndicatorElement(g);var k=a.Event(r.SLID,{relatedTarget:g,direction:i});f.supportsTransitionEnd()&&a(this._element).hasClass(s.SLIDE)?(a(g).addClass(b),f.reflow(g),a(e).addClass(i),a(g).addClass(i),a(e).one(f.TRANSITION_END,function(){a(g).removeClass(i).removeClass(b),a(g).addClass(s.ACTIVE),a(e).removeClass(s.ACTIVE).removeClass(b).removeClass(i),d._isSliding=!1,setTimeout(function(){return a(d._element).trigger(k)},0)}).emulateTransitionEnd(l)):(a(e).removeClass(s.ACTIVE),a(g).addClass(s.ACTIVE),this._isSliding=!1,a(this._element).trigger(k)),h&&this.cycle()}},j._jQueryInterface=function(b){return this.each(function(){var c=a(this).data(h),e=a.extend({},o,a(this).data());"object"===("undefined"==typeof b?"undefined":d(b))&&a.extend(e,b);var f="string"==typeof b?b:e.slide;if(c||(c=new j(this,e),a(this).data(h,c)),"number"==typeof b)c.to(b);else if("string"==typeof f){if(void 0===c[f])throw new Error('No method named "'+f+'"');c[f]()}else e.interval&&(c.pause(),c.cycle())})},j._dataApiClickHandler=function(b){var c=f.getSelectorFromElement(this);if(c){var d=a(c)[0];if(d&&a(d).hasClass(s.CAROUSEL)){var e=a.extend({},a(d).data(),a(this).data()),g=this.getAttribute("data-slide-to");g&&(e.interval=!1),j._jQueryInterface.call(a(d),e),g&&a(d).data(h).to(g),b.preventDefault()}}},e(j,null,[{key:"VERSION",get:function(){return g}},{key:"Default",get:function(){return o}}]),j}();return a(document).on(r.CLICK_DATA_API,t.DATA_SLIDE,u._dataApiClickHandler),a(window).on(r.LOAD_DATA_API,function(){a(t.DATA_RIDE).each(function(){var b=a(this);u._jQueryInterface.call(b,b.data())})}),a.fn[b]=u._jQueryInterface,a.fn[b].Constructor=u,a.fn[b].noConflict=function(){return a.fn[b]=k,u._jQueryInterface},u}(jQuery),function(a){var b="collapse",g="4.0.0-alpha.5",h="bs.collapse",i="."+h,j=".data-api",k=a.fn[b],l=600,m={toggle:!0,parent:""},n={toggle:"boolean",parent:"string"},o={SHOW:"show"+i,SHOWN:"shown"+i,HIDE:"hide"+i,HIDDEN:"hidden"+i,CLICK_DATA_API:"click"+i+j},p={IN:"in",COLLAPSE:"collapse",COLLAPSING:"collapsing",COLLAPSED:"collapsed"},q={WIDTH:"width",HEIGHT:"height"},r={ACTIVES:".card > .in, .card > .collapsing",DATA_TOGGLE:'[data-toggle="collapse"]'},s=function(){function i(b,d){c(this,i),this._isTransitioning=!1,this._element=b,this._config=this._getConfig(d),this._triggerArray=a.makeArray(a('[data-toggle="collapse"][href="#'+b.id+'"],'+('[data-toggle="collapse"][data-target="#'+b.id+'"]'))),this._parent=this._config.parent?this._getParent():null,this._config.parent||this._addAriaAndCollapsedClass(this._element,this._triggerArray),this._config.toggle&&this.toggle()}return i.prototype.toggle=function(){a(this._element).hasClass(p.IN)?this.hide():this.show()},i.prototype.show=function(){var b=this;if(!this._isTransitioning&&!a(this._element).hasClass(p.IN)){var c=void 0,d=void 0;if(this._parent&&(c=a.makeArray(a(r.ACTIVES)),c.length||(c=null)),!(c&&(d=a(c).data(h),d&&d._isTransitioning))){var e=a.Event(o.SHOW);if(a(this._element).trigger(e),!e.isDefaultPrevented()){c&&(i._jQueryInterface.call(a(c),"hide"),d||a(c).data(h,null));var g=this._getDimension();a(this._element).removeClass(p.COLLAPSE).addClass(p.COLLAPSING),this._element.style[g]=0,this._element.setAttribute("aria-expanded",!0),this._triggerArray.length&&a(this._triggerArray).removeClass(p.COLLAPSED).attr("aria-expanded",!0),this.setTransitioning(!0);var j=function(){a(b._element).removeClass(p.COLLAPSING).addClass(p.COLLAPSE).addClass(p.IN),b._element.style[g]="",b.setTransitioning(!1),a(b._element).trigger(o.SHOWN)};if(!f.supportsTransitionEnd())return void j();var k=g[0].toUpperCase()+g.slice(1),m="scroll"+k;a(this._element).one(f.TRANSITION_END,j).emulateTransitionEnd(l),this._element.style[g]=this._element[m]+"px"}}}},i.prototype.hide=function(){var b=this;if(!this._isTransitioning&&a(this._element).hasClass(p.IN)){var c=a.Event(o.HIDE);if(a(this._element).trigger(c),!c.isDefaultPrevented()){var d=this._getDimension(),e=d===q.WIDTH?"offsetWidth":"offsetHeight";this._element.style[d]=this._element[e]+"px",f.reflow(this._element),a(this._element).addClass(p.COLLAPSING).removeClass(p.COLLAPSE).removeClass(p.IN),this._element.setAttribute("aria-expanded",!1),this._triggerArray.length&&a(this._triggerArray).addClass(p.COLLAPSED).attr("aria-expanded",!1),this.setTransitioning(!0);var g=function(){b.setTransitioning(!1),a(b._element).removeClass(p.COLLAPSING).addClass(p.COLLAPSE).trigger(o.HIDDEN)};return this._element.style[d]="",f.supportsTransitionEnd()?void a(this._element).one(f.TRANSITION_END,g).emulateTransitionEnd(l):void g()}}},i.prototype.setTransitioning=function(a){this._isTransitioning=a},i.prototype.dispose=function(){a.removeData(this._element,h),this._config=null,this._parent=null,this._element=null,this._triggerArray=null,this._isTransitioning=null},i.prototype._getConfig=function(c){return c=a.extend({},m,c),c.toggle=Boolean(c.toggle),f.typeCheckConfig(b,c,n),c},i.prototype._getDimension=function(){var b=a(this._element).hasClass(q.WIDTH);return b?q.WIDTH:q.HEIGHT},i.prototype._getParent=function(){var b=this,c=a(this._config.parent)[0],d='[data-toggle="collapse"][data-parent="'+this._config.parent+'"]';return a(c).find(d).each(function(a,c){b._addAriaAndCollapsedClass(i._getTargetFromElement(c),[c])}),c},i.prototype._addAriaAndCollapsedClass=function(b,c){if(b){var d=a(b).hasClass(p.IN);b.setAttribute("aria-expanded",d),c.length&&a(c).toggleClass(p.COLLAPSED,!d).attr("aria-expanded",d)}},i._getTargetFromElement=function(b){var c=f.getSelectorFromElement(b);return c?a(c)[0]:null},i._jQueryInterface=function(b){return this.each(function(){var c=a(this),e=c.data(h),f=a.extend({},m,c.data(),"object"===("undefined"==typeof b?"undefined":d(b))&&b);if(!e&&f.toggle&&/show|hide/.test(b)&&(f.toggle=!1),e||(e=new i(this,f),c.data(h,e)),"string"==typeof b){if(void 0===e[b])throw new Error('No method named "'+b+'"');e[b]()}})},e(i,null,[{key:"VERSION",get:function(){return g}},{key:"Default",get:function(){return m}}]),i}();return a(document).on(o.CLICK_DATA_API,r.DATA_TOGGLE,function(b){b.preventDefault();var c=s._getTargetFromElement(this),d=a(c).data(h),e=d?"toggle":a(this).data();s._jQueryInterface.call(a(c),e)}),a.fn[b]=s._jQueryInterface,a.fn[b].Constructor=s,a.fn[b].noConflict=function(){return a.fn[b]=k,s._jQueryInterface},s}(jQuery),function(a){var b="dropdown",d="4.0.0-alpha.5",g="bs.dropdown",h="."+g,i=".data-api",j=a.fn[b],k=27,l=38,m=40,n=3,o={HIDE:"hide"+h,HIDDEN:"hidden"+h,SHOW:"show"+h,SHOWN:"shown"+h,CLICK:"click"+h,CLICK_DATA_API:"click"+h+i,KEYDOWN_DATA_API:"keydown"+h+i},p={BACKDROP:"dropdown-backdrop",DISABLED:"disabled",OPEN:"open"},q={BACKDROP:".dropdown-backdrop",DATA_TOGGLE:'[data-toggle="dropdown"]',FORM_CHILD:".dropdown form",ROLE_MENU:'[role="menu"]',ROLE_LISTBOX:'[role="listbox"]',NAVBAR_NAV:".navbar-nav",VISIBLE_ITEMS:'[role="menu"] li:not(.disabled) a, [role="listbox"] li:not(.disabled) a'},r=function(){function b(a){c(this,b),this._element=a,this._addEventListeners()}return b.prototype.toggle=function(){if(this.disabled||a(this).hasClass(p.DISABLED))return!1;var c=b._getParentFromElement(this),d=a(c).hasClass(p.OPEN);if(b._clearMenus(),d)return!1;if("ontouchstart"in document.documentElement&&!a(c).closest(q.NAVBAR_NAV).length){var e=document.createElement("div");e.className=p.BACKDROP,a(e).insertBefore(this),a(e).on("click",b._clearMenus)}var f={relatedTarget:this},g=a.Event(o.SHOW,f);return a(c).trigger(g),!g.isDefaultPrevented()&&(this.focus(),this.setAttribute("aria-expanded","true"),a(c).toggleClass(p.OPEN),a(c).trigger(a.Event(o.SHOWN,f)),!1)},b.prototype.dispose=function(){a.removeData(this._element,g),a(this._element).off(h),this._element=null},b.prototype._addEventListeners=function(){a(this._element).on(o.CLICK,this.toggle)},b._jQueryInterface=function(c){return this.each(function(){var d=a(this).data(g);if(d||a(this).data(g,d=new b(this)),"string"==typeof c){if(void 0===d[c])throw new Error('No method named "'+c+'"');d[c].call(this)}})},b._clearMenus=function(c){if(!c||c.which!==n){var d=a(q.BACKDROP)[0];d&&d.parentNode.removeChild(d);for(var e=a.makeArray(a(q.DATA_TOGGLE)),f=0;f<e.length;f++){var g=b._getParentFromElement(e[f]),h={relatedTarget:e[f]};if(a(g).hasClass(p.OPEN)&&!(c&&"click"===c.type&&/input|textarea/i.test(c.target.tagName)&&a.contains(g,c.target))){var i=a.Event(o.HIDE,h);a(g).trigger(i),i.isDefaultPrevented()||(e[f].setAttribute("aria-expanded","false"),a(g).removeClass(p.OPEN).trigger(a.Event(o.HIDDEN,h)))}}}},b._getParentFromElement=function(b){var c=void 0,d=f.getSelectorFromElement(b);return d&&(c=a(d)[0]),c||b.parentNode},b._dataApiKeydownHandler=function(c){if(/(38|40|27|32)/.test(c.which)&&!/input|textarea/i.test(c.target.tagName)&&(c.preventDefault(),c.stopPropagation(),!this.disabled&&!a(this).hasClass(p.DISABLED))){var d=b._getParentFromElement(this),e=a(d).hasClass(p.OPEN);if(!e&&c.which!==k||e&&c.which===k){if(c.which===k){var f=a(d).find(q.DATA_TOGGLE)[0];a(f).trigger("focus")}return void a(this).trigger("click")}var g=a.makeArray(a(q.VISIBLE_ITEMS));if(g=g.filter(function(a){return a.offsetWidth||a.offsetHeight}),g.length){var h=g.indexOf(c.target);c.which===l&&h>0&&h--,c.which===m&&h<g.length-1&&h++,h<0&&(h=0),g[h].focus()}}},e(b,null,[{key:"VERSION",get:function(){return d}}]),b}();return a(document).on(o.KEYDOWN_DATA_API,q.DATA_TOGGLE,r._dataApiKeydownHandler).on(o.KEYDOWN_DATA_API,q.ROLE_MENU,r._dataApiKeydownHandler).on(o.KEYDOWN_DATA_API,q.ROLE_LISTBOX,r._dataApiKeydownHandler).on(o.CLICK_DATA_API,r._clearMenus).on(o.CLICK_DATA_API,q.DATA_TOGGLE,r.prototype.toggle).on(o.CLICK_DATA_API,q.FORM_CHILD,function(a){a.stopPropagation()}),a.fn[b]=r._jQueryInterface,a.fn[b].Constructor=r,a.fn[b].noConflict=function(){return a.fn[b]=j,r._jQueryInterface},r}(jQuery),function(a){var b="modal",g="4.0.0-alpha.5",h="bs.modal",i="."+h,j=".data-api",k=a.fn[b],l=300,m=150,n=27,o={backdrop:!0,keyboard:!0,focus:!0,show:!0},p={backdrop:"(boolean|string)",keyboard:"boolean",focus:"boolean",show:"boolean"},q={HIDE:"hide"+i,HIDDEN:"hidden"+i,SHOW:"show"+i,SHOWN:"shown"+i,FOCUSIN:"focusin"+i,RESIZE:"resize"+i,CLICK_DISMISS:"click.dismiss"+i,KEYDOWN_DISMISS:"keydown.dismiss"+i,MOUSEUP_DISMISS:"mouseup.dismiss"+i,MOUSEDOWN_DISMISS:"mousedown.dismiss"+i,CLICK_DATA_API:"click"+i+j},r={SCROLLBAR_MEASURER:"modal-scrollbar-measure",BACKDROP:"modal-backdrop",OPEN:"modal-open",FADE:"fade",IN:"in"},s={DIALOG:".modal-dialog",DATA_TOGGLE:'[data-toggle="modal"]',DATA_DISMISS:'[data-dismiss="modal"]',FIXED_CONTENT:".navbar-fixed-top, .navbar-fixed-bottom, .is-fixed"},t=function(){function j(b,d){c(this,j),this._config=this._getConfig(d),this._element=b,this._dialog=a(b).find(s.DIALOG)[0],this._backdrop=null,this._isShown=!1,this._isBodyOverflowing=!1,this._ignoreBackdropClick=!1,this._originalBodyPadding=0,this._scrollbarWidth=0}return j.prototype.toggle=function(a){return this._isShown?this.hide():this.show(a)},j.prototype.show=function(b){var c=this,d=a.Event(q.SHOW,{relatedTarget:b});a(this._element).trigger(d),this._isShown||d.isDefaultPrevented()||(this._isShown=!0,this._checkScrollbar(),this._setScrollbar(),a(document.body).addClass(r.OPEN),this._setEscapeEvent(),this._setResizeEvent(),a(this._element).on(q.CLICK_DISMISS,s.DATA_DISMISS,a.proxy(this.hide,this)),a(this._dialog).on(q.MOUSEDOWN_DISMISS,function(){a(c._element).one(q.MOUSEUP_DISMISS,function(b){a(b.target).is(c._element)&&(c._ignoreBackdropClick=!0)})}),this._showBackdrop(a.proxy(this._showElement,this,b)))},j.prototype.hide=function(b){b&&b.preventDefault();var c=a.Event(q.HIDE);a(this._element).trigger(c),this._isShown&&!c.isDefaultPrevented()&&(this._isShown=!1,this._setEscapeEvent(),this._setResizeEvent(),a(document).off(q.FOCUSIN),a(this._element).removeClass(r.IN),a(this._element).off(q.CLICK_DISMISS),a(this._dialog).off(q.MOUSEDOWN_DISMISS),f.supportsTransitionEnd()&&a(this._element).hasClass(r.FADE)?a(this._element).one(f.TRANSITION_END,a.proxy(this._hideModal,this)).emulateTransitionEnd(l):this._hideModal())},j.prototype.dispose=function(){a.removeData(this._element,h),a(window).off(i),a(document).off(i),a(this._element).off(i),a(this._backdrop).off(i),this._config=null,this._element=null,this._dialog=null,this._backdrop=null,this._isShown=null,this._isBodyOverflowing=null,this._ignoreBackdropClick=null,this._originalBodyPadding=null,this._scrollbarWidth=null},j.prototype._getConfig=function(c){return c=a.extend({},o,c),f.typeCheckConfig(b,c,p),c},j.prototype._showElement=function(b){var c=this,d=f.supportsTransitionEnd()&&a(this._element).hasClass(r.FADE);this._element.parentNode&&this._element.parentNode.nodeType===Node.ELEMENT_NODE||document.body.appendChild(this._element),this._element.style.display="block",this._element.removeAttribute("aria-hidden"),this._element.scrollTop=0,d&&f.reflow(this._element),a(this._element).addClass(r.IN),this._config.focus&&this._enforceFocus();var e=a.Event(q.SHOWN,{relatedTarget:b}),g=function(){c._config.focus&&c._element.focus(),a(c._element).trigger(e)};d?a(this._dialog).one(f.TRANSITION_END,g).emulateTransitionEnd(l):g()},j.prototype._enforceFocus=function(){var b=this;a(document).off(q.FOCUSIN).on(q.FOCUSIN,function(c){document===c.target||b._element===c.target||a(b._element).has(c.target).length||b._element.focus()})},j.prototype._setEscapeEvent=function(){var b=this;this._isShown&&this._config.keyboard?a(this._element).on(q.KEYDOWN_DISMISS,function(a){a.which===n&&b.hide()}):this._isShown||a(this._element).off(q.KEYDOWN_DISMISS)},j.prototype._setResizeEvent=function(){this._isShown?a(window).on(q.RESIZE,a.proxy(this._handleUpdate,this)):a(window).off(q.RESIZE)},j.prototype._hideModal=function(){var b=this;this._element.style.display="none",this._element.setAttribute("aria-hidden","true"),this._showBackdrop(function(){a(document.body).removeClass(r.OPEN),b._resetAdjustments(),b._resetScrollbar(),a(b._element).trigger(q.HIDDEN)})},j.prototype._removeBackdrop=function(){this._backdrop&&(a(this._backdrop).remove(),this._backdrop=null)},j.prototype._showBackdrop=function(b){var c=this,d=a(this._element).hasClass(r.FADE)?r.FADE:"";if(this._isShown&&this._config.backdrop){var e=f.supportsTransitionEnd()&&d;if(this._backdrop=document.createElement("div"),this._backdrop.className=r.BACKDROP,d&&a(this._backdrop).addClass(d),a(this._backdrop).appendTo(document.body),a(this._element).on(q.CLICK_DISMISS,function(a){return c._ignoreBackdropClick?void(c._ignoreBackdropClick=!1):void(a.target===a.currentTarget&&("static"===c._config.backdrop?c._element.focus():c.hide()))}),e&&f.reflow(this._backdrop),a(this._backdrop).addClass(r.IN),!b)return;if(!e)return void b();a(this._backdrop).one(f.TRANSITION_END,b).emulateTransitionEnd(m)}else if(!this._isShown&&this._backdrop){a(this._backdrop).removeClass(r.IN);var g=function(){c._removeBackdrop(),b&&b()};f.supportsTransitionEnd()&&a(this._element).hasClass(r.FADE)?a(this._backdrop).one(f.TRANSITION_END,g).emulateTransitionEnd(m):g()}else b&&b()},j.prototype._handleUpdate=function(){this._adjustDialog()},j.prototype._adjustDialog=function(){var a=this._element.scrollHeight>document.documentElement.clientHeight;!this._isBodyOverflowing&&a&&(this._element.style.paddingLeft=this._scrollbarWidth+"px"),this._isBodyOverflowing&&!a&&(this._element.style.paddingRight=this._scrollbarWidth+"px")},j.prototype._resetAdjustments=function(){this._element.style.paddingLeft="",this._element.style.paddingRight=""},j.prototype._checkScrollbar=function(){this._isBodyOverflowing=document.body.clientWidth<window.innerWidth,this._scrollbarWidth=this._getScrollbarWidth()},j.prototype._setScrollbar=function(){var b=parseInt(a(s.FIXED_CONTENT).css("padding-right")||0,10);this._originalBodyPadding=document.body.style.paddingRight||"",this._isBodyOverflowing&&(document.body.style.paddingRight=b+this._scrollbarWidth+"px")},j.prototype._resetScrollbar=function(){document.body.style.paddingRight=this._originalBodyPadding},j.prototype._getScrollbarWidth=function(){var a=document.createElement("div");a.className=r.SCROLLBAR_MEASURER,document.body.appendChild(a);var b=a.offsetWidth-a.clientWidth;return document.body.removeChild(a),b},j._jQueryInterface=function(b,c){return this.each(function(){var e=a(this).data(h),f=a.extend({},j.Default,a(this).data(),"object"===("undefined"==typeof b?"undefined":d(b))&&b);if(e||(e=new j(this,f),a(this).data(h,e)),"string"==typeof b){if(void 0===e[b])throw new Error('No method named "'+b+'"');e[b](c)}else f.show&&e.show(c)})},e(j,null,[{key:"VERSION",get:function(){return g}},{key:"Default",get:function(){return o}}]),j}();return a(document).on(q.CLICK_DATA_API,s.DATA_TOGGLE,function(b){var c=this,d=void 0,e=f.getSelectorFromElement(this);e&&(d=a(e)[0]);var g=a(d).data(h)?"toggle":a.extend({},a(d).data(),a(this).data());"A"===this.tagName&&b.preventDefault();var i=a(d).one(q.SHOW,function(b){b.isDefaultPrevented()||i.one(q.HIDDEN,function(){a(c).is(":visible")&&c.focus()})});t._jQueryInterface.call(a(d),g,this)}),a.fn[b]=t._jQueryInterface,a.fn[b].Constructor=t,a.fn[b].noConflict=function(){return a.fn[b]=k,t._jQueryInterface},t}(jQuery),function(a){var b="scrollspy",g="4.0.0-alpha.5",h="bs.scrollspy",i="."+h,j=".data-api",k=a.fn[b],l={offset:10,method:"auto",target:""},m={offset:"number",method:"string",target:"(string|element)"},n={ACTIVATE:"activate"+i,SCROLL:"scroll"+i,LOAD_DATA_API:"load"+i+j},o={DROPDOWN_ITEM:"dropdown-item",DROPDOWN_MENU:"dropdown-menu",NAV_LINK:"nav-link",NAV:"nav",ACTIVE:"active"},p={DATA_SPY:'[data-spy="scroll"]',ACTIVE:".active",LIST_ITEM:".list-item",LI:"li",LI_DROPDOWN:"li.dropdown",NAV_LINKS:".nav-link",DROPDOWN:".dropdown",DROPDOWN_ITEMS:".dropdown-item",DROPDOWN_TOGGLE:".dropdown-toggle"},q={OFFSET:"offset",POSITION:"position"},r=function(){function j(b,d){c(this,j),this._element=b,this._scrollElement="BODY"===b.tagName?window:b,this._config=this._getConfig(d),this._selector=this._config.target+" "+p.NAV_LINKS+","+(this._config.target+" "+p.DROPDOWN_ITEMS),this._offsets=[],this._targets=[],this._activeTarget=null,this._scrollHeight=0,a(this._scrollElement).on(n.SCROLL,a.proxy(this._process,this)),this.refresh(),this._process()}return j.prototype.refresh=function(){var b=this,c=this._scrollElement!==this._scrollElement.window?q.POSITION:q.OFFSET,d="auto"===this._config.method?c:this._config.method,e=d===q.POSITION?this._getScrollTop():0;this._offsets=[],this._targets=[],this._scrollHeight=this._getScrollHeight();var g=a.makeArray(a(this._selector));g.map(function(b){var c=void 0,g=f.getSelectorFromElement(b);return g&&(c=a(g)[0]),c&&(c.offsetWidth||c.offsetHeight)?[a(c)[d]().top+e,g]:null}).filter(function(a){return a}).sort(function(a,b){return a[0]-b[0]}).forEach(function(a){b._offsets.push(a[0]),b._targets.push(a[1])})},j.prototype.dispose=function(){a.removeData(this._element,h),a(this._scrollElement).off(i),this._element=null,this._scrollElement=null,this._config=null,this._selector=null,this._offsets=null,this._targets=null,this._activeTarget=null,this._scrollHeight=null},j.prototype._getConfig=function(c){if(c=a.extend({},l,c),"string"!=typeof c.target){var d=a(c.target).attr("id");d||(d=f.getUID(b),a(c.target).attr("id",d)),c.target="#"+d}return f.typeCheckConfig(b,c,m),c},j.prototype._getScrollTop=function(){return this._scrollElement===window?this._scrollElement.scrollY:this._scrollElement.scrollTop},j.prototype._getScrollHeight=function(){return this._scrollElement.scrollHeight||Math.max(document.body.scrollHeight,document.documentElement.scrollHeight)},j.prototype._process=function(){var a=this._getScrollTop()+this._config.offset,b=this._getScrollHeight(),c=this._config.offset+b-this._scrollElement.offsetHeight;if(this._scrollHeight!==b&&this.refresh(),a>=c){var d=this._targets[this._targets.length-1];this._activeTarget!==d&&this._activate(d)}if(this._activeTarget&&a<this._offsets[0])return this._activeTarget=null,void this._clear();for(var e=this._offsets.length;e--;){var f=this._activeTarget!==this._targets[e]&&a>=this._offsets[e]&&(void 0===this._offsets[e+1]||a<this._offsets[e+1]);f&&this._activate(this._targets[e])}},j.prototype._activate=function(b){this._activeTarget=b,this._clear();var c=this._selector.split(",");c=c.map(function(a){return a+'[data-target="'+b+'"],'+(a+'[href="'+b+'"]')});var d=a(c.join(","));d.hasClass(o.DROPDOWN_ITEM)?(d.closest(p.DROPDOWN).find(p.DROPDOWN_TOGGLE).addClass(o.ACTIVE),d.addClass(o.ACTIVE)):d.parents(p.LI).find(p.NAV_LINKS).addClass(o.ACTIVE),a(this._scrollElement).trigger(n.ACTIVATE,{relatedTarget:b})},j.prototype._clear=function(){a(this._selector).filter(p.ACTIVE).removeClass(o.ACTIVE)},j._jQueryInterface=function(b){return this.each(function(){var c=a(this).data(h),e="object"===("undefined"==typeof b?"undefined":d(b))&&b||null;if(c||(c=new j(this,e),a(this).data(h,c)),"string"==typeof b){if(void 0===c[b])throw new Error('No method named "'+b+'"');c[b]()}})},e(j,null,[{key:"VERSION",get:function(){return g}},{key:"Default",get:function(){return l}}]),j}();return a(window).on(n.LOAD_DATA_API,function(){for(var b=a.makeArray(a(p.DATA_SPY)),c=b.length;c--;){var d=a(b[c]);r._jQueryInterface.call(d,d.data())}}),a.fn[b]=r._jQueryInterface,a.fn[b].Constructor=r,a.fn[b].noConflict=function(){return a.fn[b]=k,r._jQueryInterface},r}(jQuery),function(a){var b="tab",d="4.0.0-alpha.5",g="bs.tab",h="."+g,i=".data-api",j=a.fn[b],k=150,l={HIDE:"hide"+h,HIDDEN:"hidden"+h,SHOW:"show"+h,SHOWN:"shown"+h,CLICK_DATA_API:"click"+h+i},m={DROPDOWN_MENU:"dropdown-menu",ACTIVE:"active",FADE:"fade",IN:"in"},n={A:"a",LI:"li",DROPDOWN:".dropdown",UL:"ul:not(.dropdown-menu)",FADE_CHILD:"> .nav-item .fade, > .fade",ACTIVE:".active",ACTIVE_CHILD:"> .nav-item > .active, > .active",DATA_TOGGLE:'[data-toggle="tab"], [data-toggle="pill"]',
-DROPDOWN_TOGGLE:".dropdown-toggle",DROPDOWN_ACTIVE_CHILD:"> .dropdown-menu .active"},o=function(){function b(a){c(this,b),this._element=a}return b.prototype.show=function(){var b=this;if(!this._element.parentNode||this._element.parentNode.nodeType!==Node.ELEMENT_NODE||!a(this._element).hasClass(m.ACTIVE)){var c=void 0,d=void 0,e=a(this._element).closest(n.UL)[0],g=f.getSelectorFromElement(this._element);e&&(d=a.makeArray(a(e).find(n.ACTIVE)),d=d[d.length-1]);var h=a.Event(l.HIDE,{relatedTarget:this._element}),i=a.Event(l.SHOW,{relatedTarget:d});if(d&&a(d).trigger(h),a(this._element).trigger(i),!i.isDefaultPrevented()&&!h.isDefaultPrevented()){g&&(c=a(g)[0]),this._activate(this._element,e);var j=function(){var c=a.Event(l.HIDDEN,{relatedTarget:b._element}),e=a.Event(l.SHOWN,{relatedTarget:d});a(d).trigger(c),a(b._element).trigger(e)};c?this._activate(c,c.parentNode,j):j()}}},b.prototype.dispose=function(){a.removeClass(this._element,g),this._element=null},b.prototype._activate=function(b,c,d){var e=a(c).find(n.ACTIVE_CHILD)[0],g=d&&f.supportsTransitionEnd()&&(e&&a(e).hasClass(m.FADE)||Boolean(a(c).find(n.FADE_CHILD)[0])),h=a.proxy(this._transitionComplete,this,b,e,g,d);e&&g?a(e).one(f.TRANSITION_END,h).emulateTransitionEnd(k):h(),e&&a(e).removeClass(m.IN)},b.prototype._transitionComplete=function(b,c,d,e){if(c){a(c).removeClass(m.ACTIVE);var g=a(c).find(n.DROPDOWN_ACTIVE_CHILD)[0];g&&a(g).removeClass(m.ACTIVE),c.setAttribute("aria-expanded",!1)}if(a(b).addClass(m.ACTIVE),b.setAttribute("aria-expanded",!0),d?(f.reflow(b),a(b).addClass(m.IN)):a(b).removeClass(m.FADE),b.parentNode&&a(b.parentNode).hasClass(m.DROPDOWN_MENU)){var h=a(b).closest(n.DROPDOWN)[0];h&&a(h).find(n.DROPDOWN_TOGGLE).addClass(m.ACTIVE),b.setAttribute("aria-expanded",!0)}e&&e()},b._jQueryInterface=function(c){return this.each(function(){var d=a(this),e=d.data(g);if(e||(e=e=new b(this),d.data(g,e)),"string"==typeof c){if(void 0===e[c])throw new Error('No method named "'+c+'"');e[c]()}})},e(b,null,[{key:"VERSION",get:function(){return d}}]),b}();return a(document).on(l.CLICK_DATA_API,n.DATA_TOGGLE,function(b){b.preventDefault(),o._jQueryInterface.call(a(this),"show")}),a.fn[b]=o._jQueryInterface,a.fn[b].Constructor=o,a.fn[b].noConflict=function(){return a.fn[b]=j,o._jQueryInterface},o}(jQuery),function(a){if(void 0===window.Tether)throw new Error("Bootstrap tooltips require Tether (http://tether.io/)");var b="tooltip",g="4.0.0-alpha.5",h="bs.tooltip",i="."+h,j=a.fn[b],k=150,l="bs-tether",m={animation:!0,template:'<div class="tooltip" role="tooltip"><div class="tooltip-inner"></div></div>',trigger:"hover focus",title:"",delay:0,html:!1,selector:!1,placement:"top",offset:"0 0",constraints:[]},n={animation:"boolean",template:"string",title:"(string|element|function)",trigger:"string",delay:"(number|object)",html:"boolean",selector:"(string|boolean)",placement:"(string|function)",offset:"string",constraints:"array"},o={TOP:"bottom center",RIGHT:"middle left",BOTTOM:"top center",LEFT:"middle right"},p={IN:"in",OUT:"out"},q={HIDE:"hide"+i,HIDDEN:"hidden"+i,SHOW:"show"+i,SHOWN:"shown"+i,INSERTED:"inserted"+i,CLICK:"click"+i,FOCUSIN:"focusin"+i,FOCUSOUT:"focusout"+i,MOUSEENTER:"mouseenter"+i,MOUSELEAVE:"mouseleave"+i},r={FADE:"fade",IN:"in"},s={TOOLTIP:".tooltip",TOOLTIP_INNER:".tooltip-inner"},t={element:!1,enabled:!1},u={HOVER:"hover",FOCUS:"focus",CLICK:"click",MANUAL:"manual"},v=function(){function j(a,b){c(this,j),this._isEnabled=!0,this._timeout=0,this._hoverState="",this._activeTrigger={},this._tether=null,this.element=a,this.config=this._getConfig(b),this.tip=null,this._setListeners()}return j.prototype.enable=function(){this._isEnabled=!0},j.prototype.disable=function(){this._isEnabled=!1},j.prototype.toggleEnabled=function(){this._isEnabled=!this._isEnabled},j.prototype.toggle=function(b){if(b){var c=this.constructor.DATA_KEY,d=a(b.currentTarget).data(c);d||(d=new this.constructor(b.currentTarget,this._getDelegateConfig()),a(b.currentTarget).data(c,d)),d._activeTrigger.click=!d._activeTrigger.click,d._isWithActiveTrigger()?d._enter(null,d):d._leave(null,d)}else{if(a(this.getTipElement()).hasClass(r.IN))return void this._leave(null,this);this._enter(null,this)}},j.prototype.dispose=function(){clearTimeout(this._timeout),this.cleanupTether(),a.removeData(this.element,this.constructor.DATA_KEY),a(this.element).off(this.constructor.EVENT_KEY),this.tip&&a(this.tip).remove(),this._isEnabled=null,this._timeout=null,this._hoverState=null,this._activeTrigger=null,this._tether=null,this.element=null,this.config=null,this.tip=null},j.prototype.show=function(){var b=this,c=a.Event(this.constructor.Event.SHOW);if(this.isWithContent()&&this._isEnabled){a(this.element).trigger(c);var d=a.contains(this.element.ownerDocument.documentElement,this.element);if(c.isDefaultPrevented()||!d)return;var e=this.getTipElement(),g=f.getUID(this.constructor.NAME);e.setAttribute("id",g),this.element.setAttribute("aria-describedby",g),this.setContent(),this.config.animation&&a(e).addClass(r.FADE);var h="function"==typeof this.config.placement?this.config.placement.call(this,e,this.element):this.config.placement,i=this._getAttachment(h);a(e).data(this.constructor.DATA_KEY,this).appendTo(document.body),a(this.element).trigger(this.constructor.Event.INSERTED),this._tether=new Tether({attachment:i,element:e,target:this.element,classes:t,classPrefix:l,offset:this.config.offset,constraints:this.config.constraints,addTargetClasses:!1}),f.reflow(e),this._tether.position(),a(e).addClass(r.IN);var k=function(){var c=b._hoverState;b._hoverState=null,a(b.element).trigger(b.constructor.Event.SHOWN),c===p.OUT&&b._leave(null,b)};if(f.supportsTransitionEnd()&&a(this.tip).hasClass(r.FADE))return void a(this.tip).one(f.TRANSITION_END,k).emulateTransitionEnd(j._TRANSITION_DURATION);k()}},j.prototype.hide=function(b){var c=this,d=this.getTipElement(),e=a.Event(this.constructor.Event.HIDE),g=function(){c._hoverState!==p.IN&&d.parentNode&&d.parentNode.removeChild(d),c.element.removeAttribute("aria-describedby"),a(c.element).trigger(c.constructor.Event.HIDDEN),c.cleanupTether(),b&&b()};a(this.element).trigger(e),e.isDefaultPrevented()||(a(d).removeClass(r.IN),f.supportsTransitionEnd()&&a(this.tip).hasClass(r.FADE)?a(d).one(f.TRANSITION_END,g).emulateTransitionEnd(k):g(),this._hoverState="")},j.prototype.isWithContent=function(){return Boolean(this.getTitle())},j.prototype.getTipElement=function(){return this.tip=this.tip||a(this.config.template)[0]},j.prototype.setContent=function(){var b=a(this.getTipElement());this.setElementContent(b.find(s.TOOLTIP_INNER),this.getTitle()),b.removeClass(r.FADE).removeClass(r.IN),this.cleanupTether()},j.prototype.setElementContent=function(b,c){var e=this.config.html;"object"===("undefined"==typeof c?"undefined":d(c))&&(c.nodeType||c.jquery)?e?a(c).parent().is(b)||b.empty().append(c):b.text(a(c).text()):b[e?"html":"text"](c)},j.prototype.getTitle=function(){var a=this.element.getAttribute("data-original-title");return a||(a="function"==typeof this.config.title?this.config.title.call(this.element):this.config.title),a},j.prototype.cleanupTether=function(){this._tether&&this._tether.destroy()},j.prototype._getAttachment=function(a){return o[a.toUpperCase()]},j.prototype._setListeners=function(){var b=this,c=this.config.trigger.split(" ");c.forEach(function(c){if("click"===c)a(b.element).on(b.constructor.Event.CLICK,b.config.selector,a.proxy(b.toggle,b));else if(c!==u.MANUAL){var d=c===u.HOVER?b.constructor.Event.MOUSEENTER:b.constructor.Event.FOCUSIN,e=c===u.HOVER?b.constructor.Event.MOUSELEAVE:b.constructor.Event.FOCUSOUT;a(b.element).on(d,b.config.selector,a.proxy(b._enter,b)).on(e,b.config.selector,a.proxy(b._leave,b))}}),this.config.selector?this.config=a.extend({},this.config,{trigger:"manual",selector:""}):this._fixTitle()},j.prototype._fixTitle=function(){var a=d(this.element.getAttribute("data-original-title"));(this.element.getAttribute("title")||"string"!==a)&&(this.element.setAttribute("data-original-title",this.element.getAttribute("title")||""),this.element.setAttribute("title",""))},j.prototype._enter=function(b,c){var d=this.constructor.DATA_KEY;return c=c||a(b.currentTarget).data(d),c||(c=new this.constructor(b.currentTarget,this._getDelegateConfig()),a(b.currentTarget).data(d,c)),b&&(c._activeTrigger["focusin"===b.type?u.FOCUS:u.HOVER]=!0),a(c.getTipElement()).hasClass(r.IN)||c._hoverState===p.IN?void(c._hoverState=p.IN):(clearTimeout(c._timeout),c._hoverState=p.IN,c.config.delay&&c.config.delay.show?void(c._timeout=setTimeout(function(){c._hoverState===p.IN&&c.show()},c.config.delay.show)):void c.show())},j.prototype._leave=function(b,c){var d=this.constructor.DATA_KEY;if(c=c||a(b.currentTarget).data(d),c||(c=new this.constructor(b.currentTarget,this._getDelegateConfig()),a(b.currentTarget).data(d,c)),b&&(c._activeTrigger["focusout"===b.type?u.FOCUS:u.HOVER]=!1),!c._isWithActiveTrigger())return clearTimeout(c._timeout),c._hoverState=p.OUT,c.config.delay&&c.config.delay.hide?void(c._timeout=setTimeout(function(){c._hoverState===p.OUT&&c.hide()},c.config.delay.hide)):void c.hide()},j.prototype._isWithActiveTrigger=function(){for(var a in this._activeTrigger)if(this._activeTrigger[a])return!0;return!1},j.prototype._getConfig=function(c){return c=a.extend({},this.constructor.Default,a(this.element).data(),c),c.delay&&"number"==typeof c.delay&&(c.delay={show:c.delay,hide:c.delay}),f.typeCheckConfig(b,c,this.constructor.DefaultType),c},j.prototype._getDelegateConfig=function(){var a={};if(this.config)for(var b in this.config)this.constructor.Default[b]!==this.config[b]&&(a[b]=this.config[b]);return a},j._jQueryInterface=function(b){return this.each(function(){var c=a(this).data(h),e="object"===("undefined"==typeof b?"undefined":d(b))?b:null;if((c||!/dispose|hide/.test(b))&&(c||(c=new j(this,e),a(this).data(h,c)),"string"==typeof b)){if(void 0===c[b])throw new Error('No method named "'+b+'"');c[b]()}})},e(j,null,[{key:"VERSION",get:function(){return g}},{key:"Default",get:function(){return m}},{key:"NAME",get:function(){return b}},{key:"DATA_KEY",get:function(){return h}},{key:"Event",get:function(){return q}},{key:"EVENT_KEY",get:function(){return i}},{key:"DefaultType",get:function(){return n}}]),j}();return a.fn[b]=v._jQueryInterface,a.fn[b].Constructor=v,a.fn[b].noConflict=function(){return a.fn[b]=j,v._jQueryInterface},v}(jQuery));(function(f){var h="popover",i="4.0.0-alpha.5",j="bs.popover",k="."+j,l=f.fn[h],m=f.extend({},g.Default,{placement:"right",trigger:"click",content:"",template:'<div class="popover" role="tooltip"><h3 class="popover-title"></h3><div class="popover-content"></div></div>'}),n=f.extend({},g.DefaultType,{content:"(string|element|function)"}),o={FADE:"fade",IN:"in"},p={TITLE:".popover-title",CONTENT:".popover-content"},q={HIDE:"hide"+k,HIDDEN:"hidden"+k,SHOW:"show"+k,SHOWN:"shown"+k,INSERTED:"inserted"+k,CLICK:"click"+k,FOCUSIN:"focusin"+k,FOCUSOUT:"focusout"+k,MOUSEENTER:"mouseenter"+k,MOUSELEAVE:"mouseleave"+k},r=function(g){function l(){return c(this,l),a(this,g.apply(this,arguments))}return b(l,g),l.prototype.isWithContent=function(){return this.getTitle()||this._getContent()},l.prototype.getTipElement=function(){return this.tip=this.tip||f(this.config.template)[0]},l.prototype.setContent=function(){var a=f(this.getTipElement());this.setElementContent(a.find(p.TITLE),this.getTitle()),this.setElementContent(a.find(p.CONTENT),this._getContent()),a.removeClass(o.FADE).removeClass(o.IN),this.cleanupTether()},l.prototype._getContent=function(){return this.element.getAttribute("data-content")||("function"==typeof this.config.content?this.config.content.call(this.element):this.config.content)},l._jQueryInterface=function(a){return this.each(function(){var b=f(this).data(j),c="object"===("undefined"==typeof a?"undefined":d(a))?a:null;if((b||!/destroy|hide/.test(a))&&(b||(b=new l(this,c),f(this).data(j,b)),"string"==typeof a)){if(void 0===b[a])throw new Error('No method named "'+a+'"');b[a]()}})},e(l,null,[{key:"VERSION",get:function(){return i}},{key:"Default",get:function(){return m}},{key:"NAME",get:function(){return h}},{key:"DATA_KEY",get:function(){return j}},{key:"Event",get:function(){return q}},{key:"EVENT_KEY",get:function(){return k}},{key:"DefaultType",get:function(){return n}}]),l}(g);return f.fn[h]=r._jQueryInterface,f.fn[h].Constructor=r,f.fn[h].noConflict=function(){return f.fn[h]=l,r._jQueryInterface},r})(jQuery)}();
+if("undefined"==typeof jQuery)throw new Error("Bootstrap's JavaScript requires jQuery. jQuery must be included before Bootstrap's JavaScript.");+function(t){var e=t.fn.jquery.split(" ")[0].split(".");if(e[0]<2&&e[1]<9||1==e[0]&&9==e[1]&&e[2]<1||e[0]>=4)throw new Error("Bootstrap's JavaScript requires at least jQuery v1.9.1 but less than v4.0.0")}(jQuery),+function(){function t(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return!e||"object"!=typeof e&&"function"!=typeof e?t:e}function e(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e)}function n(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}var i="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},o=function(){function t(t,e){for(var n=0;n<e.length;n++){var i=e[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(t,i.key,i)}}return function(e,n,i){return n&&t(e.prototype,n),i&&t(e,i),e}}(),r=function(t){function e(t){return{}.toString.call(t).match(/\s([a-zA-Z]+)/)[1].toLowerCase()}function n(t){return(t[0]||t).nodeType}function i(){return{bindType:a.end,delegateType:a.end,handle:function(e){if(t(e.target).is(this))return e.handleObj.handler.apply(this,arguments)}}}function o(){if(window.QUnit)return!1;var t=document.createElement("bootstrap");for(var e in h)if(void 0!==t.style[e])return{end:h[e]};return!1}function r(e){var n=this,i=!1;return t(this).one(c.TRANSITION_END,function(){i=!0}),setTimeout(function(){i||c.triggerTransitionEnd(n)},e),this}function s(){a=o(),t.fn.emulateTransitionEnd=r,c.supportsTransitionEnd()&&(t.event.special[c.TRANSITION_END]=i())}var a=!1,l=1e6,h={WebkitTransition:"webkitTransitionEnd",MozTransition:"transitionend",OTransition:"oTransitionEnd otransitionend",transition:"transitionend"},c={TRANSITION_END:"bsTransitionEnd",getUID:function(t){do t+=~~(Math.random()*l);while(document.getElementById(t));return t},getSelectorFromElement:function(t){var e=t.getAttribute("data-target");return e||(e=t.getAttribute("href")||"",e=/^#[a-z]/i.test(e)?e:null),e},reflow:function(t){return t.offsetHeight},triggerTransitionEnd:function(e){t(e).trigger(a.end)},supportsTransitionEnd:function(){return Boolean(a)},typeCheckConfig:function(t,i,o){for(var r in o)if(o.hasOwnProperty(r)){var s=o[r],a=i[r],l=a&&n(a)?"element":e(a);if(!new RegExp(s).test(l))throw new Error(t.toUpperCase()+": "+('Option "'+r+'" provided type "'+l+'" ')+('but expected type "'+s+'".'))}}};return s(),c}(jQuery),s=(function(t){var e="alert",i="4.0.0-alpha.6",s="bs.alert",a="."+s,l=".data-api",h=t.fn[e],c=150,u={DISMISS:'[data-dismiss="alert"]'},d={CLOSE:"close"+a,CLOSED:"closed"+a,CLICK_DATA_API:"click"+a+l},f={ALERT:"alert",FADE:"fade",SHOW:"show"},_=function(){function e(t){n(this,e),this._element=t}return e.prototype.close=function(t){t=t||this._element;var e=this._getRootElement(t),n=this._triggerCloseEvent(e);n.isDefaultPrevented()||this._removeElement(e)},e.prototype.dispose=function(){t.removeData(this._element,s),this._element=null},e.prototype._getRootElement=function(e){var n=r.getSelectorFromElement(e),i=!1;return n&&(i=t(n)[0]),i||(i=t(e).closest("."+f.ALERT)[0]),i},e.prototype._triggerCloseEvent=function(e){var n=t.Event(d.CLOSE);return t(e).trigger(n),n},e.prototype._removeElement=function(e){var n=this;return t(e).removeClass(f.SHOW),r.supportsTransitionEnd()&&t(e).hasClass(f.FADE)?void t(e).one(r.TRANSITION_END,function(t){return n._destroyElement(e,t)}).emulateTransitionEnd(c):void this._destroyElement(e)},e.prototype._destroyElement=function(e){t(e).detach().trigger(d.CLOSED).remove()},e._jQueryInterface=function(n){return this.each(function(){var i=t(this),o=i.data(s);o||(o=new e(this),i.data(s,o)),"close"===n&&o[n](this)})},e._handleDismiss=function(t){return function(e){e&&e.preventDefault(),t.close(this)}},o(e,null,[{key:"VERSION",get:function(){return i}}]),e}();return t(document).on(d.CLICK_DATA_API,u.DISMISS,_._handleDismiss(new _)),t.fn[e]=_._jQueryInterface,t.fn[e].Constructor=_,t.fn[e].noConflict=function(){return t.fn[e]=h,_._jQueryInterface},_}(jQuery),function(t){var e="button",i="4.0.0-alpha.6",r="bs.button",s="."+r,a=".data-api",l=t.fn[e],h={ACTIVE:"active",BUTTON:"btn",FOCUS:"focus"},c={DATA_TOGGLE_CARROT:'[data-toggle^="button"]',DATA_TOGGLE:'[data-toggle="buttons"]',INPUT:"input",ACTIVE:".active",BUTTON:".btn"},u={CLICK_DATA_API:"click"+s+a,FOCUS_BLUR_DATA_API:"focus"+s+a+" "+("blur"+s+a)},d=function(){function e(t){n(this,e),this._element=t}return e.prototype.toggle=function(){var e=!0,n=t(this._element).closest(c.DATA_TOGGLE)[0];if(n){var i=t(this._element).find(c.INPUT)[0];if(i){if("radio"===i.type)if(i.checked&&t(this._element).hasClass(h.ACTIVE))e=!1;else{var o=t(n).find(c.ACTIVE)[0];o&&t(o).removeClass(h.ACTIVE)}e&&(i.checked=!t(this._element).hasClass(h.ACTIVE),t(i).trigger("change")),i.focus()}}this._element.setAttribute("aria-pressed",!t(this._element).hasClass(h.ACTIVE)),e&&t(this._element).toggleClass(h.ACTIVE)},e.prototype.dispose=function(){t.removeData(this._element,r),this._element=null},e._jQueryInterface=function(n){return this.each(function(){var i=t(this).data(r);i||(i=new e(this),t(this).data(r,i)),"toggle"===n&&i[n]()})},o(e,null,[{key:"VERSION",get:function(){return i}}]),e}();return t(document).on(u.CLICK_DATA_API,c.DATA_TOGGLE_CARROT,function(e){e.preventDefault();var n=e.target;t(n).hasClass(h.BUTTON)||(n=t(n).closest(c.BUTTON)),d._jQueryInterface.call(t(n),"toggle")}).on(u.FOCUS_BLUR_DATA_API,c.DATA_TOGGLE_CARROT,function(e){var n=t(e.target).closest(c.BUTTON)[0];t(n).toggleClass(h.FOCUS,/^focus(in)?$/.test(e.type))}),t.fn[e]=d._jQueryInterface,t.fn[e].Constructor=d,t.fn[e].noConflict=function(){return t.fn[e]=l,d._jQueryInterface},d}(jQuery),function(t){var e="carousel",s="4.0.0-alpha.6",a="bs.carousel",l="."+a,h=".data-api",c=t.fn[e],u=600,d=37,f=39,_={interval:5e3,keyboard:!0,slide:!1,pause:"hover",wrap:!0},g={interval:"(number|boolean)",keyboard:"boolean",slide:"(boolean|string)",pause:"(string|boolean)",wrap:"boolean"},p={NEXT:"next",PREV:"prev",LEFT:"left",RIGHT:"right"},m={SLIDE:"slide"+l,SLID:"slid"+l,KEYDOWN:"keydown"+l,MOUSEENTER:"mouseenter"+l,MOUSELEAVE:"mouseleave"+l,LOAD_DATA_API:"load"+l+h,CLICK_DATA_API:"click"+l+h},E={CAROUSEL:"carousel",ACTIVE:"active",SLIDE:"slide",RIGHT:"carousel-item-right",LEFT:"carousel-item-left",NEXT:"carousel-item-next",PREV:"carousel-item-prev",ITEM:"carousel-item"},v={ACTIVE:".active",ACTIVE_ITEM:".active.carousel-item",ITEM:".carousel-item",NEXT_PREV:".carousel-item-next, .carousel-item-prev",INDICATORS:".carousel-indicators",DATA_SLIDE:"[data-slide], [data-slide-to]",DATA_RIDE:'[data-ride="carousel"]'},T=function(){function h(e,i){n(this,h),this._items=null,this._interval=null,this._activeElement=null,this._isPaused=!1,this._isSliding=!1,this._config=this._getConfig(i),this._element=t(e)[0],this._indicatorsElement=t(this._element).find(v.INDICATORS)[0],this._addEventListeners()}return h.prototype.next=function(){if(this._isSliding)throw new Error("Carousel is sliding");this._slide(p.NEXT)},h.prototype.nextWhenVisible=function(){document.hidden||this.next()},h.prototype.prev=function(){if(this._isSliding)throw new Error("Carousel is sliding");this._slide(p.PREVIOUS)},h.prototype.pause=function(e){e||(this._isPaused=!0),t(this._element).find(v.NEXT_PREV)[0]&&r.supportsTransitionEnd()&&(r.triggerTransitionEnd(this._element),this.cycle(!0)),clearInterval(this._interval),this._interval=null},h.prototype.cycle=function(t){t||(this._isPaused=!1),this._interval&&(clearInterval(this._interval),this._interval=null),this._config.interval&&!this._isPaused&&(this._interval=setInterval((document.visibilityState?this.nextWhenVisible:this.next).bind(this),this._config.interval))},h.prototype.to=function(e){var n=this;this._activeElement=t(this._element).find(v.ACTIVE_ITEM)[0];var i=this._getItemIndex(this._activeElement);if(!(e>this._items.length-1||e<0)){if(this._isSliding)return void t(this._element).one(m.SLID,function(){return n.to(e)});if(i===e)return this.pause(),void this.cycle();var o=e>i?p.NEXT:p.PREVIOUS;this._slide(o,this._items[e])}},h.prototype.dispose=function(){t(this._element).off(l),t.removeData(this._element,a),this._items=null,this._config=null,this._element=null,this._interval=null,this._isPaused=null,this._isSliding=null,this._activeElement=null,this._indicatorsElement=null},h.prototype._getConfig=function(n){return n=t.extend({},_,n),r.typeCheckConfig(e,n,g),n},h.prototype._addEventListeners=function(){var e=this;this._config.keyboard&&t(this._element).on(m.KEYDOWN,function(t){return e._keydown(t)}),"hover"!==this._config.pause||"ontouchstart"in document.documentElement||t(this._element).on(m.MOUSEENTER,function(t){return e.pause(t)}).on(m.MOUSELEAVE,function(t){return e.cycle(t)})},h.prototype._keydown=function(t){if(!/input|textarea/i.test(t.target.tagName))switch(t.which){case d:t.preventDefault(),this.prev();break;case f:t.preventDefault(),this.next();break;default:return}},h.prototype._getItemIndex=function(e){return this._items=t.makeArray(t(e).parent().find(v.ITEM)),this._items.indexOf(e)},h.prototype._getItemByDirection=function(t,e){var n=t===p.NEXT,i=t===p.PREVIOUS,o=this._getItemIndex(e),r=this._items.length-1,s=i&&0===o||n&&o===r;if(s&&!this._config.wrap)return e;var a=t===p.PREVIOUS?-1:1,l=(o+a)%this._items.length;return l===-1?this._items[this._items.length-1]:this._items[l]},h.prototype._triggerSlideEvent=function(e,n){var i=t.Event(m.SLIDE,{relatedTarget:e,direction:n});return t(this._element).trigger(i),i},h.prototype._setActiveIndicatorElement=function(e){if(this._indicatorsElement){t(this._indicatorsElement).find(v.ACTIVE).removeClass(E.ACTIVE);var n=this._indicatorsElement.children[this._getItemIndex(e)];n&&t(n).addClass(E.ACTIVE)}},h.prototype._slide=function(e,n){var i=this,o=t(this._element).find(v.ACTIVE_ITEM)[0],s=n||o&&this._getItemByDirection(e,o),a=Boolean(this._interval),l=void 0,h=void 0,c=void 0;if(e===p.NEXT?(l=E.LEFT,h=E.NEXT,c=p.LEFT):(l=E.RIGHT,h=E.PREV,c=p.RIGHT),s&&t(s).hasClass(E.ACTIVE))return void(this._isSliding=!1);var d=this._triggerSlideEvent(s,c);if(!d.isDefaultPrevented()&&o&&s){this._isSliding=!0,a&&this.pause(),this._setActiveIndicatorElement(s);var f=t.Event(m.SLID,{relatedTarget:s,direction:c});r.supportsTransitionEnd()&&t(this._element).hasClass(E.SLIDE)?(t(s).addClass(h),r.reflow(s),t(o).addClass(l),t(s).addClass(l),t(o).one(r.TRANSITION_END,function(){t(s).removeClass(l+" "+h).addClass(E.ACTIVE),t(o).removeClass(E.ACTIVE+" "+h+" "+l),i._isSliding=!1,setTimeout(function(){return t(i._element).trigger(f)},0)}).emulateTransitionEnd(u)):(t(o).removeClass(E.ACTIVE),t(s).addClass(E.ACTIVE),this._isSliding=!1,t(this._element).trigger(f)),a&&this.cycle()}},h._jQueryInterface=function(e){return this.each(function(){var n=t(this).data(a),o=t.extend({},_,t(this).data());"object"===("undefined"==typeof e?"undefined":i(e))&&t.extend(o,e);var r="string"==typeof e?e:o.slide;if(n||(n=new h(this,o),t(this).data(a,n)),"number"==typeof e)n.to(e);else if("string"==typeof r){if(void 0===n[r])throw new Error('No method named "'+r+'"');n[r]()}else o.interval&&(n.pause(),n.cycle())})},h._dataApiClickHandler=function(e){var n=r.getSelectorFromElement(this);if(n){var i=t(n)[0];if(i&&t(i).hasClass(E.CAROUSEL)){var o=t.extend({},t(i).data(),t(this).data()),s=this.getAttribute("data-slide-to");s&&(o.interval=!1),h._jQueryInterface.call(t(i),o),s&&t(i).data(a).to(s),e.preventDefault()}}},o(h,null,[{key:"VERSION",get:function(){return s}},{key:"Default",get:function(){return _}}]),h}();return t(document).on(m.CLICK_DATA_API,v.DATA_SLIDE,T._dataApiClickHandler),t(window).on(m.LOAD_DATA_API,function(){t(v.DATA_RIDE).each(function(){var e=t(this);T._jQueryInterface.call(e,e.data())})}),t.fn[e]=T._jQueryInterface,t.fn[e].Constructor=T,t.fn[e].noConflict=function(){return t.fn[e]=c,T._jQueryInterface},T}(jQuery),function(t){var e="collapse",s="4.0.0-alpha.6",a="bs.collapse",l="."+a,h=".data-api",c=t.fn[e],u=600,d={toggle:!0,parent:""},f={toggle:"boolean",parent:"string"},_={SHOW:"show"+l,SHOWN:"shown"+l,HIDE:"hide"+l,HIDDEN:"hidden"+l,CLICK_DATA_API:"click"+l+h},g={SHOW:"show",COLLAPSE:"collapse",COLLAPSING:"collapsing",COLLAPSED:"collapsed"},p={WIDTH:"width",HEIGHT:"height"},m={ACTIVES:".card > .show, .card > .collapsing",DATA_TOGGLE:'[data-toggle="collapse"]'},E=function(){function l(e,i){n(this,l),this._isTransitioning=!1,this._element=e,this._config=this._getConfig(i),this._triggerArray=t.makeArray(t('[data-toggle="collapse"][href="#'+e.id+'"],'+('[data-toggle="collapse"][data-target="#'+e.id+'"]'))),this._parent=this._config.parent?this._getParent():null,this._config.parent||this._addAriaAndCollapsedClass(this._element,this._triggerArray),this._config.toggle&&this.toggle()}return l.prototype.toggle=function(){t(this._element).hasClass(g.SHOW)?this.hide():this.show()},l.prototype.show=function(){var e=this;if(this._isTransitioning)throw new Error("Collapse is transitioning");if(!t(this._element).hasClass(g.SHOW)){var n=void 0,i=void 0;if(this._parent&&(n=t.makeArray(t(this._parent).find(m.ACTIVES)),n.length||(n=null)),!(n&&(i=t(n).data(a),i&&i._isTransitioning))){var o=t.Event(_.SHOW);if(t(this._element).trigger(o),!o.isDefaultPrevented()){n&&(l._jQueryInterface.call(t(n),"hide"),i||t(n).data(a,null));var s=this._getDimension();t(this._element).removeClass(g.COLLAPSE).addClass(g.COLLAPSING),this._element.style[s]=0,this._element.setAttribute("aria-expanded",!0),this._triggerArray.length&&t(this._triggerArray).removeClass(g.COLLAPSED).attr("aria-expanded",!0),this.setTransitioning(!0);var h=function(){t(e._element).removeClass(g.COLLAPSING).addClass(g.COLLAPSE).addClass(g.SHOW),e._element.style[s]="",e.setTransitioning(!1),t(e._element).trigger(_.SHOWN)};if(!r.supportsTransitionEnd())return void h();var c=s[0].toUpperCase()+s.slice(1),d="scroll"+c;t(this._element).one(r.TRANSITION_END,h).emulateTransitionEnd(u),this._element.style[s]=this._element[d]+"px"}}}},l.prototype.hide=function(){var e=this;if(this._isTransitioning)throw new Error("Collapse is transitioning");if(t(this._element).hasClass(g.SHOW)){var n=t.Event(_.HIDE);if(t(this._element).trigger(n),!n.isDefaultPrevented()){var i=this._getDimension(),o=i===p.WIDTH?"offsetWidth":"offsetHeight";this._element.style[i]=this._element[o]+"px",r.reflow(this._element),t(this._element).addClass(g.COLLAPSING).removeClass(g.COLLAPSE).removeClass(g.SHOW),this._element.setAttribute("aria-expanded",!1),this._triggerArray.length&&t(this._triggerArray).addClass(g.COLLAPSED).attr("aria-expanded",!1),this.setTransitioning(!0);var s=function(){e.setTransitioning(!1),t(e._element).removeClass(g.COLLAPSING).addClass(g.COLLAPSE).trigger(_.HIDDEN)};return this._element.style[i]="",r.supportsTransitionEnd()?void t(this._element).one(r.TRANSITION_END,s).emulateTransitionEnd(u):void s()}}},l.prototype.setTransitioning=function(t){this._isTransitioning=t},l.prototype.dispose=function(){t.removeData(this._element,a),this._config=null,this._parent=null,this._element=null,this._triggerArray=null,this._isTransitioning=null},l.prototype._getConfig=function(n){return n=t.extend({},d,n),n.toggle=Boolean(n.toggle),r.typeCheckConfig(e,n,f),n},l.prototype._getDimension=function(){var e=t(this._element).hasClass(p.WIDTH);return e?p.WIDTH:p.HEIGHT},l.prototype._getParent=function(){var e=this,n=t(this._config.parent)[0],i='[data-toggle="collapse"][data-parent="'+this._config.parent+'"]';return t(n).find(i).each(function(t,n){e._addAriaAndCollapsedClass(l._getTargetFromElement(n),[n])}),n},l.prototype._addAriaAndCollapsedClass=function(e,n){if(e){var i=t(e).hasClass(g.SHOW);e.setAttribute("aria-expanded",i),n.length&&t(n).toggleClass(g.COLLAPSED,!i).attr("aria-expanded",i)}},l._getTargetFromElement=function(e){var n=r.getSelectorFromElement(e);return n?t(n)[0]:null},l._jQueryInterface=function(e){return this.each(function(){var n=t(this),o=n.data(a),r=t.extend({},d,n.data(),"object"===("undefined"==typeof e?"undefined":i(e))&&e);if(!o&&r.toggle&&/show|hide/.test(e)&&(r.toggle=!1),o||(o=new l(this,r),n.data(a,o)),"string"==typeof e){if(void 0===o[e])throw new Error('No method named "'+e+'"');o[e]()}})},o(l,null,[{key:"VERSION",get:function(){return s}},{key:"Default",get:function(){return d}}]),l}();return t(document).on(_.CLICK_DATA_API,m.DATA_TOGGLE,function(e){e.preventDefault();var n=E._getTargetFromElement(this),i=t(n).data(a),o=i?"toggle":t(this).data();E._jQueryInterface.call(t(n),o)}),t.fn[e]=E._jQueryInterface,t.fn[e].Constructor=E,t.fn[e].noConflict=function(){return t.fn[e]=c,E._jQueryInterface},E}(jQuery),function(t){var e="dropdown",i="4.0.0-alpha.6",s="bs.dropdown",a="."+s,l=".data-api",h=t.fn[e],c=27,u=38,d=40,f=3,_={HIDE:"hide"+a,HIDDEN:"hidden"+a,SHOW:"show"+a,SHOWN:"shown"+a,CLICK:"click"+a,CLICK_DATA_API:"click"+a+l,FOCUSIN_DATA_API:"focusin"+a+l,KEYDOWN_DATA_API:"keydown"+a+l},g={BACKDROP:"dropdown-backdrop",DISABLED:"disabled",SHOW:"show"},p={BACKDROP:".dropdown-backdrop",DATA_TOGGLE:'[data-toggle="dropdown"]',FORM_CHILD:".dropdown form",ROLE_MENU:'[role="menu"]',ROLE_LISTBOX:'[role="listbox"]',NAVBAR_NAV:".navbar-nav",VISIBLE_ITEMS:'[role="menu"] li:not(.disabled) a, [role="listbox"] li:not(.disabled) a'},m=function(){function e(t){n(this,e),this._element=t,this._addEventListeners()}return e.prototype.toggle=function(){if(this.disabled||t(this).hasClass(g.DISABLED))return!1;var n=e._getParentFromElement(this),i=t(n).hasClass(g.SHOW);if(e._clearMenus(),i)return!1;if("ontouchstart"in document.documentElement&&!t(n).closest(p.NAVBAR_NAV).length){var o=document.createElement("div");o.className=g.BACKDROP,t(o).insertBefore(this),t(o).on("click",e._clearMenus)}var r={relatedTarget:this},s=t.Event(_.SHOW,r);return t(n).trigger(s),!s.isDefaultPrevented()&&(this.focus(),this.setAttribute("aria-expanded",!0),t(n).toggleClass(g.SHOW),t(n).trigger(t.Event(_.SHOWN,r)),!1)},e.prototype.dispose=function(){t.removeData(this._element,s),t(this._element).off(a),this._element=null},e.prototype._addEventListeners=function(){t(this._element).on(_.CLICK,this.toggle)},e._jQueryInterface=function(n){return this.each(function(){var i=t(this).data(s);if(i||(i=new e(this),t(this).data(s,i)),"string"==typeof n){if(void 0===i[n])throw new Error('No method named "'+n+'"');i[n].call(this)}})},e._clearMenus=function(n){if(!n||n.which!==f){var i=t(p.BACKDROP)[0];i&&i.parentNode.removeChild(i);for(var o=t.makeArray(t(p.DATA_TOGGLE)),r=0;r<o.length;r++){var s=e._getParentFromElement(o[r]),a={relatedTarget:o[r]};if(t(s).hasClass(g.SHOW)&&!(n&&("click"===n.type&&/input|textarea/i.test(n.target.tagName)||"focusin"===n.type)&&t.contains(s,n.target))){var l=t.Event(_.HIDE,a);t(s).trigger(l),l.isDefaultPrevented()||(o[r].setAttribute("aria-expanded","false"),t(s).removeClass(g.SHOW).trigger(t.Event(_.HIDDEN,a)))}}}},e._getParentFromElement=function(e){var n=void 0,i=r.getSelectorFromElement(e);return i&&(n=t(i)[0]),n||e.parentNode},e._dataApiKeydownHandler=function(n){if(/(38|40|27|32)/.test(n.which)&&!/input|textarea/i.test(n.target.tagName)&&(n.preventDefault(),n.stopPropagation(),!this.disabled&&!t(this).hasClass(g.DISABLED))){var i=e._getParentFromElement(this),o=t(i).hasClass(g.SHOW);if(!o&&n.which!==c||o&&n.which===c){if(n.which===c){var r=t(i).find(p.DATA_TOGGLE)[0];t(r).trigger("focus")}return void t(this).trigger("click")}var s=t(i).find(p.VISIBLE_ITEMS).get();if(s.length){var a=s.indexOf(n.target);n.which===u&&a>0&&a--,n.which===d&&a<s.length-1&&a++,a<0&&(a=0),s[a].focus()}}},o(e,null,[{key:"VERSION",get:function(){return i}}]),e}();return t(document).on(_.KEYDOWN_DATA_API,p.DATA_TOGGLE,m._dataApiKeydownHandler).on(_.KEYDOWN_DATA_API,p.ROLE_MENU,m._dataApiKeydownHandler).on(_.KEYDOWN_DATA_API,p.ROLE_LISTBOX,m._dataApiKeydownHandler).on(_.CLICK_DATA_API+" "+_.FOCUSIN_DATA_API,m._clearMenus).on(_.CLICK_DATA_API,p.DATA_TOGGLE,m.prototype.toggle).on(_.CLICK_DATA_API,p.FORM_CHILD,function(t){t.stopPropagation()}),t.fn[e]=m._jQueryInterface,t.fn[e].Constructor=m,t.fn[e].noConflict=function(){return t.fn[e]=h,m._jQueryInterface},m}(jQuery),function(t){var e="modal",s="4.0.0-alpha.6",a="bs.modal",l="."+a,h=".data-api",c=t.fn[e],u=300,d=150,f=27,_={backdrop:!0,keyboard:!0,focus:!0,show:!0},g={backdrop:"(boolean|string)",keyboard:"boolean",focus:"boolean",show:"boolean"},p={HIDE:"hide"+l,HIDDEN:"hidden"+l,SHOW:"show"+l,SHOWN:"shown"+l,FOCUSIN:"focusin"+l,RESIZE:"resize"+l,CLICK_DISMISS:"click.dismiss"+l,KEYDOWN_DISMISS:"keydown.dismiss"+l,MOUSEUP_DISMISS:"mouseup.dismiss"+l,MOUSEDOWN_DISMISS:"mousedown.dismiss"+l,CLICK_DATA_API:"click"+l+h},m={SCROLLBAR_MEASURER:"modal-scrollbar-measure",BACKDROP:"modal-backdrop",OPEN:"modal-open",FADE:"fade",SHOW:"show"},E={DIALOG:".modal-dialog",DATA_TOGGLE:'[data-toggle="modal"]',DATA_DISMISS:'[data-dismiss="modal"]',FIXED_CONTENT:".fixed-top, .fixed-bottom, .is-fixed, .sticky-top"},v=function(){function h(e,i){n(this,h),this._config=this._getConfig(i),this._element=e,this._dialog=t(e).find(E.DIALOG)[0],this._backdrop=null,this._isShown=!1,this._isBodyOverflowing=!1,this._ignoreBackdropClick=!1,this._isTransitioning=!1,this._originalBodyPadding=0,this._scrollbarWidth=0}return h.prototype.toggle=function(t){return this._isShown?this.hide():this.show(t)},h.prototype.show=function(e){var n=this;if(this._isTransitioning)throw new Error("Modal is transitioning");r.supportsTransitionEnd()&&t(this._element).hasClass(m.FADE)&&(this._isTransitioning=!0);var i=t.Event(p.SHOW,{relatedTarget:e});t(this._element).trigger(i),this._isShown||i.isDefaultPrevented()||(this._isShown=!0,this._checkScrollbar(),this._setScrollbar(),t(document.body).addClass(m.OPEN),this._setEscapeEvent(),this._setResizeEvent(),t(this._element).on(p.CLICK_DISMISS,E.DATA_DISMISS,function(t){return n.hide(t)}),t(this._dialog).on(p.MOUSEDOWN_DISMISS,function(){t(n._element).one(p.MOUSEUP_DISMISS,function(e){t(e.target).is(n._element)&&(n._ignoreBackdropClick=!0)})}),this._showBackdrop(function(){return n._showElement(e)}))},h.prototype.hide=function(e){var n=this;if(e&&e.preventDefault(),this._isTransitioning)throw new Error("Modal is transitioning");var i=r.supportsTransitionEnd()&&t(this._element).hasClass(m.FADE);i&&(this._isTransitioning=!0);var o=t.Event(p.HIDE);t(this._element).trigger(o),this._isShown&&!o.isDefaultPrevented()&&(this._isShown=!1,this._setEscapeEvent(),this._setResizeEvent(),t(document).off(p.FOCUSIN),t(this._element).removeClass(m.SHOW),t(this._element).off(p.CLICK_DISMISS),t(this._dialog).off(p.MOUSEDOWN_DISMISS),i?t(this._element).one(r.TRANSITION_END,function(t){return n._hideModal(t)}).emulateTransitionEnd(u):this._hideModal())},h.prototype.dispose=function(){t.removeData(this._element,a),t(window,document,this._element,this._backdrop).off(l),this._config=null,this._element=null,this._dialog=null,this._backdrop=null,this._isShown=null,this._isBodyOverflowing=null,this._ignoreBackdropClick=null,this._originalBodyPadding=null,this._scrollbarWidth=null},h.prototype._getConfig=function(n){return n=t.extend({},_,n),r.typeCheckConfig(e,n,g),n},h.prototype._showElement=function(e){var n=this,i=r.supportsTransitionEnd()&&t(this._element).hasClass(m.FADE);this._element.parentNode&&this._element.parentNode.nodeType===Node.ELEMENT_NODE||document.body.appendChild(this._element),this._element.style.display="block",this._element.removeAttribute("aria-hidden"),this._element.scrollTop=0,i&&r.reflow(this._element),t(this._element).addClass(m.SHOW),this._config.focus&&this._enforceFocus();var o=t.Event(p.SHOWN,{relatedTarget:e}),s=function(){n._config.focus&&n._element.focus(),n._isTransitioning=!1,t(n._element).trigger(o)};i?t(this._dialog).one(r.TRANSITION_END,s).emulateTransitionEnd(u):s()},h.prototype._enforceFocus=function(){var e=this;t(document).off(p.FOCUSIN).on(p.FOCUSIN,function(n){document===n.target||e._element===n.target||t(e._element).has(n.target).length||e._element.focus()})},h.prototype._setEscapeEvent=function(){var e=this;this._isShown&&this._config.keyboard?t(this._element).on(p.KEYDOWN_DISMISS,function(t){t.which===f&&e.hide()}):this._isShown||t(this._element).off(p.KEYDOWN_DISMISS)},h.prototype._setResizeEvent=function(){var e=this;this._isShown?t(window).on(p.RESIZE,function(t){return e._handleUpdate(t)}):t(window).off(p.RESIZE)},h.prototype._hideModal=function(){var e=this;this._element.style.display="none",this._element.setAttribute("aria-hidden","true"),this._isTransitioning=!1,this._showBackdrop(function(){t(document.body).removeClass(m.OPEN),e._resetAdjustments(),e._resetScrollbar(),t(e._element).trigger(p.HIDDEN)})},h.prototype._removeBackdrop=function(){this._backdrop&&(t(this._backdrop).remove(),this._backdrop=null)},h.prototype._showBackdrop=function(e){var n=this,i=t(this._element).hasClass(m.FADE)?m.FADE:"";if(this._isShown&&this._config.backdrop){var o=r.supportsTransitionEnd()&&i;if(this._backdrop=document.createElement("div"),this._backdrop.className=m.BACKDROP,i&&t(this._backdrop).addClass(i),t(this._backdrop).appendTo(document.body),t(this._element).on(p.CLICK_DISMISS,function(t){return n._ignoreBackdropClick?void(n._ignoreBackdropClick=!1):void(t.target===t.currentTarget&&("static"===n._config.backdrop?n._element.focus():n.hide()))}),o&&r.reflow(this._backdrop),t(this._backdrop).addClass(m.SHOW),!e)return;if(!o)return void e();t(this._backdrop).one(r.TRANSITION_END,e).emulateTransitionEnd(d)}else if(!this._isShown&&this._backdrop){t(this._backdrop).removeClass(m.SHOW);var s=function(){n._removeBackdrop(),e&&e()};r.supportsTransitionEnd()&&t(this._element).hasClass(m.FADE)?t(this._backdrop).one(r.TRANSITION_END,s).emulateTransitionEnd(d):s()}else e&&e()},h.prototype._handleUpdate=function(){this._adjustDialog()},h.prototype._adjustDialog=function(){var t=this._element.scrollHeight>document.documentElement.clientHeight;!this._isBodyOverflowing&&t&&(this._element.style.paddingLeft=this._scrollbarWidth+"px"),this._isBodyOverflowing&&!t&&(this._element.style.paddingRight=this._scrollbarWidth+"px")},h.prototype._resetAdjustments=function(){this._element.style.paddingLeft="",this._element.style.paddingRight=""},h.prototype._checkScrollbar=function(){this._isBodyOverflowing=document.body.clientWidth<window.innerWidth,this._scrollbarWidth=this._getScrollbarWidth()},h.prototype._setScrollbar=function(){var e=parseInt(t(E.FIXED_CONTENT).css("padding-right")||0,10);this._originalBodyPadding=document.body.style.paddingRight||"",this._isBodyOverflowing&&(document.body.style.paddingRight=e+this._scrollbarWidth+"px")},h.prototype._resetScrollbar=function(){document.body.style.paddingRight=this._originalBodyPadding},h.prototype._getScrollbarWidth=function(){var t=document.createElement("div");t.className=m.SCROLLBAR_MEASURER,document.body.appendChild(t);var e=t.offsetWidth-t.clientWidth;return document.body.removeChild(t),e},h._jQueryInterface=function(e,n){return this.each(function(){var o=t(this).data(a),r=t.extend({},h.Default,t(this).data(),"object"===("undefined"==typeof e?"undefined":i(e))&&e);if(o||(o=new h(this,r),t(this).data(a,o)),"string"==typeof e){if(void 0===o[e])throw new Error('No method named "'+e+'"');o[e](n)}else r.show&&o.show(n)})},o(h,null,[{key:"VERSION",get:function(){return s}},{key:"Default",get:function(){return _}}]),h}();return t(document).on(p.CLICK_DATA_API,E.DATA_TOGGLE,function(e){var n=this,i=void 0,o=r.getSelectorFromElement(this);o&&(i=t(o)[0]);var s=t(i).data(a)?"toggle":t.extend({},t(i).data(),t(this).data());"A"!==this.tagName&&"AREA"!==this.tagName||e.preventDefault();var l=t(i).one(p.SHOW,function(e){e.isDefaultPrevented()||l.one(p.HIDDEN,function(){t(n).is(":visible")&&n.focus()})});v._jQueryInterface.call(t(i),s,this)}),t.fn[e]=v._jQueryInterface,t.fn[e].Constructor=v,t.fn[e].noConflict=function(){return t.fn[e]=c,v._jQueryInterface},v}(jQuery),function(t){var e="scrollspy",s="4.0.0-alpha.6",a="bs.scrollspy",l="."+a,h=".data-api",c=t.fn[e],u={offset:10,method:"auto",target:""},d={offset:"number",method:"string",target:"(string|element)"},f={ACTIVATE:"activate"+l,SCROLL:"scroll"+l,LOAD_DATA_API:"load"+l+h},_={DROPDOWN_ITEM:"dropdown-item",DROPDOWN_MENU:"dropdown-menu",NAV_LINK:"nav-link",NAV:"nav",ACTIVE:"active"},g={DATA_SPY:'[data-spy="scroll"]',ACTIVE:".active",LIST_ITEM:".list-item",LI:"li",LI_DROPDOWN:"li.dropdown",NAV_LINKS:".nav-link",DROPDOWN:".dropdown",DROPDOWN_ITEMS:".dropdown-item",DROPDOWN_TOGGLE:".dropdown-toggle"},p={OFFSET:"offset",POSITION:"position"},m=function(){function h(e,i){var o=this;n(this,h),this._element=e,this._scrollElement="BODY"===e.tagName?window:e,this._config=this._getConfig(i),this._selector=this._config.target+" "+g.NAV_LINKS+","+(this._config.target+" "+g.DROPDOWN_ITEMS),this._offsets=[],this._targets=[],this._activeTarget=null,this._scrollHeight=0,t(this._scrollElement).on(f.SCROLL,function(t){return o._process(t)}),this.refresh(),this._process()}return h.prototype.refresh=function(){var e=this,n=this._scrollElement!==this._scrollElement.window?p.POSITION:p.OFFSET,i="auto"===this._config.method?n:this._config.method,o=i===p.POSITION?this._getScrollTop():0;this._offsets=[],this._targets=[],this._scrollHeight=this._getScrollHeight();var s=t.makeArray(t(this._selector));s.map(function(e){var n=void 0,s=r.getSelectorFromElement(e);return s&&(n=t(s)[0]),n&&(n.offsetWidth||n.offsetHeight)?[t(n)[i]().top+o,s]:null}).filter(function(t){return t}).sort(function(t,e){return t[0]-e[0]}).forEach(function(t){e._offsets.push(t[0]),e._targets.push(t[1])})},h.prototype.dispose=function(){t.removeData(this._element,a),t(this._scrollElement).off(l),this._element=null,this._scrollElement=null,this._config=null,this._selector=null,this._offsets=null,this._targets=null,this._activeTarget=null,this._scrollHeight=null},h.prototype._getConfig=function(n){if(n=t.extend({},u,n),"string"!=typeof n.target){var i=t(n.target).attr("id");i||(i=r.getUID(e),t(n.target).attr("id",i)),n.target="#"+i}return r.typeCheckConfig(e,n,d),n},h.prototype._getScrollTop=function(){return this._scrollElement===window?this._scrollElement.pageYOffset:this._scrollElement.scrollTop},h.prototype._getScrollHeight=function(){return this._scrollElement.scrollHeight||Math.max(document.body.scrollHeight,document.documentElement.scrollHeight)},h.prototype._getOffsetHeight=function(){return this._scrollElement===window?window.innerHeight:this._scrollElement.offsetHeight},h.prototype._process=function(){var t=this._getScrollTop()+this._config.offset,e=this._getScrollHeight(),n=this._config.offset+e-this._getOffsetHeight();if(this._scrollHeight!==e&&this.refresh(),t>=n){var i=this._targets[this._targets.length-1];return void(this._activeTarget!==i&&this._activate(i))}if(this._activeTarget&&t<this._offsets[0]&&this._offsets[0]>0)return this._activeTarget=null,void this._clear();for(var o=this._offsets.length;o--;){var r=this._activeTarget!==this._targets[o]&&t>=this._offsets[o]&&(void 0===this._offsets[o+1]||t<this._offsets[o+1]);r&&this._activate(this._targets[o])}},h.prototype._activate=function(e){this._activeTarget=e,this._clear();var n=this._selector.split(",");n=n.map(function(t){return t+'[data-target="'+e+'"],'+(t+'[href="'+e+'"]')});var i=t(n.join(","));i.hasClass(_.DROPDOWN_ITEM)?(i.closest(g.DROPDOWN).find(g.DROPDOWN_TOGGLE).addClass(_.ACTIVE),i.addClass(_.ACTIVE)):i.parents(g.LI).find("> "+g.NAV_LINKS).addClass(_.ACTIVE),t(this._scrollElement).trigger(f.ACTIVATE,{relatedTarget:e})},h.prototype._clear=function(){t(this._selector).filter(g.ACTIVE).removeClass(_.ACTIVE)},h._jQueryInterface=function(e){return this.each(function(){var n=t(this).data(a),o="object"===("undefined"==typeof e?"undefined":i(e))&&e;
+if(n||(n=new h(this,o),t(this).data(a,n)),"string"==typeof e){if(void 0===n[e])throw new Error('No method named "'+e+'"');n[e]()}})},o(h,null,[{key:"VERSION",get:function(){return s}},{key:"Default",get:function(){return u}}]),h}();return t(window).on(f.LOAD_DATA_API,function(){for(var e=t.makeArray(t(g.DATA_SPY)),n=e.length;n--;){var i=t(e[n]);m._jQueryInterface.call(i,i.data())}}),t.fn[e]=m._jQueryInterface,t.fn[e].Constructor=m,t.fn[e].noConflict=function(){return t.fn[e]=c,m._jQueryInterface},m}(jQuery),function(t){var e="tab",i="4.0.0-alpha.6",s="bs.tab",a="."+s,l=".data-api",h=t.fn[e],c=150,u={HIDE:"hide"+a,HIDDEN:"hidden"+a,SHOW:"show"+a,SHOWN:"shown"+a,CLICK_DATA_API:"click"+a+l},d={DROPDOWN_MENU:"dropdown-menu",ACTIVE:"active",DISABLED:"disabled",FADE:"fade",SHOW:"show"},f={A:"a",LI:"li",DROPDOWN:".dropdown",LIST:"ul:not(.dropdown-menu), ol:not(.dropdown-menu), nav:not(.dropdown-menu)",FADE_CHILD:"> .nav-item .fade, > .fade",ACTIVE:".active",ACTIVE_CHILD:"> .nav-item > .active, > .active",DATA_TOGGLE:'[data-toggle="tab"], [data-toggle="pill"]',DROPDOWN_TOGGLE:".dropdown-toggle",DROPDOWN_ACTIVE_CHILD:"> .dropdown-menu .active"},_=function(){function e(t){n(this,e),this._element=t}return e.prototype.show=function(){var e=this;if(!(this._element.parentNode&&this._element.parentNode.nodeType===Node.ELEMENT_NODE&&t(this._element).hasClass(d.ACTIVE)||t(this._element).hasClass(d.DISABLED))){var n=void 0,i=void 0,o=t(this._element).closest(f.LIST)[0],s=r.getSelectorFromElement(this._element);o&&(i=t.makeArray(t(o).find(f.ACTIVE)),i=i[i.length-1]);var a=t.Event(u.HIDE,{relatedTarget:this._element}),l=t.Event(u.SHOW,{relatedTarget:i});if(i&&t(i).trigger(a),t(this._element).trigger(l),!l.isDefaultPrevented()&&!a.isDefaultPrevented()){s&&(n=t(s)[0]),this._activate(this._element,o);var h=function(){var n=t.Event(u.HIDDEN,{relatedTarget:e._element}),o=t.Event(u.SHOWN,{relatedTarget:i});t(i).trigger(n),t(e._element).trigger(o)};n?this._activate(n,n.parentNode,h):h()}}},e.prototype.dispose=function(){t.removeClass(this._element,s),this._element=null},e.prototype._activate=function(e,n,i){var o=this,s=t(n).find(f.ACTIVE_CHILD)[0],a=i&&r.supportsTransitionEnd()&&(s&&t(s).hasClass(d.FADE)||Boolean(t(n).find(f.FADE_CHILD)[0])),l=function(){return o._transitionComplete(e,s,a,i)};s&&a?t(s).one(r.TRANSITION_END,l).emulateTransitionEnd(c):l(),s&&t(s).removeClass(d.SHOW)},e.prototype._transitionComplete=function(e,n,i,o){if(n){t(n).removeClass(d.ACTIVE);var s=t(n.parentNode).find(f.DROPDOWN_ACTIVE_CHILD)[0];s&&t(s).removeClass(d.ACTIVE),n.setAttribute("aria-expanded",!1)}if(t(e).addClass(d.ACTIVE),e.setAttribute("aria-expanded",!0),i?(r.reflow(e),t(e).addClass(d.SHOW)):t(e).removeClass(d.FADE),e.parentNode&&t(e.parentNode).hasClass(d.DROPDOWN_MENU)){var a=t(e).closest(f.DROPDOWN)[0];a&&t(a).find(f.DROPDOWN_TOGGLE).addClass(d.ACTIVE),e.setAttribute("aria-expanded",!0)}o&&o()},e._jQueryInterface=function(n){return this.each(function(){var i=t(this),o=i.data(s);if(o||(o=new e(this),i.data(s,o)),"string"==typeof n){if(void 0===o[n])throw new Error('No method named "'+n+'"');o[n]()}})},o(e,null,[{key:"VERSION",get:function(){return i}}]),e}();return t(document).on(u.CLICK_DATA_API,f.DATA_TOGGLE,function(e){e.preventDefault(),_._jQueryInterface.call(t(this),"show")}),t.fn[e]=_._jQueryInterface,t.fn[e].Constructor=_,t.fn[e].noConflict=function(){return t.fn[e]=h,_._jQueryInterface},_}(jQuery),function(t){if("undefined"==typeof Tether)throw new Error("Bootstrap tooltips require Tether (http://tether.io/)");var e="tooltip",s="4.0.0-alpha.6",a="bs.tooltip",l="."+a,h=t.fn[e],c=150,u="bs-tether",d={animation:!0,template:'<div class="tooltip" role="tooltip"><div class="tooltip-inner"></div></div>',trigger:"hover focus",title:"",delay:0,html:!1,selector:!1,placement:"top",offset:"0 0",constraints:[],container:!1},f={animation:"boolean",template:"string",title:"(string|element|function)",trigger:"string",delay:"(number|object)",html:"boolean",selector:"(string|boolean)",placement:"(string|function)",offset:"string",constraints:"array",container:"(string|element|boolean)"},_={TOP:"bottom center",RIGHT:"middle left",BOTTOM:"top center",LEFT:"middle right"},g={SHOW:"show",OUT:"out"},p={HIDE:"hide"+l,HIDDEN:"hidden"+l,SHOW:"show"+l,SHOWN:"shown"+l,INSERTED:"inserted"+l,CLICK:"click"+l,FOCUSIN:"focusin"+l,FOCUSOUT:"focusout"+l,MOUSEENTER:"mouseenter"+l,MOUSELEAVE:"mouseleave"+l},m={FADE:"fade",SHOW:"show"},E={TOOLTIP:".tooltip",TOOLTIP_INNER:".tooltip-inner"},v={element:!1,enabled:!1},T={HOVER:"hover",FOCUS:"focus",CLICK:"click",MANUAL:"manual"},I=function(){function h(t,e){n(this,h),this._isEnabled=!0,this._timeout=0,this._hoverState="",this._activeTrigger={},this._isTransitioning=!1,this._tether=null,this.element=t,this.config=this._getConfig(e),this.tip=null,this._setListeners()}return h.prototype.enable=function(){this._isEnabled=!0},h.prototype.disable=function(){this._isEnabled=!1},h.prototype.toggleEnabled=function(){this._isEnabled=!this._isEnabled},h.prototype.toggle=function(e){if(e){var n=this.constructor.DATA_KEY,i=t(e.currentTarget).data(n);i||(i=new this.constructor(e.currentTarget,this._getDelegateConfig()),t(e.currentTarget).data(n,i)),i._activeTrigger.click=!i._activeTrigger.click,i._isWithActiveTrigger()?i._enter(null,i):i._leave(null,i)}else{if(t(this.getTipElement()).hasClass(m.SHOW))return void this._leave(null,this);this._enter(null,this)}},h.prototype.dispose=function(){clearTimeout(this._timeout),this.cleanupTether(),t.removeData(this.element,this.constructor.DATA_KEY),t(this.element).off(this.constructor.EVENT_KEY),t(this.element).closest(".modal").off("hide.bs.modal"),this.tip&&t(this.tip).remove(),this._isEnabled=null,this._timeout=null,this._hoverState=null,this._activeTrigger=null,this._tether=null,this.element=null,this.config=null,this.tip=null},h.prototype.show=function(){var e=this;if("none"===t(this.element).css("display"))throw new Error("Please use show on visible elements");var n=t.Event(this.constructor.Event.SHOW);if(this.isWithContent()&&this._isEnabled){if(this._isTransitioning)throw new Error("Tooltip is transitioning");t(this.element).trigger(n);var i=t.contains(this.element.ownerDocument.documentElement,this.element);if(n.isDefaultPrevented()||!i)return;var o=this.getTipElement(),s=r.getUID(this.constructor.NAME);o.setAttribute("id",s),this.element.setAttribute("aria-describedby",s),this.setContent(),this.config.animation&&t(o).addClass(m.FADE);var a="function"==typeof this.config.placement?this.config.placement.call(this,o,this.element):this.config.placement,l=this._getAttachment(a),c=this.config.container===!1?document.body:t(this.config.container);t(o).data(this.constructor.DATA_KEY,this).appendTo(c),t(this.element).trigger(this.constructor.Event.INSERTED),this._tether=new Tether({attachment:l,element:o,target:this.element,classes:v,classPrefix:u,offset:this.config.offset,constraints:this.config.constraints,addTargetClasses:!1}),r.reflow(o),this._tether.position(),t(o).addClass(m.SHOW);var d=function(){var n=e._hoverState;e._hoverState=null,e._isTransitioning=!1,t(e.element).trigger(e.constructor.Event.SHOWN),n===g.OUT&&e._leave(null,e)};if(r.supportsTransitionEnd()&&t(this.tip).hasClass(m.FADE))return this._isTransitioning=!0,void t(this.tip).one(r.TRANSITION_END,d).emulateTransitionEnd(h._TRANSITION_DURATION);d()}},h.prototype.hide=function(e){var n=this,i=this.getTipElement(),o=t.Event(this.constructor.Event.HIDE);if(this._isTransitioning)throw new Error("Tooltip is transitioning");var s=function(){n._hoverState!==g.SHOW&&i.parentNode&&i.parentNode.removeChild(i),n.element.removeAttribute("aria-describedby"),t(n.element).trigger(n.constructor.Event.HIDDEN),n._isTransitioning=!1,n.cleanupTether(),e&&e()};t(this.element).trigger(o),o.isDefaultPrevented()||(t(i).removeClass(m.SHOW),this._activeTrigger[T.CLICK]=!1,this._activeTrigger[T.FOCUS]=!1,this._activeTrigger[T.HOVER]=!1,r.supportsTransitionEnd()&&t(this.tip).hasClass(m.FADE)?(this._isTransitioning=!0,t(i).one(r.TRANSITION_END,s).emulateTransitionEnd(c)):s(),this._hoverState="")},h.prototype.isWithContent=function(){return Boolean(this.getTitle())},h.prototype.getTipElement=function(){return this.tip=this.tip||t(this.config.template)[0]},h.prototype.setContent=function(){var e=t(this.getTipElement());this.setElementContent(e.find(E.TOOLTIP_INNER),this.getTitle()),e.removeClass(m.FADE+" "+m.SHOW),this.cleanupTether()},h.prototype.setElementContent=function(e,n){var o=this.config.html;"object"===("undefined"==typeof n?"undefined":i(n))&&(n.nodeType||n.jquery)?o?t(n).parent().is(e)||e.empty().append(n):e.text(t(n).text()):e[o?"html":"text"](n)},h.prototype.getTitle=function(){var t=this.element.getAttribute("data-original-title");return t||(t="function"==typeof this.config.title?this.config.title.call(this.element):this.config.title),t},h.prototype.cleanupTether=function(){this._tether&&this._tether.destroy()},h.prototype._getAttachment=function(t){return _[t.toUpperCase()]},h.prototype._setListeners=function(){var e=this,n=this.config.trigger.split(" ");n.forEach(function(n){if("click"===n)t(e.element).on(e.constructor.Event.CLICK,e.config.selector,function(t){return e.toggle(t)});else if(n!==T.MANUAL){var i=n===T.HOVER?e.constructor.Event.MOUSEENTER:e.constructor.Event.FOCUSIN,o=n===T.HOVER?e.constructor.Event.MOUSELEAVE:e.constructor.Event.FOCUSOUT;t(e.element).on(i,e.config.selector,function(t){return e._enter(t)}).on(o,e.config.selector,function(t){return e._leave(t)})}t(e.element).closest(".modal").on("hide.bs.modal",function(){return e.hide()})}),this.config.selector?this.config=t.extend({},this.config,{trigger:"manual",selector:""}):this._fixTitle()},h.prototype._fixTitle=function(){var t=i(this.element.getAttribute("data-original-title"));(this.element.getAttribute("title")||"string"!==t)&&(this.element.setAttribute("data-original-title",this.element.getAttribute("title")||""),this.element.setAttribute("title",""))},h.prototype._enter=function(e,n){var i=this.constructor.DATA_KEY;return n=n||t(e.currentTarget).data(i),n||(n=new this.constructor(e.currentTarget,this._getDelegateConfig()),t(e.currentTarget).data(i,n)),e&&(n._activeTrigger["focusin"===e.type?T.FOCUS:T.HOVER]=!0),t(n.getTipElement()).hasClass(m.SHOW)||n._hoverState===g.SHOW?void(n._hoverState=g.SHOW):(clearTimeout(n._timeout),n._hoverState=g.SHOW,n.config.delay&&n.config.delay.show?void(n._timeout=setTimeout(function(){n._hoverState===g.SHOW&&n.show()},n.config.delay.show)):void n.show())},h.prototype._leave=function(e,n){var i=this.constructor.DATA_KEY;if(n=n||t(e.currentTarget).data(i),n||(n=new this.constructor(e.currentTarget,this._getDelegateConfig()),t(e.currentTarget).data(i,n)),e&&(n._activeTrigger["focusout"===e.type?T.FOCUS:T.HOVER]=!1),!n._isWithActiveTrigger())return clearTimeout(n._timeout),n._hoverState=g.OUT,n.config.delay&&n.config.delay.hide?void(n._timeout=setTimeout(function(){n._hoverState===g.OUT&&n.hide()},n.config.delay.hide)):void n.hide()},h.prototype._isWithActiveTrigger=function(){for(var t in this._activeTrigger)if(this._activeTrigger[t])return!0;return!1},h.prototype._getConfig=function(n){return n=t.extend({},this.constructor.Default,t(this.element).data(),n),n.delay&&"number"==typeof n.delay&&(n.delay={show:n.delay,hide:n.delay}),r.typeCheckConfig(e,n,this.constructor.DefaultType),n},h.prototype._getDelegateConfig=function(){var t={};if(this.config)for(var e in this.config)this.constructor.Default[e]!==this.config[e]&&(t[e]=this.config[e]);return t},h._jQueryInterface=function(e){return this.each(function(){var n=t(this).data(a),o="object"===("undefined"==typeof e?"undefined":i(e))&&e;if((n||!/dispose|hide/.test(e))&&(n||(n=new h(this,o),t(this).data(a,n)),"string"==typeof e)){if(void 0===n[e])throw new Error('No method named "'+e+'"');n[e]()}})},o(h,null,[{key:"VERSION",get:function(){return s}},{key:"Default",get:function(){return d}},{key:"NAME",get:function(){return e}},{key:"DATA_KEY",get:function(){return a}},{key:"Event",get:function(){return p}},{key:"EVENT_KEY",get:function(){return l}},{key:"DefaultType",get:function(){return f}}]),h}();return t.fn[e]=I._jQueryInterface,t.fn[e].Constructor=I,t.fn[e].noConflict=function(){return t.fn[e]=h,I._jQueryInterface},I}(jQuery));(function(r){var a="popover",l="4.0.0-alpha.6",h="bs.popover",c="."+h,u=r.fn[a],d=r.extend({},s.Default,{placement:"right",trigger:"click",content:"",template:'<div class="popover" role="tooltip"><h3 class="popover-title"></h3><div class="popover-content"></div></div>'}),f=r.extend({},s.DefaultType,{content:"(string|element|function)"}),_={FADE:"fade",SHOW:"show"},g={TITLE:".popover-title",CONTENT:".popover-content"},p={HIDE:"hide"+c,HIDDEN:"hidden"+c,SHOW:"show"+c,SHOWN:"shown"+c,INSERTED:"inserted"+c,CLICK:"click"+c,FOCUSIN:"focusin"+c,FOCUSOUT:"focusout"+c,MOUSEENTER:"mouseenter"+c,MOUSELEAVE:"mouseleave"+c},m=function(s){function u(){return n(this,u),t(this,s.apply(this,arguments))}return e(u,s),u.prototype.isWithContent=function(){return this.getTitle()||this._getContent()},u.prototype.getTipElement=function(){return this.tip=this.tip||r(this.config.template)[0]},u.prototype.setContent=function(){var t=r(this.getTipElement());this.setElementContent(t.find(g.TITLE),this.getTitle()),this.setElementContent(t.find(g.CONTENT),this._getContent()),t.removeClass(_.FADE+" "+_.SHOW),this.cleanupTether()},u.prototype._getContent=function(){return this.element.getAttribute("data-content")||("function"==typeof this.config.content?this.config.content.call(this.element):this.config.content)},u._jQueryInterface=function(t){return this.each(function(){var e=r(this).data(h),n="object"===("undefined"==typeof t?"undefined":i(t))?t:null;if((e||!/destroy|hide/.test(t))&&(e||(e=new u(this,n),r(this).data(h,e)),"string"==typeof t)){if(void 0===e[t])throw new Error('No method named "'+t+'"');e[t]()}})},o(u,null,[{key:"VERSION",get:function(){return l}},{key:"Default",get:function(){return d}},{key:"NAME",get:function(){return a}},{key:"DATA_KEY",get:function(){return h}},{key:"Event",get:function(){return p}},{key:"EVENT_KEY",get:function(){return c}},{key:"DefaultType",get:function(){return f}}]),u}(s);return r.fn[a]=m._jQueryInterface,r.fn[a].Constructor=m,r.fn[a].noConflict=function(){return r.fn[a]=u,m._jQueryInterface},m})(jQuery)}();
 ;(function(l,e){"object"===typeof exports?e(exports):"function"===typeof define&&define.amd?define(["exports"],e):e(l)})(this,function(l){function e(a){this._targetElement="undefined"!=typeof a.length?a:[a];"undefined"===typeof window._progressjsId&&(window._progressjsId=1);"undefined"===typeof window._progressjsIntervals&&(window._progressjsIntervals={});this._options={theme:"blue",overlayMode:!1,considerTransition:!0}}function m(a,c){var d=this;100<=c&&(c=100);a.hasAttribute("data-progressjs")&&
 setTimeout(function(){"undefined"!=typeof d._onProgressCallback&&d._onProgressCallback.call(d,a,c);var b=h(a);b.style.width=parseInt(c)+"%";var b=b.querySelector(".progressjs-percent"),g=parseInt(b.innerHTML.replace("%","")),e=parseInt(c),j=function(a,b,c){var d=Math.abs(b-c);3>d?k=30:20>d?k=20:intervanIn=1;0!=b-c&&(a.innerHTML=(f?++b:--b)+"%",setTimeout(function(){j(a,b,c)},k))},f=!0;g>e&&(f=!1);var k=10;j(b,g,e)},50)}function h(a){a=parseInt(a.getAttribute("data-progressjs"));return document.querySelector('.progressjs-container > .progressjs-progress[data-progressjs="'+
 a+'"] > .progressjs-inner')}function p(a){for(var c=0,d=this._targetElement.length;c<d;c++){var b=this._targetElement[c];if(b.hasAttribute("data-progressjs")){var g=h(b);(g=parseInt(g.style.width.replace("%","")))&&m.call(this,b,g+(a||1))}}}function q(){var a,c=document.createElement("fakeelement"),d={transition:"transitionend",OTransition:"oTransitionEnd",MozTransition:"transitionend",WebkitTransition:"webkitTransitionEnd"};for(a in d)if(void 0!==c.style[a])return d[a]}var n=function(a){if("object"===
@@ -66822,8 +66842,8 @@ define('ember-ajax/errors', ['exports', 'ember'], function (exports, _ember) {
    * @extends AjaxError
    */
 
-  function ConflictError() {
-    AjaxError.call(this, null, 'The ajax operation failed due to a conflict');
+  function ConflictError(errors) {
+    AjaxError.call(this, errors, 'The ajax operation failed due to a conflict');
   }
 
   ConflictError.prototype = Object.create(AjaxError.prototype);
@@ -67030,7 +67050,7 @@ define('ember-ajax/index', ['exports', 'ember-ajax/request'], function (exports,
     }
   });
 });
-define('ember-ajax/mixins/ajax-request', ['exports', 'ember', 'ember-ajax/errors', 'ember-ajax/utils/parse-response-headers', 'ember-ajax/utils/url-helpers', 'ember-ajax/utils/ajax'], function (exports, _ember, _emberAjaxErrors, _emberAjaxUtilsParseResponseHeaders, _emberAjaxUtilsUrlHelpers, _emberAjaxUtilsAjax) {
+define('ember-ajax/mixins/ajax-request', ['exports', 'ember', 'ember-ajax/errors', 'ember-ajax/utils/parse-response-headers', 'ember-ajax/utils/get-header', 'ember-ajax/utils/url-helpers', 'ember-ajax/utils/ajax'], function (exports, _ember, _emberAjaxErrors, _emberAjaxUtilsParseResponseHeaders, _emberAjaxUtilsGetHeader, _emberAjaxUtilsUrlHelpers, _emberAjaxUtilsAjax) {
   'use strict';
 
   var $ = _ember['default'].$;
@@ -67050,13 +67070,13 @@ define('ember-ajax/mixins/ajax-request', ['exports', 'ember', 'ember-ajax/errors
   var testing = _ember['default'].testing;
   var warn = _ember['default'].warn;
 
-  var JSONAPIContentType = 'application/vnd.api+json';
+  var JSONAPIContentType = /^application\/vnd\.api\+json/i;
 
   function isJSONAPIContentType(header) {
     if (isNone(header)) {
       return false;
     }
-    return header.indexOf(JSONAPIContentType) === 0;
+    return !!header.match(JSONAPIContentType);
   }
 
   function startsWithSlash(string) {
@@ -67244,12 +67264,10 @@ define('ember-ajax/mixins/ajax-request', ['exports', 'ember', 'ember-ajax/errors
     _makeRequest: function _makeRequest(hash) {
       var _this2 = this;
 
-      var requestData = {
-        type: hash.type,
-        url: hash.url
-      };
+      var method = hash.method || hash.type || 'GET';
+      var requestData = { method: method, type: method, url: hash.url };
 
-      if (isJSONAPIContentType(hash.headers['Content-Type']) && requestData.type !== 'GET') {
+      if (isJSONAPIContentType((0, _emberAjaxUtilsGetHeader['default'])(hash.headers, 'Content-Type')) && requestData.type !== 'GET') {
         if (typeof hash.data === 'object') {
           hash.data = JSON.stringify(hash.data);
         }
@@ -67624,9 +67642,9 @@ define('ember-ajax/mixins/ajax-request', ['exports', 'ember', 'ember-ajax/errors
      */
     generateDetailedMessage: function generateDetailedMessage(status, headers, payload, requestData) {
       var shortenedPayload = undefined;
-      var payloadContentType = headers['Content-Type'] || 'Empty Content-Type';
+      var payloadContentType = (0, _emberAjaxUtilsGetHeader['default'])(headers, 'Content-Type') || 'Empty Content-Type';
 
-      if (payloadContentType === 'text/html' && payload.length > 250) {
+      if (payloadContentType.toLowerCase() === 'text/html' && payload.length > 250) {
         shortenedPayload = '[Omitted Lengthy HTML]';
       } else {
         shortenedPayload = JSON.stringify(payload);
@@ -67781,7 +67799,7 @@ define('ember-ajax/mixins/ajax-request', ['exports', 'ember', 'ember-ajax/errors
      */
     parseErrorResponse: function parseErrorResponse(responseText) {
       try {
-        return $.parseJSON(responseText);
+        return JSON.parse(responseText);
       } catch (e) {
         return responseText;
       }
@@ -67906,8 +67924,9 @@ define('ember-ajax/mixins/ajax-support', ['exports', 'ember'], function (exports
     ajax: function ajax(url, type) {
       var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
-      options.type = type;
-      return this.get('ajaxService').request(url, options);
+      var augmentedOptions = this.ajaxOptions.apply(this, arguments);
+
+      return this.get('ajaxService').request(url, augmentedOptions);
     }
   });
 });
@@ -67964,6 +67983,35 @@ define('ember-ajax/utils/ajax', ['exports', 'ember', 'ember-ajax/utils/is-fastbo
   var $ = _ember['default'].$;
 
   exports['default'] = _emberAjaxUtilsIsFastboot['default'] ? najax : $.ajax;
+});
+define('ember-ajax/utils/get-header', ['exports', 'ember'], function (exports, _ember) {
+  'use strict';
+
+  exports['default'] = getHeader;
+
+  var A = _ember['default'].A;
+  var isNone = _ember['default'].isNone;
+
+  /**
+   * Do a case-insensitive lookup of an HTTP header
+   *
+   * @function getHeader
+   * @private
+   * @param {Object} headers
+   * @param {string} name
+   * @return {string}
+   */
+  function getHeader(headers, name) {
+    if (isNone(headers) || isNone(name)) {
+      return; // ask for nothing, get nothing.
+    }
+
+    var matchedKey = A(Object.keys(headers)).find(function (key) {
+      return key.toLowerCase() === name.toLowerCase();
+    });
+
+    return headers[matchedKey];
+  }
 });
 define('ember-ajax/utils/is-fastboot', ['exports'], function (exports) {
   /* global FastBoot */
@@ -68346,106 +68394,222 @@ define('ember-data/-private/adapters/build-url-mixin', ['exports', 'ember'], fun
     },
 
     /**
-     * @method urlForFindRecord
-     * @param {String} id
-     * @param {String} modelName
-     * @param {DS.Snapshot} snapshot
-     * @return {String} url
-     */
+     Builds a URL for a `store.findRecord(type, id)` call.
+      Example:
+      ```app/adapters/user.js
+     import DS from 'ember-data';
+      export default DS.JSONAPIAdapter.extend({
+       urlForFindRecord(id, modelName, snapshot) {
+         let baseUrl = this.buildURL();
+         return `${baseUrl}/users/${snapshot.adapterOptions.user_id}/playlists/${id}`;
+       }
+     });
+     ```
+      @method urlForFindRecord
+     @param {String} id
+     @param {String} modelName
+     @param {DS.Snapshot} snapshot
+     @return {String} url
+      */
     urlForFindRecord: function urlForFindRecord(id, modelName, snapshot) {
       return this._buildURL(modelName, id);
     },
 
     /**
-     * @method urlForFindAll
-     * @param {String} modelName
-     * @param {DS.SnapshotRecordArray} snapshot
-     * @return {String} url
+     Builds a URL for a `store.findAll(type)` call.
+      Example:
+      ```app/adapters/comment.js
+     import DS from 'ember-data';
+      export default DS.JSONAPIAdapter.extend({
+       urlForFindAll(id, modelName, snapshot) {
+         return 'data/comments.json';
+       }
+     });
+     ```
+      @method urlForFindAll
+     @param {String} modelName
+     @param {DS.SnapshotRecordArray} snapshot
+     @return {String} url
      */
     urlForFindAll: function urlForFindAll(modelName, snapshot) {
       return this._buildURL(modelName);
     },
 
     /**
-     * @method urlForQuery
-     * @param {Object} query
-     * @param {String} modelName
-     * @return {String} url
+     Builds a URL for a `store.query(type, query)` call.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.RESTAdapter.extend({
+       host: 'https://api.github.com',
+       urlForQuery (query, modelName) {
+         switch(modelName) {
+           case 'repo':
+             return `https://api.github.com/orgs/${query.orgId}/repos`;
+           default:
+             return this._super(...arguments);
+         }
+       }
+     });
+     ```
+      @method urlForQuery
+     @param {Object} query
+     @param {String} modelName
+     @return {String} url
      */
     urlForQuery: function urlForQuery(query, modelName) {
       return this._buildURL(modelName);
     },
 
     /**
-     * @method urlForQueryRecord
-     * @param {Object} query
-     * @param {String} modelName
-     * @return {String} url
+     Builds a URL for a `store.queryRecord(type, query)` call.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.RESTAdapter.extend({
+       urlForQueryRecord({ slug }, modelName) {
+         let baseUrl = this.buildURL();
+         return `${baseUrl}/${encodeURIComponent(slug)}`;
+       }
+     });
+     ```
+      @method urlForQueryRecord
+     @param {Object} query
+     @param {String} modelName
+     @return {String} url
      */
     urlForQueryRecord: function urlForQueryRecord(query, modelName) {
       return this._buildURL(modelName);
     },
 
     /**
-     * @method urlForFindMany
-     * @param {Array} ids
-     * @param {String} modelName
-     * @param {Array} snapshots
-     * @return {String} url
+     Builds a URL for coalesceing multiple `store.findRecord(type, id)
+     records into 1 request when the adapter's `coalesceFindRequests`
+     property is true.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.RESTAdapter.extend({
+       urlForFindMany(ids, modelName) {
+         let baseUrl = this.buildURL();
+         return `${baseUrl}/coalesce`;
+       }
+     });
+     ```
+      @method urlForFindMany
+     @param {Array} ids
+     @param {String} modelName
+     @param {Array} snapshots
+     @return {String} url
      */
     urlForFindMany: function urlForFindMany(ids, modelName, snapshots) {
       return this._buildURL(modelName);
     },
 
     /**
-     * @method urlForFindHasMany
-     * @param {String} id
-     * @param {String} modelName
-     * @param {DS.Snapshot} snapshot
-     * @return {String} url
+     Builds a URL for fetching a async hasMany relationship when a url
+     is not provided by the server.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.JSONAPIAdapter.extend({
+       urlForFindHasMany(id, modelName, snapshot) {
+         let baseUrl = this.buildURL(id, modelName);
+         return `${baseUrl}/relationships`;
+       }
+     });
+     ```
+      @method urlForFindHasMany
+     @param {String} id
+     @param {String} modelName
+     @param {DS.Snapshot} snapshot
+     @return {String} url
      */
     urlForFindHasMany: function urlForFindHasMany(id, modelName, snapshot) {
       return this._buildURL(modelName, id);
     },
 
     /**
-     * @method urlForFindBelongsTo
-     * @param {String} id
-     * @param {String} modelName
-     * @param {DS.Snapshot} snapshot
-     * @return {String} url
+     Builds a URL for fetching a async belongsTo relationship when a url
+     is not provided by the server.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.JSONAPIAdapter.extend({
+       urlForFindBelongsTo(id, modelName, snapshot) {
+         let baseUrl = this.buildURL(id, modelName);
+         return `${baseUrl}/relationships`;
+       }
+     });
+     ```
+      @method urlForFindBelongsTo
+     @param {String} id
+     @param {String} modelName
+     @param {DS.Snapshot} snapshot
+     @return {String} url
      */
     urlForFindBelongsTo: function urlForFindBelongsTo(id, modelName, snapshot) {
       return this._buildURL(modelName, id);
     },
 
     /**
-     * @method urlForCreateRecord
-     * @param {String} modelName
-     * @param {DS.Snapshot} snapshot
-     * @return {String} url
+     Builds a URL for a `record.save()` call when the record was created
+     locally using `store.createRecord()`.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.RESTAdapter.extend({
+       urlForCreateRecord(modelName, snapshot) {
+         return this._super(...arguments) + '/new';
+       }
+     });
+     ```
+      @method urlForCreateRecord
+     @param {String} modelName
+     @param {DS.Snapshot} snapshot
+     @return {String} url
      */
     urlForCreateRecord: function urlForCreateRecord(modelName, snapshot) {
       return this._buildURL(modelName);
     },
 
     /**
-     * @method urlForUpdateRecord
-     * @param {String} id
-     * @param {String} modelName
-     * @param {DS.Snapshot} snapshot
-     * @return {String} url
+     Builds a URL for a `record.save()` call when the record has been update locally.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.RESTAdapter.extend({
+       urlForUpdateRecord(id, modelName, snapshot) {
+         return `/${id}/feed?access_token=${snapshot.adapterOptions.token}`;
+       }
+     });
+     ```
+      @method urlForUpdateRecord
+     @param {String} id
+     @param {String} modelName
+     @param {DS.Snapshot} snapshot
+     @return {String} url
      */
     urlForUpdateRecord: function urlForUpdateRecord(id, modelName, snapshot) {
       return this._buildURL(modelName, id);
     },
 
     /**
-     * @method urlForDeleteRecord
-     * @param {String} id
-     * @param {String} modelName
-     * @param {DS.Snapshot} snapshot
-     * @return {String} url
+     Builds a URL for a `record.save()` call when the record has been deleted locally.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.RESTAdapter.extend({
+       urlForDeleteRecord(id, modelName, snapshot) {
+         return this._super(...arguments) + '/destroy';
+       }
+     });
+     ```
+      @method urlForDeleteRecord
+     @param {String} id
+     @param {String} modelName
+     @param {DS.Snapshot} snapshot
+     @return {String} url
      */
     urlForDeleteRecord: function urlForDeleteRecord(id, modelName, snapshot) {
       return this._buildURL(modelName, id);
@@ -68556,6 +68720,7 @@ define('ember-data/-private/debug', ['exports', 'ember'], function (exports, _em
   exports.deprecate = deprecate;
   exports.info = info;
   exports.runInDebug = runInDebug;
+  exports.instrument = instrument;
   exports.warn = warn;
   exports.debugSeal = debugSeal;
   exports.assertPolymorphicType = assertPolymorphicType;
@@ -68580,6 +68745,10 @@ define('ember-data/-private/debug', ['exports', 'ember'], function (exports, _em
     return _ember['default'].runInDebug.apply(_ember['default'], arguments);
   }
 
+  function instrument(method) {
+    return method();
+  }
+
   function warn() {
     return _ember['default'].warn.apply(_ember['default'], arguments);
   }
@@ -68588,16 +68757,16 @@ define('ember-data/-private/debug', ['exports', 'ember'], function (exports, _em
     return _ember['default'].debugSeal.apply(_ember['default'], arguments);
   }
 
-  function checkPolymorphic(typeClass, addedRecord) {
-    if (typeClass.__isMixin) {
+  function checkPolymorphic(modelClass, addedModelClass) {
+    if (modelClass.__isMixin) {
       //TODO Need to do this in order to support mixins, should convert to public api
       //once it exists in Ember
-      return typeClass.__mixin.detect(addedRecord.type.PrototypeMixin);
+      return modelClass.__mixin.detect(addedModelClass.PrototypeMixin);
     }
     if (_ember['default'].MODEL_FACTORY_INJECTIONS) {
-      typeClass = typeClass.superclass;
+      modelClass = modelClass.superclass;
     }
-    return typeClass.detect(addedRecord.type);
+    return modelClass.detect(addedModelClass);
   }
 
   /*
@@ -68613,22 +68782,21 @@ define('ember-data/-private/debug', ['exports', 'ember'], function (exports, _em
     `record.relationshipFor(key)`.
   
     @method assertPolymorphicType
-    @param {InternalModel} record
+    @param {InternalModel} internalModel
     @param {RelationshipMeta} relationshipMeta retrieved via
            `record.relationshipFor(key)`
     @param {InternalModel} addedRecord record which
            should be added/set for the relationship
   */
 
-  function assertPolymorphicType(record, relationshipMeta, addedRecord) {
-    var addedType = addedRecord.type.modelName;
-    var recordType = record.type.modelName;
+  function assertPolymorphicType(parentInternalModel, relationshipMeta, addedInternalModel) {
+    var addedModelName = addedInternalModel.modelName;
+    var parentModelName = parentInternalModel.modelName;
     var key = relationshipMeta.key;
-    var typeClass = record.store.modelFor(relationshipMeta.type);
+    var relationshipClass = parentInternalModel.store.modelFor(relationshipMeta.type);
+    var assertionMessage = 'You cannot add a record of modelClass \'' + addedModelName + '\' to the \'' + parentModelName + '.' + key + '\' relationship (only \'' + relationshipClass.modelName + '\' allowed)';
 
-    var assertionMessage = 'You cannot add a record of type \'' + addedType + '\' to the \'' + recordType + '.' + key + '\' relationship (only \'' + typeClass.modelName + '\' allowed)';
-
-    assert(assertionMessage, checkPolymorphic(typeClass, addedRecord));
+    assert(assertionMessage, checkPolymorphic(relationshipClass, addedInternalModel.modelClass));
   }
 });
 define('ember-data/-private/ext/date', ['exports', 'ember', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateDebug) {
@@ -69060,34 +69228,38 @@ define('ember-data/-private/system/debug/debug-info', ['exports', 'ember'], func
     */
     _debugInfo: function _debugInfo() {
       var attributes = ['id'];
-      var relationships = { belongsTo: [], hasMany: [] };
+      var relationships = {};
       var expensiveProperties = [];
 
       this.eachAttribute(function (name, meta) {
         return attributes.push(name);
       });
 
-      this.eachRelationship(function (name, relationship) {
-        relationships[relationship.kind].push(name);
-        expensiveProperties.push(name);
-      });
-
       var groups = [{
         name: 'Attributes',
         properties: attributes,
         expand: true
-      }, {
-        name: 'Belongs To',
-        properties: relationships.belongsTo,
-        expand: true
-      }, {
-        name: 'Has Many',
-        properties: relationships.hasMany,
-        expand: true
-      }, {
+      }];
+
+      this.eachRelationship(function (name, relationship) {
+        var properties = relationships[relationship.kind];
+
+        if (properties === undefined) {
+          properties = relationships[relationship.kind] = [];
+          groups.push({
+            name: relationship.name,
+            properties: properties,
+            expand: true
+          });
+        }
+        properties.push(name);
+        expensiveProperties.push(name);
+      });
+
+      groups.push({
         name: 'Flags',
         properties: ['isLoaded', 'hasDirtyAttributes', 'isSaving', 'isDeleted', 'isError', 'isNew', 'isValid']
-      }];
+      });
 
       return {
         propertyInfo: {
@@ -69215,28 +69387,89 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
   exports["default"] = _ember["default"].Object.extend(_ember["default"].MutableArray, _ember["default"].Evented, {
     init: function init() {
       this._super.apply(this, arguments);
+
+      /**
+      The loading state of this array
+       @property {Boolean} isLoaded
+      */
+      this.isLoaded = false;
+      this.length = 0;
+
+      /**
+      Used for async `hasMany` arrays
+      to keep track of when they will resolve.
+       @property {Ember.RSVP.Promise} promise
+      @private
+      */
+      this.promise = null;
+
+      /**
+      Metadata associated with the request for async hasMany relationships.
+       Example
+       Given that the server returns the following JSON payload when fetching a
+      hasMany relationship:
+       ```js
+      {
+        "comments": [{
+          "id": 1,
+          "comment": "This is the first comment",
+        }, {
+      // ...
+        }],
+         "meta": {
+          "page": 1,
+          "total": 5
+        }
+      }
+      ```
+       You can then access the metadata via the `meta` property:
+       ```js
+      post.get('comments').then(function(comments) {
+        var meta = comments.get('meta');
+       // meta.page => 1
+      // meta.total => 5
+      });
+      ```
+       @property {Object} meta
+      @public
+      */
+      this.meta = this.meta || null;
+
+      /**
+      `true` if the relationship is polymorphic, `false` otherwise.
+       @property {Boolean} isPolymorphic
+      @private
+      */
+      this.isPolymorphic = this.isPolymorphic || false;
+
+      /**
+      The relationship which manages this array.
+       @property {ManyRelationship} relationship
+      @private
+      */
+      this.relationship = this.relationship || null;
+
       this.currentState = _ember["default"].A([]);
+      this.flushCanonical(false);
     },
-
-    record: null,
-
-    canonicalState: null,
-    currentState: null,
-
-    length: 0,
 
     objectAt: function objectAt(index) {
       //Ember observers such as 'firstObject', 'lastObject' might do out of bounds accesses
       if (!this.currentState[index]) {
         return undefined;
       }
+
       return this.currentState[index].getRecord();
     },
 
     flushCanonical: function flushCanonical() {
-      //TODO make this smarter, currently its plenty stupid
+      var isInitialized = arguments.length <= 0 || arguments[0] === undefined ? true : arguments[0];
+
+      // TODO make this smarter, currently its plenty stupid
+      // TODO this filtering was re-introduced as a bugfix, but seems unneeded in 2.13
+      // with the changes to internalModel cleanup in that version.
       var toSet = this.canonicalState.filter(function (internalModel) {
-        return !internalModel.isDeleted();
+        return internalModel.currentState.stateName !== 'root.deleted.saved';
       });
 
       //a hack for not removing new records
@@ -69256,61 +69489,12 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
       }
       this.currentState = toSet;
       this.arrayContentDidChange(0, oldLength, this.length);
-      //TODO Figure out to notify only on additions and maybe only if unloaded
-      this.relationship.notifyHasManyChanged();
-      this.record.updateRecordArrays();
-    },
-    /**
-      `true` if the relationship is polymorphic, `false` otherwise.
-       @property {Boolean} isPolymorphic
-      @private
-    */
-    isPolymorphic: false,
 
-    /**
-      The loading state of this array
-       @property {Boolean} isLoaded
-    */
-    isLoaded: false,
-
-    /**
-      The relationship which manages this array.
-       @property {ManyRelationship} relationship
-      @private
-    */
-    relationship: null,
-
-    /**
-      Metadata associated with the request for async hasMany relationships.
-       Example
-       Given that the server returns the following JSON payload when fetching a
-      hasMany relationship:
-       ```js
-      {
-        "comments": [{
-          "id": 1,
-          "comment": "This is the first comment",
-        }, {
-          // ...
-        }],
-         "meta": {
-          "page": 1,
-          "total": 5
-        }
+      if (isInitialized) {
+        //TODO Figure out to notify only on additions and maybe only if unloaded
+        this.relationship.notifyHasManyChanged();
       }
-      ```
-       You can then access the metadata via the `meta` property:
-       ```js
-      post.get('comments').then(function(comments) {
-        var meta = comments.get('meta');
-         // meta.page => 1
-        // meta.total => 5
-      });
-      ```
-       @property {Object} meta
-      @public
-    */
-    meta: null,
+    },
 
     internalReplace: function internalReplace(idx, amt, objects) {
       if (!objects) {
@@ -69320,18 +69504,12 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
       this.currentState.splice.apply(this.currentState, [idx, amt].concat(objects));
       this.set('length', this.currentState.length);
       this.arrayContentDidChange(idx, amt, objects.length);
-      if (objects) {
-        //TODO(Igor) probably needed only for unloaded records
-        this.relationship.notifyHasManyChanged();
-      }
-      this.record.updateRecordArrays();
     },
 
     //TODO(Igor) optimize
     internalRemoveRecords: function internalRemoveRecords(records) {
-      var index;
       for (var i = 0; i < records.length; i++) {
-        index = this.currentState.indexOf(records[i]);
+        var index = this.currentState.indexOf(records[i]);
         this.internalReplace(index, 1);
       }
     },
@@ -69345,7 +69523,7 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
     },
 
     replace: function replace(idx, amt, objects) {
-      var records;
+      var records = undefined;
       if (amt > 0) {
         records = this.currentState.slice(idx, idx + amt);
         this.get('relationship').removeRecords(records);
@@ -69356,13 +69534,6 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
         }), idx);
       }
     },
-    /**
-      Used for async `hasMany` arrays
-      to keep track of when they will resolve.
-       @property {Ember.RSVP.Promise} promise
-      @private
-    */
-    promise: null,
 
     /**
       @method loadingRecordsCount
@@ -69386,7 +69557,22 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
     },
 
     /**
-      @method reload
+      Reloads all of the records in the manyArray. If the manyArray
+      holds a relationship that was originally fetched using a links url
+      Ember Data will revisit the original links url to repopulate the
+      relationship.
+       If the manyArray holds the result of a `store.query()` reload will
+      re-run the original query.
+       Example
+       ```javascript
+      var user = store.peekRecord('user', 1)
+      user.login().then(function() {
+        user.get('permissions').then(function(permissions) {
+          return permissions.reload();
+        });
+      });
+      ```
+       @method reload
       @public
     */
     reload: function reload() {
@@ -69411,10 +69597,10 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
     */
     save: function save() {
       var manyArray = this;
-      var promiseLabel = "DS: ManyArray#save " + get(this, 'type');
-      var promise = _ember["default"].RSVP.all(this.invoke("save"), promiseLabel).then(function (array) {
+      var promiseLabel = 'DS: ManyArray#save ' + get(this, 'type');
+      var promise = _ember["default"].RSVP.all(this.invoke("save"), promiseLabel).then(function () {
         return manyArray;
-      }, null, "DS: ManyArray#save return ManyArray");
+      }, null, 'DS: ManyArray#save return ManyArray');
 
       return _emberDataPrivateSystemPromiseProxies.PromiseArray.create({ promise: promise });
     },
@@ -70058,39 +70244,47 @@ define('ember-data/-private/system/model/errors', ['exports', 'ember', 'ember-da
 define("ember-data/-private/system/model/internal-model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/model/states", "ember-data/-private/system/relationships/state/create", "ember-data/-private/system/snapshot", "ember-data/-private/system/empty-object", "ember-data/-private/features", "ember-data/-private/utils", "ember-data/-private/system/references"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemModelStates, _emberDataPrivateSystemRelationshipsStateCreate, _emberDataPrivateSystemSnapshot, _emberDataPrivateSystemEmptyObject, _emberDataPrivateFeatures, _emberDataPrivateUtils, _emberDataPrivateSystemReferences) {
   "use strict";
 
-  var _slicedToArray = (function () {
-    function sliceIterator(arr, i) {
-      var _arr = [];var _n = true;var _d = false;var _e = undefined;try {
-        for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
-          _arr.push(_s.value);if (i && _arr.length === i) break;
-        }
-      } catch (err) {
-        _d = true;_e = err;
-      } finally {
-        try {
-          if (!_n && _i["return"]) _i["return"]();
-        } finally {
-          if (_d) throw _e;
-        }
-      }return _arr;
-    }return function (arr, i) {
-      if (Array.isArray(arr)) {
-        return arr;
-      } else if (Symbol.iterator in Object(arr)) {
-        return sliceIterator(arr, i);
-      } else {
-        throw new TypeError("Invalid attempt to destructure non-iterable instance");
+  var _createClass = (function () {
+    function defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);
       }
+    }return function (Constructor, protoProps, staticProps) {
+      if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;
     };
   })();
 
-  exports["default"] = InternalModel;
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
 
-  var Promise = _ember["default"].RSVP.Promise;
   var get = _ember["default"].get;
   var set = _ember["default"].set;
   var copy = _ember["default"].copy;
+  var EmberError = _ember["default"].Error;
+  var inspect = _ember["default"].inspect;
+  var isEmpty = _ember["default"].isEmpty;
+  var isEqual = _ember["default"].isEqual;
+  var emberRun = _ember["default"].run;
+  var setOwner = _ember["default"].setOwner;
+  var RSVP = _ember["default"].RSVP;
+  var Promise = _ember["default"].RSVP.Promise;
+
   var assign = _ember["default"].assign || _ember["default"].merge;
+
+  /*
+    The TransitionChainMap caches the `state.enters`, `state.setups`, and final state reached
+    when transitioning from one state to another, so that future transitions can replay the
+    transition without needing to walk the state tree, collect these hook calls and determine
+     the state to transition into.
+  
+     A future optimization would be to build a single chained method out of the collected enters
+     and setups. It may also be faster to do a two level cache (from: { to }) instead of caching based
+     on a key that adds the two together.
+   */
+  var TransitionChainMap = new _emberDataPrivateSystemEmptyObject["default"]();
 
   var _extractPivotNameCache = new _emberDataPrivateSystemEmptyObject["default"]();
   var _splitOnDotCache = new _emberDataPrivateSystemEmptyObject["default"]();
@@ -70103,11 +70297,8 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     return _extractPivotNameCache[name] || (_extractPivotNameCache[name] = splitOnDot(name)[0]);
   }
 
-  function retrieveFromCurrentState(key) {
-    return function () {
-      return get(this.currentState, key);
-    };
-  }
+  // this (and all heimdall instrumentation) will be stripped by a babel transform
+  //  https://github.com/heimdalljs/babel5-plugin-strip-heimdall
 
   /*
     `InternalModel` is the Model class that we use internally inside Ember Data to represent models.
@@ -70125,803 +70316,1014 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     @private
     @class InternalModel
   */
-  function InternalModel(type, id, store, _, data) {
-    this.type = type;
-    this.id = id;
-    this.store = store;
-    this._data = data || new _emberDataPrivateSystemEmptyObject["default"]();
-    this.modelName = type.modelName;
-    this.dataHasInitialized = false;
-    //Look into making this lazy
-    this._deferredTriggers = [];
-    this._attributes = new _emberDataPrivateSystemEmptyObject["default"]();
-    this._inFlightAttributes = new _emberDataPrivateSystemEmptyObject["default"]();
-    this._relationships = new _emberDataPrivateSystemRelationshipsStateCreate["default"](this);
-    this._recordArrays = undefined;
-    this.currentState = _emberDataPrivateSystemModelStates["default"].empty;
-    this.recordReference = new _emberDataPrivateSystemReferences.RecordReference(store, this);
-    this.references = {};
-    this.isReloading = false;
-    this.isError = false;
-    this.error = null;
-    this.__ember_meta__ = null;
-    this[_ember["default"].GUID_KEY] = _ember["default"].guidFor(this);
-    /*
-      implicit relationships are relationship which have not been declared but the inverse side exists on
-      another record somewhere
-      For example if there was
-       ```app/models/comment.js
-      import DS from 'ember-data';
-       export default DS.Model.extend({
-        name: DS.attr()
-      })
-      ```
-       but there is also
-       ```app/models/post.js
-      import DS from 'ember-data';
-       export default DS.Model.extend({
-        name: DS.attr(),
-        comments: DS.hasMany('comment')
-      })
-      ```
-       would have a implicit post relationship in order to be do things like remove ourselves from the post
-      when we are deleted
-    */
-    this._implicitRelationships = new _emberDataPrivateSystemEmptyObject["default"]();
-  }
 
-  InternalModel.prototype = {
-    isEmpty: retrieveFromCurrentState('isEmpty'),
-    isLoading: retrieveFromCurrentState('isLoading'),
-    isLoaded: retrieveFromCurrentState('isLoaded'),
-    hasDirtyAttributes: retrieveFromCurrentState('hasDirtyAttributes'),
-    isSaving: retrieveFromCurrentState('isSaving'),
-    isDeleted: retrieveFromCurrentState('isDeleted'),
-    isNew: retrieveFromCurrentState('isNew'),
-    isValid: retrieveFromCurrentState('isValid'),
-    dirtyType: retrieveFromCurrentState('dirtyType'),
-
-    constructor: InternalModel,
-    materializeRecord: function materializeRecord() {
-      (0, _emberDataPrivateDebug.assert)("Materialized " + this.modelName + " record with id:" + this.id + "more than once", this.record === null || this.record === undefined);
-
-      // lookupFactory should really return an object that creates
-      // instances with the injections applied
-      var createOptions = {
-        store: this.store,
-        _internalModel: this,
-        id: this.id,
-        currentState: get(this, 'currentState'),
-        isError: this.isError,
-        adapterError: this.error
-      };
-
-      if (_ember["default"].setOwner) {
-        // ensure that `Ember.getOwner(this)` works inside a model instance
-        _ember["default"].setOwner(createOptions, (0, _emberDataPrivateUtils.getOwner)(this.store));
-      } else {
-        createOptions.container = this.store.container;
-      }
-
-      this.record = this.type._create(createOptions);
-
-      this._triggerDeferredTriggers();
-    },
-
-    recordObjectWillDestroy: function recordObjectWillDestroy() {
-      this.record = null;
-    },
-
-    deleteRecord: function deleteRecord() {
-      this.send('deleteRecord');
-    },
-
-    save: function save(options) {
-      var promiseLabel = "DS: Model#save " + this;
-      var resolver = _ember["default"].RSVP.defer(promiseLabel);
-
-      this.store.scheduleSave(this, resolver, options);
-      return resolver.promise;
-    },
-
-    startedReloading: function startedReloading() {
-      this.isReloading = true;
-      if (this.record) {
-        set(this.record, 'isReloading', true);
-      }
-    },
-
-    finishedReloading: function finishedReloading() {
+  var InternalModel = (function () {
+    function InternalModel(modelClass, id, store, data) {
+      this.modelClass = modelClass;
+      this.id = id;
+      this.store = store;
+      this._data = data || new _emberDataPrivateSystemEmptyObject["default"]();
+      this.modelName = modelClass.modelName;
+      this.dataHasInitialized = false;
+      this._loadingPromise = null;
+      this._recordArrays = undefined;
+      this._record = null;
+      this.currentState = _emberDataPrivateSystemModelStates["default"].empty;
       this.isReloading = false;
-      if (this.record) {
-        set(this.record, 'isReloading', false);
+      this._isDestroyed = false;
+      this.isError = false;
+      this.error = null;
+
+      // caches for lazy getters
+      this.__deferredTriggers = null;
+      this._references = null;
+      this._recordReference = null;
+      this.__inFlightAttributes = null;
+      this.__relationships = null;
+      this.__attributes = null;
+      this.__implicitRelationships = null;
+    }
+
+    _createClass(InternalModel, [{
+      key: "isEmpty",
+      value: function isEmpty() {
+        return this.currentState.isEmpty;
       }
-    },
-
-    reload: function reload() {
-      this.startedReloading();
-      var record = this;
-      var promiseLabel = "DS: Model#reload of " + this;
-      return new Promise(function (resolve) {
-        record.send('reloadRecord', resolve);
-      }, promiseLabel).then(function () {
-        record.didCleanError();
-        return record;
-      }, function (error) {
-        record.didError(error);
-        throw error;
-      }, "DS: Model#reload complete, update flags")["finally"](function () {
-        record.finishedReloading();
-        record.updateRecordArrays();
-      });
-    },
-
-    getRecord: function getRecord() {
-      if (!this.record) {
-        this.materializeRecord();
+    }, {
+      key: "isLoading",
+      value: function isLoading() {
+        return this.currentState.isLoading;
       }
-      return this.record;
-    },
+    }, {
+      key: "isLoaded",
+      value: function isLoaded() {
+        return this.currentState.isLoaded;
+      }
+    }, {
+      key: "hasDirtyAttributes",
+      value: function hasDirtyAttributes() {
+        return this.currentState.hasDirtyAttributes;
+      }
+    }, {
+      key: "isSaving",
+      value: function isSaving() {
+        return this.currentState.isSaving;
+      }
+    }, {
+      key: "isDeleted",
+      value: function isDeleted() {
+        return this.currentState.isDeleted;
+      }
+    }, {
+      key: "isNew",
+      value: function isNew() {
+        return this.currentState.isNew;
+      }
+    }, {
+      key: "isValid",
+      value: function isValid() {
+        return this.currentState.isValid;
+      }
+    }, {
+      key: "dirtyType",
+      value: function dirtyType() {
+        return this.currentState.dirtyType;
+      }
+    }, {
+      key: "getRecord",
+      value: function getRecord() {
+        if (!this._record) {
 
-    unloadRecord: function unloadRecord() {
-      this.send('unloadRecord');
-    },
+          // lookupFactory should really return an object that creates
+          // instances with the injections applied
+          var createOptions = {
+            store: this.store,
+            _internalModel: this,
+            id: this.id,
+            currentState: this.currentState,
+            isError: this.isError,
+            adapterError: this.error
+          };
 
-    eachRelationship: function eachRelationship(callback, binding) {
-      return this.type.eachRelationship(callback, binding);
-    },
+          if (setOwner) {
+            // ensure that `getOwner(this)` works inside a model instance
+            setOwner(createOptions, (0, _emberDataPrivateUtils.getOwner)(this.store));
+          } else {
+            createOptions.container = this.store.container;
+          }
 
-    eachAttribute: function eachAttribute(callback, binding) {
-      return this.type.eachAttribute(callback, binding);
-    },
+          this._record = this.modelClass._create(createOptions);
 
-    inverseFor: function inverseFor(key) {
-      return this.type.inverseFor(key);
-    },
+          this._triggerDeferredTriggers();
+        }
 
-    setupData: function setupData(data) {
-      var changedKeys = this._changedKeys(data.attributes);
-      assign(this._data, data.attributes);
-      this.pushedData();
-      if (this.record) {
+        return this._record;
+      }
+    }, {
+      key: "recordObjectWillDestroy",
+      value: function recordObjectWillDestroy() {
+        this._record = null;
+      }
+    }, {
+      key: "deleteRecord",
+      value: function deleteRecord() {
+        this.send('deleteRecord');
+      }
+    }, {
+      key: "save",
+      value: function save(options) {
+        var promiseLabel = "DS: Model#save " + this;
+        var resolver = RSVP.defer(promiseLabel);
+
+        this.store.scheduleSave(this, resolver, options);
+        return resolver.promise;
+      }
+    }, {
+      key: "startedReloading",
+      value: function startedReloading() {
+        this.isReloading = true;
+        if (this.hasRecord) {
+          set(this.record, 'isReloading', true);
+        }
+      }
+    }, {
+      key: "finishedReloading",
+      value: function finishedReloading() {
+        this.isReloading = false;
+        if (this.hasRecord) {
+          set(this.record, 'isReloading', false);
+        }
+      }
+    }, {
+      key: "reload",
+      value: function reload() {
+        this.startedReloading();
+        var internalModel = this;
+        var promiseLabel = "DS: Model#reload of " + this;
+
+        return new Promise(function (resolve) {
+          internalModel.send('reloadRecord', resolve);
+        }, promiseLabel).then(function () {
+          internalModel.didCleanError();
+          return internalModel;
+        }, function (error) {
+          internalModel.didError(error);
+          throw error;
+        }, "DS: Model#reload complete, update flags")["finally"](function () {
+          internalModel.finishedReloading();
+          internalModel.updateRecordArrays();
+        });
+      }
+    }, {
+      key: "unloadRecord",
+      value: function unloadRecord() {
+        this.send('unloadRecord');
+      }
+    }, {
+      key: "eachRelationship",
+      value: function eachRelationship(callback, binding) {
+        return this.modelClass.eachRelationship(callback, binding);
+      }
+    }, {
+      key: "eachAttribute",
+      value: function eachAttribute(callback, binding) {
+        return this.modelClass.eachAttribute(callback, binding);
+      }
+    }, {
+      key: "inverseFor",
+      value: function inverseFor(key) {
+        return this.modelClass.inverseFor(key);
+      }
+    }, {
+      key: "setupData",
+      value: function setupData(data) {
+        var changedKeys = this._changedKeys(data.attributes);
+        assign(this._data, data.attributes);
+        this.pushedData();
+        if (this.hasRecord) {
+          this.record._notifyProperties(changedKeys);
+        }
+        this.didInitializeData();
+      }
+    }, {
+      key: "becameReady",
+      value: function becameReady() {
+        emberRun.schedule('actions', this.store.recordArrayManager, this.store.recordArrayManager.recordWasLoaded, this);
+      }
+    }, {
+      key: "didInitializeData",
+      value: function didInitializeData() {
+        if (!this.dataHasInitialized) {
+          this.becameReady();
+          this.dataHasInitialized = true;
+        }
+      }
+    }, {
+      key: "destroy",
+      value: function destroy() {
+        this._isDestroyed = true;
+        if (this.hasRecord) {
+          return this.record.destroy();
+        }
+      }
+
+      /*
+        @method createSnapshot
+        @private
+      */
+    }, {
+      key: "createSnapshot",
+      value: function createSnapshot(options) {
+        return new _emberDataPrivateSystemSnapshot["default"](this, options);
+      }
+
+      /*
+        @method loadingData
+        @private
+        @param {Promise} promise
+      */
+    }, {
+      key: "loadingData",
+      value: function loadingData(promise) {
+        this.send('loadingData', promise);
+      }
+
+      /*
+        @method loadedData
+        @private
+      */
+    }, {
+      key: "loadedData",
+      value: function loadedData() {
+        this.send('loadedData');
+        this.didInitializeData();
+      }
+
+      /*
+        @method notFound
+        @private
+      */
+    }, {
+      key: "notFound",
+      value: function notFound() {
+        this.send('notFound');
+      }
+
+      /*
+        @method pushedData
+        @private
+      */
+    }, {
+      key: "pushedData",
+      value: function pushedData() {
+        this.send('pushedData');
+      }
+    }, {
+      key: "flushChangedAttributes",
+      value: function flushChangedAttributes() {
+        this._inFlightAttributes = this._attributes;
+        this._attributes = new _emberDataPrivateSystemEmptyObject["default"]();
+      }
+    }, {
+      key: "hasChangedAttributes",
+      value: function hasChangedAttributes() {
+        return Object.keys(this._attributes).length > 0;
+      }
+
+      /*
+        Checks if the attributes which are considered as changed are still
+        different to the state which is acknowledged by the server.
+         This method is needed when data for the internal model is pushed and the
+        pushed data might acknowledge dirty attributes as confirmed.
+         @method updateChangedAttributes
+        @private
+       */
+    }, {
+      key: "updateChangedAttributes",
+      value: function updateChangedAttributes() {
+        var changedAttributes = this.changedAttributes();
+        var changedAttributeNames = Object.keys(changedAttributes);
+        var attrs = this._attributes;
+
+        for (var i = 0, _length = changedAttributeNames.length; i < _length; i++) {
+          var attribute = changedAttributeNames[i];
+          var data = changedAttributes[attribute];
+          var oldData = data[0];
+          var newData = data[1];
+
+          if (oldData === newData) {
+            delete attrs[attribute];
+          }
+        }
+      }
+
+      /*
+        Returns an object, whose keys are changed properties, and value is an
+        [oldProp, newProp] array.
+         @method changedAttributes
+        @private
+      */
+    }, {
+      key: "changedAttributes",
+      value: function changedAttributes() {
+        var oldData = this._data;
+        var currentData = this._attributes;
+        var inFlightData = this._inFlightAttributes;
+        var newData = assign(copy(inFlightData), currentData);
+        var diffData = new _emberDataPrivateSystemEmptyObject["default"]();
+        var newDataKeys = Object.keys(newData);
+
+        for (var i = 0, _length2 = newDataKeys.length; i < _length2; i++) {
+          var key = newDataKeys[i];
+          diffData[key] = [oldData[key], newData[key]];
+        }
+
+        return diffData;
+      }
+
+      /*
+        @method adapterWillCommit
+        @private
+      */
+    }, {
+      key: "adapterWillCommit",
+      value: function adapterWillCommit() {
+        this.send('willCommit');
+      }
+
+      /*
+        @method adapterDidDirty
+        @private
+      */
+    }, {
+      key: "adapterDidDirty",
+      value: function adapterDidDirty() {
+        this.send('becomeDirty');
+        this.updateRecordArraysLater();
+      }
+
+      /*
+        @method send
+        @private
+        @param {String} name
+        @param {Object} context
+      */
+    }, {
+      key: "send",
+      value: function send(name, context) {
+        var currentState = this.currentState;
+
+        if (!currentState[name]) {
+          this._unhandledEvent(currentState, name, context);
+        }
+
+        return currentState[name](this, context);
+      }
+    }, {
+      key: "notifyHasManyAdded",
+      value: function notifyHasManyAdded(key, record, idx) {
+        if (this.hasRecord) {
+          this.record.notifyHasManyAdded(key, record, idx);
+        }
+      }
+    }, {
+      key: "notifyHasManyRemoved",
+      value: function notifyHasManyRemoved(key, record, idx) {
+        if (this.hasRecord) {
+          this.record.notifyHasManyRemoved(key, record, idx);
+        }
+      }
+    }, {
+      key: "notifyBelongsToChanged",
+      value: function notifyBelongsToChanged(key, record) {
+        if (this.hasRecord) {
+          this.record.notifyBelongsToChanged(key, record);
+        }
+      }
+    }, {
+      key: "notifyPropertyChange",
+      value: function notifyPropertyChange(key) {
+        if (this.hasRecord) {
+          this.record.notifyPropertyChange(key);
+        }
+      }
+    }, {
+      key: "rollbackAttributes",
+      value: function rollbackAttributes() {
+        var dirtyKeys = Object.keys(this._attributes);
+
+        this._attributes = new _emberDataPrivateSystemEmptyObject["default"]();
+
+        if (get(this, 'isError')) {
+          this._inFlightAttributes = new _emberDataPrivateSystemEmptyObject["default"]();
+          this.didCleanError();
+        }
+
+        //Eventually rollback will always work for relationships
+        //For now we support it only out of deleted state, because we
+        //have an explicit way of knowing when the server acked the relationship change
+        if (this.isDeleted()) {
+          //TODO: Should probably move this to the state machine somehow
+          this.becameReady();
+        }
+
+        if (this.isNew()) {
+          this.clearRelationships();
+        }
+
+        if (this.isValid()) {
+          this._inFlightAttributes = new _emberDataPrivateSystemEmptyObject["default"]();
+        }
+
+        this.send('rolledBack');
+
+        this.record._notifyProperties(dirtyKeys);
+      }
+
+      /*
+        @method transitionTo
+        @private
+        @param {String} name
+      */
+    }, {
+      key: "transitionTo",
+      value: function transitionTo(name) {
+        // POSSIBLE TODO: Remove this code and replace with
+        // always having direct reference to state objects
+
+        var pivotName = extractPivotName(name);
+        var state = this.currentState;
+        var transitionMapId = state.stateName + "->" + name;
+
+        do {
+          if (state.exit) {
+            state.exit(this);
+          }
+          state = state.parentState;
+        } while (!state[pivotName]);
+
+        var setups = undefined;
+        var enters = undefined;
+        var i = undefined;
+        var l = undefined;
+        var map = TransitionChainMap[transitionMapId];
+
+        if (map) {
+          setups = map.setups;
+          enters = map.enters;
+          state = map.state;
+        } else {
+          setups = [];
+          enters = [];
+
+          var path = splitOnDot(name);
+
+          for (i = 0, l = path.length; i < l; i++) {
+            state = state[path[i]];
+
+            if (state.enter) {
+              enters.push(state);
+            }
+            if (state.setup) {
+              setups.push(state);
+            }
+          }
+
+          TransitionChainMap[transitionMapId] = { setups: setups, enters: enters, state: state };
+        }
+
+        for (i = 0, l = enters.length; i < l; i++) {
+          enters[i].enter(this);
+        }
+
+        this.currentState = state;
+        if (this.hasRecord) {
+          set(this.record, 'currentState', state);
+        }
+
+        for (i = 0, l = setups.length; i < l; i++) {
+          setups[i].setup(this);
+        }
+
+        this.updateRecordArraysLater();
+      }
+    }, {
+      key: "_unhandledEvent",
+      value: function _unhandledEvent(state, name, context) {
+        var errorMessage = "Attempted to handle event `" + name + "` ";
+        errorMessage += "on " + String(this) + " while in state ";
+        errorMessage += state.stateName + ". ";
+
+        if (context !== undefined) {
+          errorMessage += "Called with " + inspect(context) + ".";
+        }
+
+        throw new EmberError(errorMessage);
+      }
+    }, {
+      key: "triggerLater",
+      value: function triggerLater() {
+        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+          args[_key] = arguments[_key];
+        }
+
+        if (this._deferredTriggers.push(args) !== 1) {
+          return;
+        }
+        emberRun.schedule('actions', this, this._triggerDeferredTriggers);
+      }
+    }, {
+      key: "_triggerDeferredTriggers",
+      value: function _triggerDeferredTriggers() {
+        //TODO: Before 1.0 we want to remove all the events that happen on the pre materialized record,
+        //but for now, we queue up all the events triggered before the record was materialized, and flush
+        //them once we have the record
+        if (!this.hasRecord) {
+          return;
+        }
+        for (var i = 0, l = this._deferredTriggers.length; i < l; i++) {
+          this.record.trigger.apply(this.record, this._deferredTriggers[i]);
+        }
+
+        this._deferredTriggers.length = 0;
+      }
+
+      /*
+        @method clearRelationships
+        @private
+      */
+    }, {
+      key: "clearRelationships",
+      value: function clearRelationships() {
+        var _this = this;
+
+        this.eachRelationship(function (name, relationship) {
+          if (_this._relationships.has(name)) {
+            var rel = _this._relationships.get(name);
+            rel.clear();
+            rel.destroy();
+          }
+        });
+        Object.keys(this._implicitRelationships).forEach(function (key) {
+          _this._implicitRelationships[key].clear();
+          _this._implicitRelationships[key].destroy();
+        });
+      }
+
+      /*
+        When a find request is triggered on the store, the user can optionally pass in
+        attributes and relationships to be preloaded. These are meant to behave as if they
+        came back from the server, except the user obtained them out of band and is informing
+        the store of their existence. The most common use case is for supporting client side
+        nested URLs, such as `/posts/1/comments/2` so the user can do
+        `store.findRecord('comment', 2, { preload: { post: 1 } })` without having to fetch the post.
+         Preloaded data can be attributes and relationships passed in either as IDs or as actual
+        models.
+         @method preloadData
+        @private
+        @param {Object} preload
+      */
+    }, {
+      key: "preloadData",
+      value: function preloadData(preload) {
+        var _this2 = this;
+
+        //TODO(Igor) consider the polymorphic case
+        Object.keys(preload).forEach(function (key) {
+          var preloadValue = get(preload, key);
+          var relationshipMeta = _this2.modelClass.metaForProperty(key);
+          if (relationshipMeta.isRelationship) {
+            _this2._preloadRelationship(key, preloadValue);
+          } else {
+            _this2._data[key] = preloadValue;
+          }
+        });
+      }
+    }, {
+      key: "_preloadRelationship",
+      value: function _preloadRelationship(key, preloadValue) {
+        var relationshipMeta = this.modelClass.metaForProperty(key);
+        var modelClass = relationshipMeta.type;
+        if (relationshipMeta.kind === 'hasMany') {
+          this._preloadHasMany(key, preloadValue, modelClass);
+        } else {
+          this._preloadBelongsTo(key, preloadValue, modelClass);
+        }
+      }
+    }, {
+      key: "_preloadHasMany",
+      value: function _preloadHasMany(key, preloadValue, modelClass) {
+        (0, _emberDataPrivateDebug.assert)("You need to pass in an array to set a hasMany property on a record", Array.isArray(preloadValue));
+        var recordsToSet = new Array(preloadValue.length);
+
+        for (var i = 0; i < preloadValue.length; i++) {
+          var recordToPush = preloadValue[i];
+          recordsToSet[i] = this._convertStringOrNumberIntoInternalModel(recordToPush, modelClass);
+        }
+
+        //We use the pathway of setting the hasMany as if it came from the adapter
+        //because the user told us that they know this relationships exists already
+        this._relationships.get(key).updateRecordsFromAdapter(recordsToSet);
+      }
+    }, {
+      key: "_preloadBelongsTo",
+      value: function _preloadBelongsTo(key, preloadValue, modelClass) {
+        var recordToSet = this._convertStringOrNumberIntoInternalModel(preloadValue, modelClass);
+
+        //We use the pathway of setting the hasMany as if it came from the adapter
+        //because the user told us that they know this relationships exists already
+        this._relationships.get(key).setRecord(recordToSet);
+      }
+    }, {
+      key: "_convertStringOrNumberIntoInternalModel",
+      value: function _convertStringOrNumberIntoInternalModel(value, modelClass) {
+        if (typeof value === 'string' || typeof value === 'number') {
+          return this.store._internalModelForId(modelClass, value);
+        }
+        if (value._internalModel) {
+          return value._internalModel;
+        }
+        return value;
+      }
+
+      /*
+        @method updateRecordArrays
+        @private
+      */
+    }, {
+      key: "updateRecordArrays",
+      value: function updateRecordArrays() {
+        this._updatingRecordArraysLater = false;
+        this.store.dataWasUpdated(this.modelClass, this);
+      }
+    }, {
+      key: "setId",
+      value: function setId(id) {
+        (0, _emberDataPrivateDebug.assert)('A record\'s id cannot be changed once it is in the loaded state', this.id === null || this.id === id || this.isNew());
+        this.id = id;
+        if (this.record.get('id') !== id) {
+          this.record.set('id', id);
+        }
+      }
+    }, {
+      key: "didError",
+      value: function didError(error) {
+        this.error = error;
+        this.isError = true;
+
+        if (this.hasRecord) {
+          this.record.setProperties({
+            isError: true,
+            adapterError: error
+          });
+        }
+      }
+    }, {
+      key: "didCleanError",
+      value: function didCleanError() {
+        this.error = null;
+        this.isError = false;
+
+        if (this.hasRecord) {
+          this.record.setProperties({
+            isError: false,
+            adapterError: null
+          });
+        }
+      }
+
+      /*
+        If the adapter did not return a hash in response to a commit,
+        merge the changed attributes and relationships into the existing
+        saved data.
+         @method adapterDidCommit
+      */
+    }, {
+      key: "adapterDidCommit",
+      value: function adapterDidCommit(data) {
+        if (data) {
+          data = data.attributes;
+        }
+
+        this.didCleanError();
+        var changedKeys = this._changedKeys(data);
+
+        assign(this._data, this._inFlightAttributes);
+        if (data) {
+          assign(this._data, data);
+        }
+
+        this._inFlightAttributes = new _emberDataPrivateSystemEmptyObject["default"]();
+
+        this.send('didCommit');
+        this.updateRecordArraysLater();
+
+        if (!data) {
+          return;
+        }
+
         this.record._notifyProperties(changedKeys);
       }
-      this.didInitalizeData();
-    },
 
-    becameReady: function becameReady() {
-      _ember["default"].run.schedule('actions', this.store.recordArrayManager, this.store.recordArrayManager.recordWasLoaded, this);
-    },
-
-    didInitalizeData: function didInitalizeData() {
-      if (!this.dataHasInitialized) {
-        this.becameReady();
-        this.dataHasInitialized = true;
-      }
-    },
-
-    destroy: function destroy() {
-      if (this.record) {
-        return this.record.destroy();
-      }
-    },
-
-    /*
-      @method createSnapshot
-      @private
-    */
-    createSnapshot: function createSnapshot(options) {
-      return new _emberDataPrivateSystemSnapshot["default"](this, options);
-    },
-
-    /*
-      @method loadingData
-      @private
-      @param {Promise} promise
-    */
-    loadingData: function loadingData(promise) {
-      this.send('loadingData', promise);
-    },
-
-    /*
-      @method loadedData
-      @private
-    */
-    loadedData: function loadedData() {
-      this.send('loadedData');
-      this.didInitalizeData();
-    },
-
-    /*
-      @method notFound
-      @private
-    */
-    notFound: function notFound() {
-      this.send('notFound');
-    },
-
-    /*
-      @method pushedData
-      @private
-    */
-    pushedData: function pushedData() {
-      this.send('pushedData');
-    },
-
-    flushChangedAttributes: function flushChangedAttributes() {
-      this._inFlightAttributes = this._attributes;
-      this._attributes = new _emberDataPrivateSystemEmptyObject["default"]();
-    },
-
-    hasChangedAttributes: function hasChangedAttributes() {
-      return Object.keys(this._attributes).length > 0;
-    },
-
-    /*
-      Checks if the attributes which are considered as changed are still
-      different to the state which is acknowledged by the server.
-       This method is needed when data for the internal model is pushed and the
-      pushed data might acknowledge dirty attributes as confirmed.
-       @method updateChangedAttributes
-      @private
-     */
-    updateChangedAttributes: function updateChangedAttributes() {
-      var changedAttributes = this.changedAttributes();
-      var changedAttributeNames = Object.keys(changedAttributes);
-
-      for (var i = 0, _length = changedAttributeNames.length; i < _length; i++) {
-        var attribute = changedAttributeNames[i];
-
-        var _changedAttributes$attribute = _slicedToArray(changedAttributes[attribute], 2);
-
-        var oldData = _changedAttributes$attribute[0];
-        var newData = _changedAttributes$attribute[1];
-
-        if (oldData === newData) {
-          delete this._attributes[attribute];
+      /*
+        @method updateRecordArraysLater
+        @private
+      */
+    }, {
+      key: "updateRecordArraysLater",
+      value: function updateRecordArraysLater() {
+        // quick hack (something like this could be pushed into run.once
+        if (this._updatingRecordArraysLater) {
+          return;
         }
+        this._updatingRecordArraysLater = true;
+        emberRun.schedule('actions', this, this.updateRecordArrays);
       }
-    },
-
-    /*
-      Returns an object, whose keys are changed properties, and value is an
-      [oldProp, newProp] array.
-       @method changedAttributes
-      @private
-    */
-    changedAttributes: function changedAttributes() {
-      var oldData = this._data;
-      var currentData = this._attributes;
-      var inFlightData = this._inFlightAttributes;
-      var newData = assign(copy(inFlightData), currentData);
-      var diffData = new _emberDataPrivateSystemEmptyObject["default"]();
-
-      var newDataKeys = Object.keys(newData);
-
-      for (var i = 0, _length2 = newDataKeys.length; i < _length2; i++) {
-        var key = newDataKeys[i];
-        diffData[key] = [oldData[key], newData[key]];
+    }, {
+      key: "addErrorMessageToAttribute",
+      value: function addErrorMessageToAttribute(attribute, message) {
+        get(this.getRecord(), 'errors')._add(attribute, message);
       }
+    }, {
+      key: "removeErrorMessageFromAttribute",
+      value: function removeErrorMessageFromAttribute(attribute) {
+        get(this.getRecord(), 'errors')._remove(attribute);
+      }
+    }, {
+      key: "clearErrorMessages",
+      value: function clearErrorMessages() {
+        get(this.getRecord(), 'errors')._clear();
+      }
+    }, {
+      key: "hasErrors",
+      value: function hasErrors() {
+        var errors = get(this.getRecord(), 'errors');
 
-      return diffData;
-    },
-
-    /*
-      @method adapterWillCommit
-      @private
-    */
-    adapterWillCommit: function adapterWillCommit() {
-      this.send('willCommit');
-    },
-
-    /*
-      @method adapterDidDirty
-      @private
-    */
-    adapterDidDirty: function adapterDidDirty() {
-      this.send('becomeDirty');
-      this.updateRecordArraysLater();
-    },
-
-    /*
-      @method send
-      @private
-      @param {String} name
-      @param {Object} context
-    */
-    send: function send(name, context) {
-      var currentState = get(this, 'currentState');
-
-      if (!currentState[name]) {
-        this._unhandledEvent(currentState, name, context);
+        return !isEmpty(errors);
       }
 
-      return currentState[name](this, context);
-    },
+      // FOR USE DURING COMMIT PROCESS
 
-    notifyHasManyAdded: function notifyHasManyAdded(key, record, idx) {
-      if (this.record) {
-        this.record.notifyHasManyAdded(key, record, idx);
-      }
-    },
+      /*
+        @method adapterDidInvalidate
+        @private
+      */
+    }, {
+      key: "adapterDidInvalidate",
+      value: function adapterDidInvalidate(errors) {
+        var attribute = undefined;
 
-    notifyHasManyRemoved: function notifyHasManyRemoved(key, record, idx) {
-      if (this.record) {
-        this.record.notifyHasManyRemoved(key, record, idx);
-      }
-    },
+        for (attribute in errors) {
+          if (errors.hasOwnProperty(attribute)) {
+            this.addErrorMessageToAttribute(attribute, errors[attribute]);
+          }
+        }
 
-    notifyBelongsToChanged: function notifyBelongsToChanged(key, record) {
-      if (this.record) {
-        this.record.notifyBelongsToChanged(key, record);
-      }
-    },
+        this.send('becameInvalid');
 
-    notifyPropertyChange: function notifyPropertyChange(key) {
-      if (this.record) {
-        this.record.notifyPropertyChange(key);
-      }
-    },
-
-    rollbackAttributes: function rollbackAttributes() {
-      var dirtyKeys = Object.keys(this._attributes);
-
-      this._attributes = new _emberDataPrivateSystemEmptyObject["default"]();
-
-      if (get(this, 'isError')) {
-        this._inFlightAttributes = new _emberDataPrivateSystemEmptyObject["default"]();
-        this.didCleanError();
+        this._saveWasRejected();
       }
 
-      //Eventually rollback will always work for relationships
-      //For now we support it only out of deleted state, because we
-      //have an explicit way of knowing when the server acked the relationship change
-      if (this.isDeleted()) {
-        //TODO: Should probably move this to the state machine somehow
-        this.becameReady();
+      /*
+        @method adapterDidError
+        @private
+      */
+    }, {
+      key: "adapterDidError",
+      value: function adapterDidError(error) {
+        this.send('becameError');
+        this.didError(error);
+        this._saveWasRejected();
       }
-
-      if (this.isNew()) {
-        this.clearRelationships();
-      }
-
-      if (this.isValid()) {
+    }, {
+      key: "_saveWasRejected",
+      value: function _saveWasRejected() {
+        var keys = Object.keys(this._inFlightAttributes);
+        var attrs = this._attributes;
+        for (var i = 0; i < keys.length; i++) {
+          if (attrs[keys[i]] === undefined) {
+            attrs[keys[i]] = this._inFlightAttributes[keys[i]];
+          }
+        }
         this._inFlightAttributes = new _emberDataPrivateSystemEmptyObject["default"]();
       }
 
-      this.send('rolledBack');
+      /*
+        Ember Data has 3 buckets for storing the value of an attribute on an internalModel.
+         `_data` holds all of the attributes that have been acknowledged by
+        a backend via the adapter. When rollbackAttributes is called on a model all
+        attributes will revert to the record's state in `_data`.
+         `_attributes` holds any change the user has made to an attribute
+        that has not been acknowledged by the adapter. Any values in
+        `_attributes` are have priority over values in `_data`.
+         `_inFlightAttributes`. When a record is being synced with the
+        backend the values in `_attributes` are copied to
+        `_inFlightAttributes`. This way if the backend acknowledges the
+        save but does not return the new state Ember Data can copy the
+        values from `_inFlightAttributes` to `_data`. Without having to
+        worry about changes made to `_attributes` while the save was
+        happenign.
+          Changed keys builds a list of all of the values that may have been
+        changed by the backend after a successful save.
+         It does this by iterating over each key, value pair in the payload
+        returned from the server after a save. If the `key` is found in
+        `_attributes` then the user has a local changed to the attribute
+        that has not been synced with the server and the key is not
+        included in the list of changed keys.
+      
+        If the value, for a key differs from the value in what Ember Data
+        believes to be the truth about the backend state (A merger of the
+        `_data` and `_inFlightAttributes` objects where
+        `_inFlightAttributes` has priority) then that means the backend
+        has updated the value and the key is added to the list of changed
+        keys.
+         @method _changedKeys
+        @private
+      */
+    }, {
+      key: "_changedKeys",
+      value: function _changedKeys(updates) {
+        var changedKeys = [];
 
-      this.record._notifyProperties(dirtyKeys);
-    },
+        if (updates) {
+          var original = undefined,
+              i = undefined,
+              value = undefined,
+              key = undefined;
+          var keys = Object.keys(updates);
+          var _length3 = keys.length;
+          var attrs = this._attributes;
 
-    /*
-      @method transitionTo
-      @private
-      @param {String} name
-    */
-    transitionTo: function transitionTo(name) {
-      // POSSIBLE TODO: Remove this code and replace with
-      // always having direct reference to state objects
+          original = assign(new _emberDataPrivateSystemEmptyObject["default"](), this._data);
+          original = assign(original, this._inFlightAttributes);
 
-      var pivotName = extractPivotName(name);
-      var currentState = get(this, 'currentState');
-      var state = currentState;
+          for (i = 0; i < _length3; i++) {
+            key = keys[i];
+            value = updates[key];
 
-      do {
-        if (state.exit) {
-          state.exit(this);
-        }
-        state = state.parentState;
-      } while (!state.hasOwnProperty(pivotName));
+            // A value in _attributes means the user has a local change to
+            // this attributes. We never override this value when merging
+            // updates from the backend so we should not sent a change
+            // notification if the server value differs from the original.
+            if (attrs[key] !== undefined) {
+              continue;
+            }
 
-      var path = splitOnDot(name);
-      var setups = [];
-      var enters = [];
-      var i, l;
-
-      for (i = 0, l = path.length; i < l; i++) {
-        state = state[path[i]];
-
-        if (state.enter) {
-          enters.push(state);
-        }
-        if (state.setup) {
-          setups.push(state);
-        }
-      }
-
-      for (i = 0, l = enters.length; i < l; i++) {
-        enters[i].enter(this);
-      }
-
-      set(this, 'currentState', state);
-      //TODO Consider whether this is the best approach for keeping these two in sync
-      if (this.record) {
-        set(this.record, 'currentState', state);
-      }
-
-      for (i = 0, l = setups.length; i < l; i++) {
-        setups[i].setup(this);
-      }
-
-      this.updateRecordArraysLater();
-    },
-
-    _unhandledEvent: function _unhandledEvent(state, name, context) {
-      var errorMessage = "Attempted to handle event `" + name + "` ";
-      errorMessage += "on " + String(this) + " while in state ";
-      errorMessage += state.stateName + ". ";
-
-      if (context !== undefined) {
-        errorMessage += "Called with " + _ember["default"].inspect(context) + ".";
-      }
-
-      throw new _ember["default"].Error(errorMessage);
-    },
-
-    triggerLater: function triggerLater() {
-      var length = arguments.length;
-      var args = new Array(length);
-
-      for (var i = 0; i < length; i++) {
-        args[i] = arguments[i];
-      }
-
-      if (this._deferredTriggers.push(args) !== 1) {
-        return;
-      }
-      _ember["default"].run.scheduleOnce('actions', this, '_triggerDeferredTriggers');
-    },
-
-    _triggerDeferredTriggers: function _triggerDeferredTriggers() {
-      //TODO: Before 1.0 we want to remove all the events that happen on the pre materialized record,
-      //but for now, we queue up all the events triggered before the record was materialized, and flush
-      //them once we have the record
-      if (!this.record) {
-        return;
-      }
-      for (var i = 0, l = this._deferredTriggers.length; i < l; i++) {
-        this.record.trigger.apply(this.record, this._deferredTriggers[i]);
-      }
-
-      this._deferredTriggers.length = 0;
-    },
-    /*
-      @method clearRelationships
-      @private
-    */
-    clearRelationships: function clearRelationships() {
-      var _this = this;
-
-      this.eachRelationship(function (name, relationship) {
-        if (_this._relationships.has(name)) {
-          var rel = _this._relationships.get(name);
-          rel.clear();
-          rel.destroy();
-        }
-      });
-      Object.keys(this._implicitRelationships).forEach(function (key) {
-        _this._implicitRelationships[key].clear();
-        _this._implicitRelationships[key].destroy();
-      });
-    },
-
-    /*
-      When a find request is triggered on the store, the user can optionally pass in
-      attributes and relationships to be preloaded. These are meant to behave as if they
-      came back from the server, except the user obtained them out of band and is informing
-      the store of their existence. The most common use case is for supporting client side
-      nested URLs, such as `/posts/1/comments/2` so the user can do
-      `store.findRecord('comment', 2, { preload: { post: 1 } })` without having to fetch the post.
-       Preloaded data can be attributes and relationships passed in either as IDs or as actual
-      models.
-       @method _preloadData
-      @private
-      @param {Object} preload
-    */
-    _preloadData: function _preloadData(preload) {
-      var _this2 = this;
-
-      //TODO(Igor) consider the polymorphic case
-      Object.keys(preload).forEach(function (key) {
-        var preloadValue = get(preload, key);
-        var relationshipMeta = _this2.type.metaForProperty(key);
-        if (relationshipMeta.isRelationship) {
-          _this2._preloadRelationship(key, preloadValue);
-        } else {
-          _this2._data[key] = preloadValue;
-        }
-      });
-    },
-
-    _preloadRelationship: function _preloadRelationship(key, preloadValue) {
-      var relationshipMeta = this.type.metaForProperty(key);
-      var type = relationshipMeta.type;
-      if (relationshipMeta.kind === 'hasMany') {
-        this._preloadHasMany(key, preloadValue, type);
-      } else {
-        this._preloadBelongsTo(key, preloadValue, type);
-      }
-    },
-
-    _preloadHasMany: function _preloadHasMany(key, preloadValue, type) {
-      (0, _emberDataPrivateDebug.assert)("You need to pass in an array to set a hasMany property on a record", Array.isArray(preloadValue));
-      var recordsToSet = new Array(preloadValue.length);
-
-      for (var i = 0; i < preloadValue.length; i++) {
-        var recordToPush = preloadValue[i];
-        recordsToSet[i] = this._convertStringOrNumberIntoInternalModel(recordToPush, type);
-      }
-
-      //We use the pathway of setting the hasMany as if it came from the adapter
-      //because the user told us that they know this relationships exists already
-      this._relationships.get(key).updateRecordsFromAdapter(recordsToSet);
-    },
-
-    _preloadBelongsTo: function _preloadBelongsTo(key, preloadValue, type) {
-      var recordToSet = this._convertStringOrNumberIntoInternalModel(preloadValue, type);
-
-      //We use the pathway of setting the hasMany as if it came from the adapter
-      //because the user told us that they know this relationships exists already
-      this._relationships.get(key).setRecord(recordToSet);
-    },
-
-    _convertStringOrNumberIntoInternalModel: function _convertStringOrNumberIntoInternalModel(value, type) {
-      if (typeof value === 'string' || typeof value === 'number') {
-        return this.store._internalModelForId(type, value);
-      }
-      if (value._internalModel) {
-        return value._internalModel;
-      }
-      return value;
-    },
-
-    /*
-      @method updateRecordArrays
-      @private
-    */
-    updateRecordArrays: function updateRecordArrays() {
-      this._updatingRecordArraysLater = false;
-      this.store.dataWasUpdated(this.type, this);
-    },
-
-    setId: function setId(id) {
-      (0, _emberDataPrivateDebug.assert)('A record\'s id cannot be changed once it is in the loaded state', this.id === null || this.id === id || this.isNew());
-      this.id = id;
-      if (this.record.get('id') !== id) {
-        this.record.set('id', id);
-      }
-    },
-
-    didError: function didError(error) {
-      this.error = error;
-      this.isError = true;
-
-      if (this.record) {
-        this.record.setProperties({
-          isError: true,
-          adapterError: error
-        });
-      }
-    },
-
-    didCleanError: function didCleanError() {
-      this.error = null;
-      this.isError = false;
-
-      if (this.record) {
-        this.record.setProperties({
-          isError: false,
-          adapterError: null
-        });
-      }
-    },
-    /*
-      If the adapter did not return a hash in response to a commit,
-      merge the changed attributes and relationships into the existing
-      saved data.
-       @method adapterDidCommit
-    */
-    adapterDidCommit: function adapterDidCommit(data) {
-      if (data) {
-        data = data.attributes;
-      }
-
-      this.didCleanError();
-      var changedKeys = this._changedKeys(data);
-
-      assign(this._data, this._inFlightAttributes);
-      if (data) {
-        assign(this._data, data);
-      }
-
-      this._inFlightAttributes = new _emberDataPrivateSystemEmptyObject["default"]();
-
-      this.send('didCommit');
-      this.updateRecordArraysLater();
-
-      if (!data) {
-        return;
-      }
-
-      this.record._notifyProperties(changedKeys);
-    },
-
-    /*
-      @method updateRecordArraysLater
-      @private
-    */
-    updateRecordArraysLater: function updateRecordArraysLater() {
-      // quick hack (something like this could be pushed into run.once
-      if (this._updatingRecordArraysLater) {
-        return;
-      }
-      this._updatingRecordArraysLater = true;
-      _ember["default"].run.schedule('actions', this, this.updateRecordArrays);
-    },
-
-    addErrorMessageToAttribute: function addErrorMessageToAttribute(attribute, message) {
-      var record = this.getRecord();
-      get(record, 'errors')._add(attribute, message);
-    },
-
-    removeErrorMessageFromAttribute: function removeErrorMessageFromAttribute(attribute) {
-      var record = this.getRecord();
-      get(record, 'errors')._remove(attribute);
-    },
-
-    clearErrorMessages: function clearErrorMessages() {
-      var record = this.getRecord();
-      get(record, 'errors')._clear();
-    },
-
-    hasErrors: function hasErrors() {
-      var record = this.getRecord();
-      var errors = get(record, 'errors');
-
-      return !_ember["default"].isEmpty(errors);
-    },
-
-    // FOR USE DURING COMMIT PROCESS
-
-    /*
-      @method adapterDidInvalidate
-      @private
-    */
-    adapterDidInvalidate: function adapterDidInvalidate(errors) {
-      var attribute;
-
-      for (attribute in errors) {
-        if (errors.hasOwnProperty(attribute)) {
-          this.addErrorMessageToAttribute(attribute, errors[attribute]);
-        }
-      }
-
-      this.send('becameInvalid');
-
-      this._saveWasRejected();
-    },
-
-    /*
-      @method adapterDidError
-      @private
-    */
-    adapterDidError: function adapterDidError(error) {
-      this.send('becameError');
-      this.didError(error);
-      this._saveWasRejected();
-    },
-
-    _saveWasRejected: function _saveWasRejected() {
-      var keys = Object.keys(this._inFlightAttributes);
-      for (var i = 0; i < keys.length; i++) {
-        if (this._attributes[keys[i]] === undefined) {
-          this._attributes[keys[i]] = this._inFlightAttributes[keys[i]];
-        }
-      }
-      this._inFlightAttributes = new _emberDataPrivateSystemEmptyObject["default"]();
-    },
-
-    /*
-      Ember Data has 3 buckets for storing the value of an attribute on an internalModel.
-       `_data` holds all of the attributes that have been acknowledged by
-      a backend via the adapter. When rollbackAttributes is called on a model all
-      attributes will revert to the record's state in `_data`.
-       `_attributes` holds any change the user has made to an attribute
-      that has not been acknowledged by the adapter. Any values in
-      `_attributes` are have priority over values in `_data`.
-       `_inFlightAttributes`. When a record is being synced with the
-      backend the values in `_attributes` are copied to
-      `_inFlightAttributes`. This way if the backend acknowledges the
-      save but does not return the new state Ember Data can copy the
-      values from `_inFlightAttributes` to `_data`. Without having to
-      worry about changes made to `_attributes` while the save was
-      happenign.
-        Changed keys builds a list of all of the values that may have been
-      changed by the backend after a successful save.
-       It does this by iterating over each key, value pair in the payload
-      returned from the server after a save. If the `key` is found in
-      `_attributes` then the user has a local changed to the attribute
-      that has not been synced with the server and the key is not
-      included in the list of changed keys.
-    
-      If the value, for a key differs from the value in what Ember Data
-      believes to be the truth about the backend state (A merger of the
-      `_data` and `_inFlightAttributes` objects where
-      `_inFlightAttributes` has priority) then that means the backend
-      has updated the value and the key is added to the list of changed
-      keys.
-       @method _changedKeys
-      @private
-    */
-    _changedKeys: function _changedKeys(updates) {
-      var changedKeys = [];
-
-      if (updates) {
-        var original, i, value, key;
-        var keys = Object.keys(updates);
-        var length = keys.length;
-
-        original = assign(new _emberDataPrivateSystemEmptyObject["default"](), this._data);
-        original = assign(original, this._inFlightAttributes);
-
-        for (i = 0; i < length; i++) {
-          key = keys[i];
-          value = updates[key];
-
-          // A value in _attributes means the user has a local change to
-          // this attributes. We never override this value when merging
-          // updates from the backend so we should not sent a change
-          // notification if the server value differs from the original.
-          if (this._attributes[key] !== undefined) {
-            continue;
-          }
-
-          if (!_ember["default"].isEqual(original[key], value)) {
-            changedKeys.push(key);
+            if (!isEqual(original[key], value)) {
+              changedKeys.push(key);
+            }
           }
         }
+
+        return changedKeys;
       }
-
-      return changedKeys;
-    },
-
-    toString: function toString() {
-      if (this.record) {
-        return this.record.toString();
-      } else {
+    }, {
+      key: "toString",
+      value: function toString() {
         return "<" + this.modelName + ":" + this.id + ">";
       }
-    },
+    }, {
+      key: "referenceFor",
+      value: function referenceFor(kind, name) {
+        var _this3 = this;
 
-    referenceFor: function referenceFor(type, name) {
-      var _this3 = this;
+        var reference = this.references[name];
 
-      var reference = this.references[name];
+        if (!reference) {
+          (function () {
+            var relationship = _this3._relationships.get(name);
 
-      if (!reference) {
-        var relationship = this._relationships.get(name);
+            (0, _emberDataPrivateDebug.runInDebug)(function () {
+              var modelName = _this3.modelName;
+              (0, _emberDataPrivateDebug.assert)("There is no " + kind + " relationship named '" + name + "' on a model of modelClass '" + modelName + "'", relationship);
 
-        (0, _emberDataPrivateDebug.runInDebug)(function () {
-          var modelName = _this3.modelName;
-          (0, _emberDataPrivateDebug.assert)("There is no " + type + " relationship named '" + name + "' on a model of type '" + modelName + "'", relationship);
+              var actualRelationshipKind = relationship.relationshipMeta.kind;
+              (0, _emberDataPrivateDebug.assert)("You tried to get the '" + name + "' relationship on a '" + modelName + "' via record." + kind + "('" + name + "'), but the relationship is of kind '" + actualRelationshipKind + "'. Use record." + actualRelationshipKind + "('" + name + "') instead.", actualRelationshipKind === kind);
+            });
 
-          var actualRelationshipKind = relationship.relationshipMeta.kind;
-          (0, _emberDataPrivateDebug.assert)("You tried to get the '" + name + "' relationship on a '" + modelName + "' via record." + type + "('" + name + "'), but the relationship is of type '" + actualRelationshipKind + "'. Use record." + actualRelationshipKind + "('" + name + "') instead.", actualRelationshipKind === type);
-        });
+            if (kind === "belongsTo") {
+              reference = new _emberDataPrivateSystemReferences.BelongsToReference(_this3.store, _this3, relationship);
+            } else if (kind === "hasMany") {
+              reference = new _emberDataPrivateSystemReferences.HasManyReference(_this3.store, _this3, relationship);
+            }
 
-        if (type === "belongsTo") {
-          reference = new _emberDataPrivateSystemReferences.BelongsToReference(this.store, this, relationship);
-        } else if (type === "hasMany") {
-          reference = new _emberDataPrivateSystemReferences.HasManyReference(this.store, this, relationship);
+            _this3.references[name] = reference;
+          })();
         }
 
-        this.references[name] = reference;
+        return reference;
+      }
+    }, {
+      key: "type",
+      get: function get() {
+        return this.modelClass;
+      }
+    }, {
+      key: "recordReference",
+      get: function get() {
+        if (this._recordReference === null) {
+          this._recordReference = new _emberDataPrivateSystemReferences.RecordReference(this.store, this);
+        }
+        return this._recordReference;
+      }
+    }, {
+      key: "references",
+      get: function get() {
+        if (this._references === null) {
+          this._references = new _emberDataPrivateSystemEmptyObject["default"]();
+        }
+        return this._references;
+      }
+    }, {
+      key: "_deferredTriggers",
+      get: function get() {
+        if (this.__deferredTriggers === null) {
+          this.__deferredTriggers = [];
+        }
+        return this.__deferredTriggers;
+      }
+    }, {
+      key: "_attributes",
+      get: function get() {
+        if (this.__attributes === null) {
+          this.__attributes = new _emberDataPrivateSystemEmptyObject["default"]();
+        }
+        return this.__attributes;
+      },
+      set: function set(v) {
+        this.__attributes = v;
+      }
+    }, {
+      key: "_relationships",
+      get: function get() {
+        if (this.__relationships === null) {
+          this.__relationships = new _emberDataPrivateSystemRelationshipsStateCreate["default"](this);
+        }
+
+        return this.__relationships;
+      }
+    }, {
+      key: "_inFlightAttributes",
+      get: function get() {
+        if (this.__inFlightAttributes === null) {
+          this.__inFlightAttributes = new _emberDataPrivateSystemEmptyObject["default"]();
+        }
+        return this.__inFlightAttributes;
+      },
+      set: function set(v) {
+        this.__inFlightAttributes = v;
       }
 
-      return reference;
-    }
-  };
+      /*
+       implicit relationships are relationship which have not been declared but the inverse side exists on
+       another record somewhere
+       For example if there was
+        ```app/models/comment.js
+       import DS from 'ember-data';
+        export default DS.Model.extend({
+       name: DS.attr()
+       })
+       ```
+        but there is also
+        ```app/models/post.js
+       import DS from 'ember-data';
+        export default DS.Model.extend({
+       name: DS.attr(),
+       comments: DS.hasMany('comment')
+       })
+       ```
+        would have a implicit post relationship in order to be do things like remove ourselves from the post
+       when we are deleted
+      */
+    }, {
+      key: "_implicitRelationships",
+      get: function get() {
+        if (this.__implicitRelationships === null) {
+          this.__implicitRelationships = new _emberDataPrivateSystemEmptyObject["default"]();
+        }
+        return this.__implicitRelationships;
+      }
+    }, {
+      key: "record",
+      get: function get() {
+        return this._record;
+      }
+    }, {
+      key: "isDestroyed",
+      get: function get() {
+        return this._isDestroyed;
+      }
+    }, {
+      key: "hasRecord",
+      get: function get() {
+        return !!this._record;
+      }
+    }]);
+
+    return InternalModel;
+  })();
+
+  exports["default"] = InternalModel;
 
   if (false) {
     /*
@@ -70939,14 +71341,15 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     };
   }
 });
-define("ember-data/-private/system/model/model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/model/errors", "ember-data/-private/system/debug/debug-info", "ember-data/-private/system/relationships/belongs-to", "ember-data/-private/system/relationships/has-many", "ember-data/-private/system/relationships/ext", "ember-data/-private/system/model/attr", "ember-data/-private/features"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemModelErrors, _emberDataPrivateSystemDebugDebugInfo, _emberDataPrivateSystemRelationshipsBelongsTo, _emberDataPrivateSystemRelationshipsHasMany, _emberDataPrivateSystemRelationshipsExt, _emberDataPrivateSystemModelAttr, _emberDataPrivateFeatures) {
+define("ember-data/-private/system/model/model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/model/errors", "ember-data/-private/system/debug/debug-info", "ember-data/-private/system/relationships/belongs-to", "ember-data/-private/system/relationships/has-many", "ember-data/-private/system/relationships/ext", "ember-data/-private/system/model/attr", "ember-data/-private/features", "ember-data/-private/system/model/states"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemModelErrors, _emberDataPrivateSystemDebugDebugInfo, _emberDataPrivateSystemRelationshipsBelongsTo, _emberDataPrivateSystemRelationshipsHasMany, _emberDataPrivateSystemRelationshipsExt, _emberDataPrivateSystemModelAttr, _emberDataPrivateFeatures, _emberDataPrivateSystemModelStates) {
   "use strict";
+
+  var get = _ember["default"].get;
+  var computed = _ember["default"].computed;
 
   /**
     @module ember-data
   */
-
-  var get = _ember["default"].get;
 
   function intersection(array1, array2) {
     var result = [];
@@ -70961,7 +71364,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
 
   var RESERVED_MODEL_PROPS = ['currentState', 'data', 'store'];
 
-  var retrieveFromCurrentState = _ember["default"].computed('currentState', function (key) {
+  var retrieveFromCurrentState = computed('currentState', function (key) {
     return get(this._internalModel.currentState, key);
   }).readOnly();
 
@@ -71043,7 +71446,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       @type {Boolean}
       @readOnly
     */
-    hasDirtyAttributes: _ember["default"].computed('currentState.isDirty', function () {
+    hasDirtyAttributes: computed('currentState.isDirty', function () {
       return this.get('currentState.isDirty');
     }),
     /**
@@ -71198,6 +71601,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       @private
       @type {Object}
     */
+    currentState: _emberDataPrivateSystemModelStates["default"].empty,
 
     /**
       When the record is in the `invalid` state this object will contain
@@ -71242,7 +71646,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
        @property errors
       @type {DS.Errors}
     */
-    errors: _ember["default"].computed(function () {
+    errors: computed(function () {
       var errors = _emberDataPrivateSystemModelErrors["default"].create();
 
       errors._registerHandlers(this._internalModel, function () {
@@ -71273,7 +71677,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       @return {Object} an object whose values are primitive JSON values only
     */
     serialize: function serialize(options) {
-      return this.store.serialize(this, options);
+      return this._internalModel.createSnapshot().serialize(options);
     },
 
     /**
@@ -71300,49 +71704,49 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       that is either loaded from the server or created locally.
        @event ready
     */
-    ready: _ember["default"].K,
+    ready: function ready() {},
 
     /**
       Fired when the record is loaded from the server.
        @event didLoad
     */
-    didLoad: _ember["default"].K,
+    didLoad: function didLoad() {},
 
     /**
       Fired when the record is updated.
        @event didUpdate
     */
-    didUpdate: _ember["default"].K,
+    didUpdate: function didUpdate() {},
 
     /**
       Fired when a new record is commited to the server.
        @event didCreate
     */
-    didCreate: _ember["default"].K,
+    didCreate: function didCreate() {},
 
     /**
       Fired when the record is deleted.
        @event didDelete
     */
-    didDelete: _ember["default"].K,
+    didDelete: function didDelete() {},
 
     /**
       Fired when the record becomes invalid.
        @event becameInvalid
     */
-    becameInvalid: _ember["default"].K,
+    becameInvalid: function becameInvalid() {},
 
     /**
       Fired when the record enters the error state.
        @event becameError
     */
-    becameError: _ember["default"].K,
+    becameError: function becameError() {},
 
     /**
       Fired when the record is rolled back.
        @event rolledBack
     */
-    rolledBack: _ember["default"].K,
+    rolledBack: function rolledBack() {},
 
     //TODO Do we want to deprecate these?
     /**
@@ -71668,7 +72072,9 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
         type: 'blog',
         id: 1,
         relationships: {
-          user: { type: 'user', id: 1 }
+          user: {
+            data: { type: 'user', id: 1 }
+          }
         }
       });
       var userRef = blog.belongsTo('user');
@@ -71866,13 +72272,12 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
 
   exports["default"] = Model.extend(_emberDataPrivateSystemDebugDebugInfo["default"], _emberDataPrivateSystemRelationshipsBelongsTo.BelongsToMixin, _emberDataPrivateSystemRelationshipsExt.DidDefinePropertyMixin, _emberDataPrivateSystemRelationshipsExt.RelationshipsInstanceMethodsMixin, _emberDataPrivateSystemRelationshipsHasMany.HasManyMixin, _emberDataPrivateSystemModelAttr.AttrInstanceMethodsMixin);
 });
-define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateDebug) {
+define('ember-data/-private/system/model/states', ['exports', 'ember-data/-private/debug'], function (exports, _emberDataPrivateDebug) {
   /**
     @module ember-data
   */
   'use strict';
 
-  var get = _ember['default'].get;
   /*
     This file encapsulates the various states that a record can transition
     through during its lifecycle.
@@ -72032,7 +72437,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
      * [isEmpty](DS.Model.html#property_isEmpty)
      * [isLoading](DS.Model.html#property_isLoading)
      * [isLoaded](DS.Model.html#property_isLoaded)
-     * [isDirty](DS.Model.html#property_isDirty)
+     * [hasDirtyAttributes](DS.Model.html#property_hasDirtyAttributes)
      * [isSaving](DS.Model.html#property_isSaving)
      * [isDeleted](DS.Model.html#property_isDeleted)
      * [isNew](DS.Model.html#property_isNew)
@@ -72109,7 +72514,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
 
       //TODO(Igor) reloading now triggers a
       //loadingData event, though it seems fine?
-      loadingData: _ember['default'].K,
+      loadingData: function loadingData() {},
 
       propertyWasReset: function propertyWasReset(internalModel, name) {
         if (!internalModel.hasChangedAttributes()) {
@@ -72125,7 +72530,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
         }
       },
 
-      becomeDirty: _ember['default'].K,
+      becomeDirty: function becomeDirty() {},
 
       willCommit: function willCommit(internalModel) {
         internalModel.transitionTo('inFlight');
@@ -72158,19 +72563,17 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
 
       // EVENTS
       didSetProperty: _didSetProperty,
-      becomeDirty: _ember['default'].K,
-      pushedData: _ember['default'].K,
+      becomeDirty: function becomeDirty() {},
+      pushedData: function pushedData() {},
 
       unloadRecord: assertAgainstUnloadRecord,
 
       // TODO: More robust semantics around save-while-in-flight
-      willCommit: _ember['default'].K,
+      willCommit: function willCommit() {},
 
       didCommit: function didCommit(internalModel) {
-        var dirtyType = get(this, 'dirtyType');
-
         internalModel.transitionTo('saved');
-        internalModel.send('invokeLifecycleCallbacks', dirtyType);
+        internalModel.send('invokeLifecycleCallbacks', this.dirtyType);
       },
 
       becameInvalid: function becameInvalid(internalModel) {
@@ -72205,9 +72608,9 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
         }
       },
 
-      becameInvalid: _ember['default'].K,
-      becomeDirty: _ember['default'].K,
-      pushedData: _ember['default'].K,
+      becameInvalid: function becameInvalid() {},
+      becomeDirty: function becomeDirty() {},
+      pushedData: function pushedData() {},
 
       willCommit: function willCommit(internalModel) {
         internalModel.clearErrorMessages();
@@ -72236,7 +72639,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
 
   function deepClone(object) {
     var clone = {};
-    var value;
+    var value = undefined;
 
     for (var prop in object) {
       value = object[prop];
@@ -72272,6 +72675,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
   createdState.invalid.rolledBack = function (internalModel) {
     internalModel.transitionTo('deleted.saved');
   };
+
   createdState.uncommitted.rolledBack = function (internalModel) {
     internalModel.transitionTo('deleted.saved');
   };
@@ -72299,7 +72703,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
     internalModel.triggerLater('didLoad');
   };
 
-  createdState.uncommitted.propertyWasReset = _ember['default'].K;
+  createdState.uncommitted.propertyWasReset = function () {};
 
   function assertAgainstUnloadRecord(internalModel) {
     (0, _emberDataPrivateDebug.assert)("You can only unload a record which is not inFlight. `" + internalModel + "`", false);
@@ -72328,7 +72732,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
     // doesn't change your state. For example, if you're in the
     // in-flight state, rolling back the record doesn't move
     // you out of the in-flight state.
-    rolledBack: _ember['default'].K,
+    rolledBack: function rolledBack() {},
     unloadRecord: function unloadRecord(internalModel) {
       // clear relationships before moving to deleted state
       // otherwise it fails
@@ -72336,7 +72740,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
       internalModel.transitionTo('deleted.saved');
     },
 
-    propertyWasReset: _ember['default'].K,
+    propertyWasReset: function propertyWasReset() {},
 
     // SUBSTATES
 
@@ -72409,7 +72813,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
 
       //TODO(Igor) Reloading now triggers a loadingData event,
       //but it should be ok?
-      loadingData: _ember['default'].K,
+      loadingData: function loadingData() {},
 
       // SUBSTATES
 
@@ -72425,7 +72829,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
         // EVENTS
         didSetProperty: _didSetProperty,
 
-        pushedData: _ember['default'].K,
+        pushedData: function pushedData() {},
 
         becomeDirty: function becomeDirty(internalModel) {
           internalModel.transitionTo('updated.uncommitted');
@@ -72450,14 +72854,11 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
           internalModel.transitionTo('deleted.saved');
         },
 
-        didCommit: function didCommit(internalModel) {
-          internalModel.send('invokeLifecycleCallbacks', get(internalModel, 'lastDirtyType'));
-        },
+        didCommit: function didCommit() {},
 
         // loaded.saved.notFound would be triggered by a failed
         // `reload()` on an unchanged record
-        notFound: _ember['default'].K
-
+        notFound: function notFound() {}
       },
 
       // A record is in this state after it has been locally
@@ -72504,9 +72905,9 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
           internalModel.triggerLater('ready');
         },
 
-        pushedData: _ember['default'].K,
-        becomeDirty: _ember['default'].K,
-        deleteRecord: _ember['default'].K,
+        pushedData: function pushedData() {},
+        becomeDirty: function becomeDirty() {},
+        deleteRecord: function deleteRecord() {},
 
         rolledBack: function rolledBack(internalModel) {
           internalModel.transitionTo('loaded.saved');
@@ -72527,7 +72928,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
         unloadRecord: assertAgainstUnloadRecord,
 
         // TODO: More robust semantics around save-while-in-flight
-        willCommit: _ember['default'].K,
+        willCommit: function willCommit() {},
         didCommit: function didCommit(internalModel) {
           internalModel.transitionTo('saved');
 
@@ -72563,9 +72964,8 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
           internalModel.triggerLater('didCommit', internalModel);
         },
 
-        willCommit: _ember['default'].K,
-
-        didCommit: _ember['default'].K
+        willCommit: function willCommit() {},
+        didCommit: function didCommit() {}
       },
 
       invalid: {
@@ -72581,10 +72981,10 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
           }
         },
 
-        becameInvalid: _ember['default'].K,
-        becomeDirty: _ember['default'].K,
-        deleteRecord: _ember['default'].K,
-        willCommit: _ember['default'].K,
+        becameInvalid: function becameInvalid() {},
+        becomeDirty: function becomeDirty() {},
+        deleteRecord: function deleteRecord() {},
+        willCommit: function willCommit() {},
 
         rolledBack: function rolledBack(internalModel) {
           internalModel.clearErrorMessages();
@@ -72621,16 +73021,14 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
         continue;
       }
       if (typeof object[prop] === 'object') {
-        object[prop] = wireState(object[prop], object, name + "." + prop);
+        object[prop] = wireState(object[prop], object, name + '.' + prop);
       }
     }
 
     return object;
   }
 
-  RootState = wireState(RootState, null, "root");
-
-  exports['default'] = RootState;
+  exports['default'] = wireState(RootState, null, 'root');
 });
 define('ember-data/-private/system/normalize-link', ['exports'], function (exports) {
   'use strict';
@@ -72726,8 +73124,13 @@ define('ember-data/-private/system/ordered-set', ['exports', 'ember'], function 
 define('ember-data/-private/system/promise-proxies', ['exports', 'ember', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateDebug) {
   'use strict';
 
-  var Promise = _ember['default'].RSVP.Promise;
+  exports.promiseObject = promiseObject;
+  exports.promiseArray = promiseArray;
+  exports.proxyToContent = proxyToContent;
+  exports.promiseManyArray = promiseManyArray;
+
   var get = _ember['default'].get;
+  var Promise = _ember['default'].RSVP.Promise;
 
   /**
     A `PromiseArray` is an object that acts like both an `Ember.Array`
@@ -72760,6 +73163,8 @@ define('ember-data/-private/system/promise-proxies', ['exports', 'ember', 'ember
   */
   var PromiseArray = _ember['default'].ArrayProxy.extend(_ember['default'].PromiseProxyMixin);
 
+  exports.PromiseArray = PromiseArray;
+
   /**
     A `PromiseObject` is an object that acts like both an `Ember.Object`
     and a promise. When the promise is resolved, then the resulting value
@@ -72791,17 +73196,19 @@ define('ember-data/-private/system/promise-proxies', ['exports', 'ember', 'ember
   */
   var PromiseObject = _ember['default'].ObjectProxy.extend(_ember['default'].PromiseProxyMixin);
 
-  var promiseObject = function promiseObject(promise, label) {
+  exports.PromiseObject = PromiseObject;
+
+  function promiseObject(promise, label) {
     return PromiseObject.create({
       promise: Promise.resolve(promise, label)
     });
-  };
+  }
 
-  var promiseArray = function promiseArray(promise, label) {
+  function promiseArray(promise, label) {
     return PromiseArray.create({
       promise: Promise.resolve(promise, label)
     });
-  };
+  }
 
   /**
     A PromiseManyArray is a PromiseArray that also proxies certain method calls
@@ -72823,8 +73230,9 @@ define('ember-data/-private/system/promise-proxies', ['exports', 'ember', 'ember
 
   function proxyToContent(method) {
     return function () {
-      var content = get(this, 'content');
-      return content[method].apply(content, arguments);
+      var _get;
+
+      return (_get = get(this, 'content'))[method].apply(_get, arguments);
     };
   }
 
@@ -72850,18 +73258,13 @@ define('ember-data/-private/system/promise-proxies', ['exports', 'ember', 'ember
     has: proxyToContent('has')
   });
 
-  var promiseManyArray = function promiseManyArray(promise, label) {
+  exports.PromiseManyArray = PromiseManyArray;
+
+  function promiseManyArray(promise, label) {
     return PromiseManyArray.create({
       promise: Promise.resolve(promise, label)
     });
-  };
-
-  exports.PromiseArray = PromiseArray;
-  exports.PromiseObject = PromiseObject;
-  exports.PromiseManyArray = PromiseManyArray;
-  exports.promiseArray = promiseArray;
-  exports.promiseObject = promiseObject;
-  exports.promiseManyArray = promiseManyArray;
+  }
 });
 define("ember-data/-private/system/record-array-manager", ["exports", "ember", "ember-data/-private/system/record-arrays", "ember-data/-private/system/ordered-set"], function (exports, _ember, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemOrderedSet) {
   /**
@@ -72870,7 +73273,9 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
 
   "use strict";
 
-  var MapWithDefault = _ember["default"].MapWithDefault;var get = _ember["default"].get;
+  var get = _ember["default"].get;
+  var MapWithDefault = _ember["default"].MapWithDefault;
+  var emberRun = _ember["default"].run;
 
   /**
     @class RecordArrayManager
@@ -72889,8 +73294,8 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
       });
 
       this.liveRecordArrays = MapWithDefault.create({
-        defaultValue: function defaultValue(typeClass) {
-          return _this.createRecordArray(typeClass);
+        defaultValue: function defaultValue(modelClass) {
+          return _this.createRecordArray(modelClass);
         }
       });
 
@@ -72903,7 +73308,7 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
         return;
       }
 
-      _ember["default"].run.schedule('actions', this, this.updateRecordArrays);
+      emberRun.schedule('actions', this, this.updateRecordArrays);
     },
 
     recordArraysForRecord: function recordArraysForRecord(record) {
@@ -72922,7 +73327,8 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
       var _this2 = this;
 
       this.changedRecords.forEach(function (internalModel) {
-        if (get(internalModel, 'record.isDestroyed') || get(internalModel, 'record.isDestroying') || get(internalModel, 'currentState.stateName') === 'root.deleted.saved') {
+
+        if (internalModel.isDestroyed || internalModel.currentState.stateName === 'root.deleted.saved') {
           _this2._recordWasDeleted(internalModel);
         } else {
           _this2._recordWasChanged(internalModel);
@@ -72940,7 +73346,7 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
       }
 
       recordArrays.forEach(function (array) {
-        return array.removeInternalModel(record);
+        return array._removeInternalModels([record]);
       });
 
       record._recordArrays = null;
@@ -72951,7 +73357,7 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
 
       var typeClass = record.type;
       var recordArrays = this.filteredRecordArrays.get(typeClass);
-      var filter;
+      var filter = undefined;
       recordArrays.forEach(function (array) {
         filter = get(array, 'filterFunction');
         _this3.updateFilterRecordArray(array, filter, typeClass, record);
@@ -72964,7 +73370,7 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
 
       var typeClass = record.type;
       var recordArrays = this.filteredRecordArrays.get(typeClass);
-      var filter;
+      var filter = undefined;
 
       recordArrays.forEach(function (array) {
         filter = get(array, 'filterFunction');
@@ -72973,46 +73379,65 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
 
       if (this.liveRecordArrays.has(typeClass)) {
         var liveRecordArray = this.liveRecordArrays.get(typeClass);
-        this._addRecordToRecordArray(liveRecordArray, record);
+        this._addInternalModelToRecordArray(liveRecordArray, record);
       }
     },
+
     /**
       Update an individual filter.
        @method updateFilterRecordArray
       @param {DS.FilteredRecordArray} array
       @param {Function} filter
-      @param {DS.Model} typeClass
-      @param {InternalModel} record
+      @param {DS.Model} modelClass
+      @param {InternalModel} internalModel
     */
-    updateFilterRecordArray: function updateFilterRecordArray(array, filter, typeClass, record) {
-      var shouldBeInArray = filter(record.getRecord());
-      var recordArrays = this.recordArraysForRecord(record);
+    updateFilterRecordArray: function updateFilterRecordArray(array, filter, modelClass, internalModel) {
+      var shouldBeInArray = filter(internalModel.getRecord());
+      var recordArrays = this.recordArraysForRecord(internalModel);
       if (shouldBeInArray) {
-        this._addRecordToRecordArray(array, record);
+        this._addInternalModelToRecordArray(array, internalModel);
       } else {
         recordArrays["delete"](array);
-        array.removeInternalModel(record);
+        array._removeInternalModels([internalModel]);
       }
     },
 
-    _addRecordToRecordArray: function _addRecordToRecordArray(array, record) {
-      var recordArrays = this.recordArraysForRecord(record);
+    _addInternalModelToRecordArray: function _addInternalModelToRecordArray(array, internalModel) {
+      var recordArrays = this.recordArraysForRecord(internalModel);
       if (!recordArrays.has(array)) {
-        array.addInternalModel(record);
+        array._pushInternalModels([internalModel]);
         recordArrays.add(array);
       }
     },
 
-    populateLiveRecordArray: function populateLiveRecordArray(array, modelName) {
-      var typeMap = this.store.typeMapFor(modelName);
+    syncLiveRecordArray: function syncLiveRecordArray(array, modelClass) {
+      var hasNoPotentialDeletions = this.changedRecords.length === 0;
+      var typeMap = this.store.typeMapFor(modelClass);
+      var hasNoInsertionsOrRemovals = typeMap.records.length === array.length;
+
+      /*
+        Ideally the recordArrayManager has knowledge of the changes to be applied to
+        liveRecordArrays, and is capable of strategically flushing those changes and applying
+        small diffs if desired.  However, until we've refactored recordArrayManager, this dirty
+        check prevents us from unnecessarily wiping out live record arrays returned by peekAll.
+       */
+      if (hasNoPotentialDeletions && hasNoInsertionsOrRemovals) {
+        return;
+      }
+
+      this.populateLiveRecordArray(array, modelClass);
+    },
+
+    populateLiveRecordArray: function populateLiveRecordArray(array, modelClass) {
+      var typeMap = this.store.typeMapFor(modelClass);
       var records = typeMap.records;
-      var record;
+      var record = undefined;
 
       for (var i = 0; i < records.length; i++) {
         record = records[i];
 
         if (!record.isDeleted() && !record.isEmpty()) {
-          this._addRecordToRecordArray(array, record);
+          this._addInternalModelToRecordArray(array, record);
         }
       }
     },
@@ -73024,19 +73449,19 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
       method is invoked when the filter is created in th first place.
        @method updateFilter
       @param {Array} array
-      @param {String} modelName
+      @param {Class} modelClass
       @param {Function} filter
     */
-    updateFilter: function updateFilter(array, modelName, filter) {
-      var typeMap = this.store.typeMapFor(modelName);
+    updateFilter: function updateFilter(array, modelClass, filter) {
+      var typeMap = this.store.typeMapFor(modelClass);
       var records = typeMap.records;
-      var record;
+      var record = undefined;
 
       for (var i = 0; i < records.length; i++) {
         record = records[i];
 
         if (!record.isDeleted() && !record.isEmpty()) {
-          this.updateFilterRecordArray(array, filter, modelName, record);
+          this.updateFilterRecordArray(array, filter, modelClass, record);
         }
       }
     },
@@ -73055,19 +73480,17 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
     /**
       Create a `DS.RecordArray` for a type.
        @method createRecordArray
-      @param {Class} typeClass
+      @param {Class} modelClass
       @return {DS.RecordArray}
     */
-    createRecordArray: function createRecordArray(typeClass) {
-      var array = _emberDataPrivateSystemRecordArrays.RecordArray.create({
-        type: typeClass,
+    createRecordArray: function createRecordArray(modelClass) {
+      return _emberDataPrivateSystemRecordArrays.RecordArray.create({
+        type: modelClass,
         content: _ember["default"].A(),
         store: this.store,
         isLoaded: true,
         manager: this
       });
-
-      return array;
     },
 
     /**
@@ -73138,6 +73561,7 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
       @param {DS.RecordArray} array
     */
     unregisterRecordArray: function unregisterRecordArray(array) {
+
       var typeClass = array.type;
 
       // unregister filtered record array
@@ -73176,7 +73600,7 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
 
   function flatten(list) {
     var length = list.length;
-    var result = _ember["default"].A();
+    var result = [];
 
     for (var i = 0; i < length; i++) {
       result = result.concat(list[i]);
@@ -73207,7 +73631,7 @@ define("ember-data/-private/system/record-arrays", ["exports", "ember-data/-priv
   exports.FilteredRecordArray = _emberDataPrivateSystemRecordArraysFilteredRecordArray["default"];
   exports.AdapterPopulatedRecordArray = _emberDataPrivateSystemRecordArraysAdapterPopulatedRecordArray["default"];
 });
-define("ember-data/-private/system/record-arrays/adapter-populated-record-array", ["exports", "ember", "ember-data/-private/system/record-arrays/record-array", "ember-data/-private/system/clone-null", "ember-data/-private/features"], function (exports, _ember, _emberDataPrivateSystemRecordArraysRecordArray, _emberDataPrivateSystemCloneNull, _emberDataPrivateFeatures) {
+define("ember-data/-private/system/record-arrays/adapter-populated-record-array", ["exports", "ember", "ember-data/-private/system/record-arrays/record-array", "ember-data/-private/system/clone-null"], function (exports, _ember, _emberDataPrivateSystemRecordArraysRecordArray, _emberDataPrivateSystemCloneNull) {
   "use strict";
 
   /**
@@ -73222,12 +73646,46 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
     may trigger a search on the server, whose results would be loaded
     into an instance of the `AdapterPopulatedRecordArray`.
   
+    ---
+  
+    If you want to update the array and get the latest records from the
+    adapter, you can invoke [`update()`](#method_update):
+  
+    Example
+  
+    ```javascript
+    // GET /users?isAdmin=true
+    var admins = store.query('user', { isAdmin: true });
+  
+    admins.then(function() {
+      console.log(admins.get("length")); // 42
+    });
+  
+    // somewhere later in the app code, when new admins have been created
+    // in the meantime
+    //
+    // GET /users?isAdmin=true
+    admins.update().then(function() {
+      admins.get('isUpdating'); // false
+      console.log(admins.get("length")); // 123
+    });
+  
+    admins.get('isUpdating'); // true
+    ```
+  
     @class AdapterPopulatedRecordArray
     @namespace DS
     @extends DS.RecordArray
   */
   exports["default"] = _emberDataPrivateSystemRecordArraysRecordArray["default"].extend({
-    query: null,
+    init: function init() {
+      // yes we are touching `this` before super, but ArrayProxy has a bug that requires this.
+      this.set('content', this.get('content') || _ember["default"].A());
+
+      this._super.apply(this, arguments);
+      this.query = this.query || null;
+      this.links = null;
+    },
 
     replace: function replace() {
       var type = get(this, 'type').toString();
@@ -73243,29 +73701,28 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
     },
 
     /**
-      @method loadRecords
-      @param {Array} records
+      @method _setInternalModels
+      @param {Array} internalModels
       @param {Object} payload normalized payload
       @private
     */
-    loadRecords: function loadRecords(records, payload) {
+    _setInternalModels: function _setInternalModels(internalModels, payload) {
       var _this = this;
 
-      //TODO Optimize
-      var internalModels = _ember["default"].A(records).mapBy('_internalModel');
+      // TODO: initial load should not cause change events at all, only
+      // subsequent. This requires changing the public api of adapter.query, but
+      // hopefully we can do that soon.
+      this.get('content').setObjects(internalModels);
+
       this.setProperties({
-        content: _ember["default"].A(internalModels),
         isLoaded: true,
         isUpdating: false,
-        meta: (0, _emberDataPrivateSystemCloneNull["default"])(payload.meta)
+        meta: (0, _emberDataPrivateSystemCloneNull["default"])(payload.meta),
+        links: (0, _emberDataPrivateSystemCloneNull["default"])(payload.links)
       });
 
-      if (true) {
-        this.set('links', (0, _emberDataPrivateSystemCloneNull["default"])(payload.links));
-      }
-
       internalModels.forEach(function (record) {
-        _this.manager.recordArraysForRecord(record).add(_this);
+        return _this.manager.recordArraysForRecord(record).add(_this);
       });
 
       // TODO: should triggering didLoad event be the last action of the runLoop?
@@ -73293,6 +73750,12 @@ define('ember-data/-private/system/record-arrays/filtered-record-array', ['expor
     @extends DS.RecordArray
   */
   exports['default'] = _emberDataPrivateSystemRecordArraysRecordArray['default'].extend({
+    init: function init() {
+      this._super.apply(this, arguments);
+
+      this.set('filterFunction', this.get('filterFunction') || null);
+      this.isLoaded = true;
+    },
     /**
       The filterFunction is a function used to test records from the store to
       determine if they should be part of the record array.
@@ -73314,12 +73777,10 @@ define('ember-data/-private/system/record-arrays/filtered-record-array', ['expor
       @param {DS.Model} record
       @return {Boolean} `true` if the record should be in the array
     */
-    filterFunction: null,
-    isLoaded: true,
 
     replace: function replace() {
       var type = get(this, 'type').toString();
-      throw new Error("The result of a client-side filter (on " + type + ") is immutable.");
+      throw new Error('The result of a client-side filter (on ' + type + ') is immutable.');
     },
 
     /**
@@ -73327,8 +73788,10 @@ define('ember-data/-private/system/record-arrays/filtered-record-array', ['expor
       @private
     */
     _updateFilter: function _updateFilter() {
-      var manager = get(this, 'manager');
-      manager.updateFilter(this, get(this, 'type'), get(this, 'filterFunction'));
+      if (get(this, 'isDestroying') || get(this, 'isDestroyed')) {
+        return;
+      }
+      get(this, 'manager').updateFilter(this, get(this, 'type'), get(this, 'filterFunction'));
     },
 
     updateFilter: _ember['default'].observer('filterFunction', function () {
@@ -73345,6 +73808,7 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
 
   var get = _ember["default"].get;
   var set = _ember["default"].set;
+  var Promise = _ember["default"].RSVP.Promise;
 
   /**
     A record array is an array that contains records of a certain type. The record
@@ -73360,25 +73824,28 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
   */
 
   exports["default"] = _ember["default"].ArrayProxy.extend(_ember["default"].Evented, {
-    /**
-      The model type contained by this record array.
-       @property type
-      @type DS.Model
-    */
-    type: null,
+    init: function init() {
+      this._super.apply(this, arguments);
 
-    /**
-      The array of client ids backing the record array. When a
-      record is requested from the record array, the record
-      for the client id at the same index is materialized, if
-      necessary, by the store.
-       @property content
-      @private
-      @type Ember.Array
-    */
-    content: null,
+      /**
+        The model type contained by this record array.
+         @property type
+        @type DS.Model
+        */
+      this.type = this.type || null;
 
-    /**
+      /**
+        The array of client ids backing the record array. When a
+        record is requested from the record array, the record
+        for the client id at the same index is materialized, if
+        necessary, by the store.
+         @property content
+        @private
+        @type Ember.Array
+        */
+      this.set('content', this.content || null);
+
+      /**
       The flag to signal a `RecordArray` is finished loading data.
        Example
        ```javascript
@@ -73387,29 +73854,36 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
       ```
        @property isLoaded
       @type Boolean
-    */
-    isLoaded: false,
-    /**
+      */
+      this.isLoaded = this.isLoaded || false;
+      /**
       The flag to signal a `RecordArray` is currently loading data.
-       Example
-       ```javascript
+      Example
+      ```javascript
       var people = store.peekAll('person');
       people.get('isUpdating'); // false
       people.update();
       people.get('isUpdating'); // true
       ```
-       @property isUpdating
+      @property isUpdating
       @type Boolean
-    */
-    isUpdating: false,
+      */
+      this.isUpdating = false;
 
-    /**
+      /**
       The store that created this record array.
-       @property store
+      @property store
       @private
       @type DS.Store
-    */
-    store: null,
+      */
+      this.store = this.store || null;
+      this._updatingPromise = null;
+    },
+
+    replace: function replace() {
+      var type = get(this, 'type').toString();
+      throw new Error("The result of a server query (for all " + type + " types) is immutable. To modify contents, use toArray()");
+    },
 
     /**
       Retrieves an object from the content by index.
@@ -73419,8 +73893,7 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
       @return {DS.Model} record
     */
     objectAtContent: function objectAtContent(index) {
-      var content = get(this, 'content');
-      var internalModel = content.objectAt(index);
+      var internalModel = get(this, 'content').objectAt(index);
       return internalModel && internalModel.getRecord();
     },
 
@@ -73439,12 +73912,25 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
        @method update
     */
     update: function update() {
+      var _this = this;
+
       if (get(this, 'isUpdating')) {
-        return;
+        return this._updatingPromise;
       }
 
       this.set('isUpdating', true);
-      return this._update();
+
+      var updatingPromise = this._update()["finally"](function () {
+        _this._updatingPromise = null;
+        if (_this.get('isDestroying') || _this.get('isDestroyed')) {
+          return;
+        }
+        _this.set('isUpdating', false);
+      });
+
+      this._updatingPromise = updatingPromise;
+
+      return updatingPromise;
     },
 
     /*
@@ -73463,15 +73949,12 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
        @method addInternalModel
       @private
       @param {InternalModel} internalModel
-      @param {number} an optional index to insert at
     */
-    addInternalModel: function addInternalModel(internalModel, idx) {
-      var content = get(this, 'content');
-      if (idx === undefined) {
-        content.addObject(internalModel);
-      } else if (!content.includes(internalModel)) {
-        content.insertAt(idx, internalModel);
-      }
+    _pushInternalModels: function _pushInternalModels(internalModels) {
+      // pushObjects because the internalModels._recordArrays set was already
+      // consulted for inclusion, so addObject and its on .contains call is not
+      // required.
+      get(this, 'content').pushObjects(internalModels);
     },
 
     /**
@@ -73480,8 +73963,8 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
       @private
       @param {InternalModel} internalModel
     */
-    removeInternalModel: function removeInternalModel(internalModel) {
-      get(this, 'content').removeObject(internalModel);
+    _removeInternalModels: function _removeInternalModels(internalModels) {
+      get(this, 'content').removeObjects(internalModels);
     },
 
     /**
@@ -73498,23 +73981,24 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
       @return {DS.PromiseArray} promise
     */
     save: function save() {
-      var recordArray = this;
-      var promiseLabel = "DS: RecordArray#save " + get(this, 'type');
-      var promise = _ember["default"].RSVP.all(this.invoke("save"), promiseLabel).then(function (array) {
-        return recordArray;
-      }, null, "DS: RecordArray#save return RecordArray");
+      var _this2 = this;
+
+      var promiseLabel = 'DS: RecordArray#save ' + get(this, 'type');
+      var promise = Promise.all(this.invoke('save'), promiseLabel).then(function () {
+        return _this2;
+      }, null, 'DS: RecordArray#save return RecordArray');
 
       return _emberDataPrivateSystemPromiseProxies.PromiseArray.create({ promise: promise });
     },
 
     _dissociateFromOwnRecords: function _dissociateFromOwnRecords() {
-      var _this = this;
+      var _this3 = this;
 
-      this.get('content').forEach(function (record) {
-        var recordArrays = record._recordArrays;
+      this.get('content').forEach(function (internalModel) {
+        var recordArrays = internalModel._recordArrays;
 
         if (recordArrays) {
-          recordArrays["delete"](_this);
+          recordArrays["delete"](_this3);
         }
       });
     },
@@ -73524,21 +74008,41 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
       @private
     */
     _unregisterFromManager: function _unregisterFromManager() {
-      var manager = get(this, 'manager');
-      manager.unregisterRecordArray(this);
+      get(this, 'manager').unregisterRecordArray(this);
     },
 
     willDestroy: function willDestroy() {
       this._unregisterFromManager();
       this._dissociateFromOwnRecords();
-      set(this, 'content', undefined);
+      // TODO: we should not do work during destroy:
+      //   * when objects are destroyed, they should simply be left to do
+      //   * if logic errors do to this, that logic needs to be more careful during
+      //    teardown (ember provides isDestroying/isDestroyed) for this reason
+      //   * the exception being: if an dominator has a reference to this object,
+      //     and must be informed to release e.g. e.g. removing itself from th
+      //     recordArrayMananger
+      set(this, 'content', null);
       set(this, 'length', 0);
       this._super.apply(this, arguments);
     },
 
-    createSnapshot: function createSnapshot(options) {
-      var meta = this.get('meta');
-      return new _emberDataPrivateSystemSnapshotRecordArray["default"](this, meta, options);
+    /**
+    r   @method _createSnapshot
+      @private
+    */
+    _createSnapshot: function _createSnapshot(options) {
+      // this is private for users, but public for ember-data internals
+      return new _emberDataPrivateSystemSnapshotRecordArray["default"](this, this.get('meta'), options);
+    },
+
+    /**
+    r   @method _takeSnapshot
+      @private
+    */
+    _takeSnapshot: function _takeSnapshot() {
+      return get(this, 'content').map(function (internalModel) {
+        return internalModel.createSnapshot();
+      });
     }
   });
 });
@@ -73552,6 +74056,15 @@ define('ember-data/-private/system/references', ['exports', 'ember-data/-private
 define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-data/model', 'ember', 'ember-data/-private/system/references/reference', 'ember-data/-private/features', 'ember-data/-private/debug'], function (exports, _emberDataModel, _ember, _emberDataPrivateSystemReferencesReference, _emberDataPrivateFeatures, _emberDataPrivateDebug) {
   'use strict';
 
+  /**
+     A BelongsToReference is a low level API that allows users and
+     addon author to perform meta-operations on a belongs-to
+     relationship.
+  
+     @class BelongsToReference
+     @namespace DS
+     @extends DS.Reference
+  */
   var BelongsToReference = function BelongsToReference(store, parentInternalModel, belongsToRelationship) {
     this._super$constructor(store, parentInternalModel);
     this.belongsToRelationship = belongsToRelationship;
@@ -73565,6 +74078,41 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
   BelongsToReference.prototype.constructor = BelongsToReference;
   BelongsToReference.prototype._super$constructor = _emberDataPrivateSystemReferencesReference['default'];
 
+  /**
+     This returns a string that represents how the reference will be
+     looked up when it is loaded. If the relationship has a link it will
+     use the "link" otherwise it defaults to "id".
+  
+     Example
+  
+     ```javascript
+      // models/blog.js
+      export default DS.Model.extend({
+        user: DS.belongsTo({ async: true })
+      });
+  
+      var blog = store.push({
+        type: 'blog',
+        id: 1,
+        relationships: {
+          user: {
+            data: { type: 'user', id: 1 }
+          }
+        }
+      });
+      var userRef = blog.belongsTo('user');
+  
+      // get the identifier of the reference
+      if (userRef.remoteType() === "id") {
+        var id = userRef.id();
+      } else if (userRef.remoteType() === "link") {
+        var link = userRef.link();
+      }
+      ```
+  
+     @method remoteType
+     @return {String} The name of the remote type. This should either be "link" or "id"
+  */
   BelongsToReference.prototype.remoteType = function () {
     if (this.belongsToRelationship.link) {
       return "link";
@@ -73573,19 +74121,174 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
     return "id";
   };
 
+  /**
+     The `id` of the record that this reference refers to. Together, the
+     `type()` and `id()` methods form a composite key for the identity
+     map. This can be used to access the id of an async relationship
+     without triggering a fetch that would normally happen if you
+     attempted to use `record.get('relationship.id')`.
+  
+     Example
+  
+     ```javascript
+      // models/blog.js
+      export default DS.Model.extend({
+        user: DS.belongsTo({ async: true })
+      });
+  
+      var blog = store.push({
+        data: {
+          type: 'blog',
+          id: 1,
+          relationships: {
+            user: {
+              data: { type: 'user', id: 1 }
+            }
+          }
+        }
+      });
+      var userRef = blog.belongsTo('user');
+  
+      // get the identifier of the reference
+      if (userRef.remoteType() === "id") {
+        var id = userRef.id();
+      }
+      ```
+  
+     @method id
+     @return {String} The id of the record in this belongsTo relationship.
+  */
   BelongsToReference.prototype.id = function () {
     var inverseRecord = this.belongsToRelationship.inverseRecord;
     return inverseRecord && inverseRecord.id;
   };
 
+  /**
+     The link Ember Data will use to fetch or reload this belongs-to
+     relationship.
+  
+     Example
+  
+     ```javascript
+      // models/blog.js
+      export default DS.Model.extend({
+        user: DS.belongsTo({ async: true })
+      });
+  
+      var blog = store.push({
+        data: {
+          type: 'blog',
+          id: 1,
+          relationships: {
+            user: {
+              links: {
+                related: '/articles/1/author'
+              }
+            }
+          }
+        }
+      });
+      var userRef = blog.belongsTo('user');
+  
+      // get the identifier of the reference
+      if (userRef.remoteType() === "link") {
+        var link = userRef.link();
+      }
+      ```
+  
+     @method link
+     @return {String} The link Ember Data will use to fetch or reload this belongs-to relationship.
+  */
   BelongsToReference.prototype.link = function () {
     return this.belongsToRelationship.link;
   };
 
+  /**
+     The meta data for the belongs-to relationship.
+  
+     Example
+  
+     ```javascript
+      // models/blog.js
+      export default DS.Model.extend({
+        user: DS.belongsTo({ async: true })
+      });
+  
+      var blog = store.push({
+        data: {
+          type: 'blog',
+          id: 1,
+          relationships: {
+            user: {
+              links: {
+                related: {
+                  href: '/articles/1/author',
+                  meta: {
+                    lastUpdated: 1458014400000
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+  
+      var userRef = blog.belongsTo('user');
+  
+      userRef.meta() // { lastUpdated: 1458014400000 }
+      ```
+  
+     @method meta
+     @return {Object} The meta information for the belongs-oo relationship.
+  */
   BelongsToReference.prototype.meta = function () {
     return this.belongsToRelationship.meta;
   };
 
+  /**
+     `push` can be used to update the data in the relationship and Ember
+     Data will treat the new data as the conanical value of this
+     relationship on the backend.
+  
+     Example
+  
+      ```javascript
+      // models/blog.js
+      export default DS.Model.extend({
+        user: DS.belongsTo({ async: true })
+      });
+  
+      var blog = store.push({
+        data: {
+          type: 'blog',
+          id: 1,
+          relationships: {
+            user: {
+              data: { type: 'user', id: 1 }
+            }
+          }
+        }
+      });
+      var userRef = blog.belongsTo('user');
+  
+      // provide data for reference
+      userRef.push({
+        data: {
+          type: 'user',
+          id: 1,
+          attributes: {
+            username: "@user"
+          }
+        }
+      }).then(function(user) {
+        userRef.value() === user;
+      });
+      ```
+  
+     @method push
+     @param {Object|Promise} objectOrPromise a promise that resolves to a JSONAPI document object describing the new value of this relationship.
+     @return {Promise<record>} A promise that resolves with the new value in this belongs-to relationship.
+  */
   BelongsToReference.prototype.push = function (objectOrPromise) {
     var _this = this;
 
@@ -73612,16 +74315,99 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
     });
   };
 
+  /**
+     `value()` synchronously returns the current value of the belongs-to
+     relationship. Unlike `record.get('relationshipName')`, calling
+     `value()` on a reference does not trigger a fetch if the async
+     relationship is not yet loaded. If the relationship is not loaded
+     it will always return `null`.
+  
+     Example
+  
+      ```javascript
+      // models/blog.js
+      export default DS.Model.extend({
+        user: DS.belongsTo({ async: true })
+      });
+  
+      var blog = store.push({
+        data: {
+          type: 'blog',
+          id: 1,
+          relationships: {
+            user: {
+              data: { type: 'user', id: 1 }
+            }
+          }
+        }
+      });
+      var userRef = blog.belongsTo('user');
+  
+      userRef.value(); // null
+  
+      // provide data for reference
+      userRef.push({
+        data: {
+          type: 'user',
+          id: 1,
+          attributes: {
+            username: "@user"
+          }
+        }
+      }).then(function(user) {
+        userRef.value(); // user
+      });
+      ```
+  
+     @method value
+     @param {Object|Promise} objectOrPromise a promise that resolves to a JSONAPI document object describing the new value of this relationship.
+     @return {DS.Model} the record in this relationship
+  */
   BelongsToReference.prototype.value = function () {
     var inverseRecord = this.belongsToRelationship.inverseRecord;
 
-    if (inverseRecord && inverseRecord.record) {
-      return inverseRecord.record;
+    if (inverseRecord && inverseRecord.isLoaded()) {
+      return inverseRecord.getRecord();
     }
 
     return null;
   };
 
+  /**
+     Loads a record in a belongs to relationship if it is not already
+     loaded. If the relationship is already loaded this method does not
+     trigger a new load.
+  
+     Example
+  
+      ```javascript
+      // models/blog.js
+      export default DS.Model.extend({
+        user: DS.belongsTo({ async: true })
+      });
+  
+      var blog = store.push({
+        data: {
+          type: 'blog',
+          id: 1,
+          relationships: {
+            user: {
+              data: { type: 'user', id: 1 }
+            }
+          }
+        }
+      });
+      var userRef = blog.belongsTo('user');
+  
+      userRef.value(); // null
+  
+      userRef.load().then(function(user) {
+        userRef.value() === user
+      });
+  
+     @method load
+     @return {Promise} a promise that resolves with the record in this belongs-to relationship.
+  */
   BelongsToReference.prototype.load = function () {
     var _this2 = this;
 
@@ -73636,6 +74422,40 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
     }
   };
 
+  /**
+     Triggers a reload of the value in this relationship. If the
+     remoteType is `"link"` Ember Data will use the relationship link to
+     reload the relationship. Otherwise it will reload the record by its
+     id.
+  
+     Example
+  
+      ```javascript
+      // models/blog.js
+      export default DS.Model.extend({
+        user: DS.belongsTo({ async: true })
+      });
+  
+      var blog = store.push({
+        data: {
+          type: 'blog',
+          id: 1,
+          relationships: {
+            user: {
+              data: { type: 'user', id: 1 }
+            }
+          }
+        }
+      });
+      var userRef = blog.belongsTo('user');
+  
+      userRef.reload().then(function(user) {
+        userRef.value() === user
+      });
+  
+     @method reload
+     @return {Promise} a promise that resolves with the record in this belongs-to relationship after the reload has completed.
+  */
   BelongsToReference.prototype.reload = function () {
     var _this3 = this;
 
@@ -73649,6 +74469,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
 define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'ember-data/-private/system/references/reference', 'ember-data/-private/debug', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateSystemReferencesReference, _emberDataPrivateDebug, _emberDataPrivateFeatures) {
   'use strict';
 
+  var resolve = _ember['default'].RSVP.resolve;
   var get = _ember['default'].get;
 
   var HasManyReference = function HasManyReference(store, parentInternalModel, hasManyRelationship) {
@@ -73677,22 +74498,21 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
   };
 
   HasManyReference.prototype.ids = function () {
-    var members = this.hasManyRelationship.members;
-    var ids = members.toArray().map(function (internalModel) {
+    var members = this.hasManyRelationship.members.toArray();
+
+    return members.map(function (internalModel) {
       return internalModel.id;
     });
-
-    return ids;
   };
 
   HasManyReference.prototype.meta = function () {
-    return this.hasManyRelationship.manyArray.meta;
+    return this.hasManyRelationship.meta;
   };
 
   HasManyReference.prototype.push = function (objectOrPromise) {
     var _this = this;
 
-    return _ember['default'].RSVP.resolve(objectOrPromise).then(function (payload) {
+    return resolve(objectOrPromise).then(function (payload) {
       var array = payload;
 
       if (false) {
@@ -73745,7 +74565,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
 
       _this.hasManyRelationship.computeChanges(internalModels);
 
-      return _this.hasManyRelationship.manyArray;
+      return _this.hasManyRelationship.getManyArray();
     });
   };
 
@@ -73756,16 +74576,15 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
     }
 
     var members = this.hasManyRelationship.members.toArray();
-    var isEveryLoaded = members.every(function (internalModel) {
+
+    return members.every(function (internalModel) {
       return internalModel.isLoaded() === true;
     });
-
-    return isEveryLoaded;
   };
 
   HasManyReference.prototype.value = function () {
     if (this._isLoaded()) {
-      return this.hasManyRelationship.manyArray;
+      return this.hasManyRelationship.getManyArray();
     }
 
     return null;
@@ -73776,8 +74595,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
       return this.hasManyRelationship.getRecords();
     }
 
-    var manyArray = this.hasManyRelationship.manyArray;
-    return _ember['default'].RSVP.resolve(manyArray);
+    return resolve(this.hasManyRelationship.getManyArray());
   };
 
   HasManyReference.prototype.reload = function () {
@@ -73789,6 +74607,13 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
 define('ember-data/-private/system/references/record', ['exports', 'ember', 'ember-data/-private/system/references/reference'], function (exports, _ember, _emberDataPrivateSystemReferencesReference) {
   'use strict';
 
+  /**
+     An RecordReference is a low level API that allows users and
+     addon author to perform meta-operations on a record.
+  
+     @class RecordReference
+     @namespace DS
+  */
   var RecordReference = function RecordReference(store, internalModel) {
     this._super$constructor(store, internalModel);
     this.type = internalModel.modelName;
@@ -73799,31 +74624,141 @@ define('ember-data/-private/system/references/record', ['exports', 'ember', 'emb
   RecordReference.prototype.constructor = RecordReference;
   RecordReference.prototype._super$constructor = _emberDataPrivateSystemReferencesReference['default'];
 
+  /**
+     The `id` of the record that this reference refers to.
+  
+     Together, the `type` and `id` properties form a composite key for
+     the identity map.
+  
+     Example
+  
+     ```javascript
+     var userRef = store.getReference('user', 1);
+  
+     userRef.id(); // '1'
+     ```
+  
+     @method id
+     @return {String} The id of the record.
+  */
   RecordReference.prototype.id = function () {
     return this._id;
   };
 
+  /**
+     How the reference will be looked up when it is loaded: Currently
+     this always return `identity` to signifying that a record will be
+     loaded by the `type` and `id`.
+  
+     Example
+  
+     ```javascript
+     var userRef = store.getReference('user', 1);
+  
+     userRef.remoteType(); // 'identity'
+     ```
+  
+     @method remoteType
+     @return {String} 'identity'
+  */
   RecordReference.prototype.remoteType = function () {
     return 'identity';
   };
 
+  /**
+    This API allows you to provide a reference with new data. The
+    simplest usage of this API is similar to `store.push`: you provide a
+    normalized hash of data and the object represented by the reference
+    will update.
+  
+    If you pass a promise to `push`, Ember Data will not ask the adapter
+    for the data if another attempt to fetch it is made in the
+    interim. When the promise resolves, the underlying object is updated
+    with the new data, and the promise returned by *this function* is resolved
+    with that object.
+  
+    For example, `recordReference.push(promise)` will be resolved with a
+    record.
+  
+     Example
+  
+     ```javascript
+     var userRef = store.getReference('user', 1);
+  
+     // provide data for reference
+     userRef.push({ data: { id: 1, username: "@user" }}).then(function(user) {
+       userRef.value() === user;
+     });
+     ```
+  
+    @method
+    @param {Promise|Object}
+    @returns Promise<record> a promise for the value (record or relationship)
+  */
   RecordReference.prototype.push = function (objectOrPromise) {
     var _this = this;
 
     return _ember['default'].RSVP.resolve(objectOrPromise).then(function (data) {
-      var record = _this.store.push(data);
-      return record;
+      return _this.store.push(data);
     });
   };
 
+  /**
+    If the entity referred to by the reference is already loaded, it is
+    present as `reference.value`. Otherwise the value returned by this function
+    is `null`.
+  
+     Example
+  
+     ```javascript
+     var userRef = store.getReference('user', 1);
+  
+     userRef.value(); // user
+     ```
+  
+     @method value
+     @return {DS.Model} the record for this RecordReference
+  */
   RecordReference.prototype.value = function () {
     return this.internalModel.record;
   };
 
+  /**
+     Triggers a fetch for the backing entity based on its `remoteType`
+     (see `remoteType` definitions per reference type).
+  
+     Example
+  
+     ```javascript
+     var userRef = store.getReference('user', 1);
+  
+     // load user (via store.find)
+     userRef.load().then(...)
+     ```
+  
+     @method load
+     @return {Promise<record>} the record for this RecordReference
+  */
   RecordReference.prototype.load = function () {
     return this.store.findRecord(this.type, this._id);
   };
 
+  /**
+     Reloads the record if it is already loaded. If the record is not
+     loaded it will load the record via `store.findRecord`
+  
+     Example
+  
+     ```javascript
+     var userRef = store.getReference('user', 1);
+  
+     // or trigger a reload
+     userRef.reload().then(...)
+     ```
+  
+     @method reload
+     @return {Promise<record>} the record for this RecordReference
+  */
   RecordReference.prototype.reload = function () {
     var record = this.value();
     if (record) {
@@ -73871,6 +74806,7 @@ define('ember-data/-private/system/relationship-meta', ['exports', 'ember-inflec
       kind: meta.kind,
       type: typeForRelationshipMeta(meta),
       options: meta.options,
+      name: meta.name,
       parentType: meta.parentType,
       isRelationship: true
     };
@@ -73976,6 +74912,7 @@ define("ember-data/-private/system/relationships/belongs-to", ["exports", "ember
       isRelationship: true,
       options: opts,
       kind: 'belongsTo',
+      name: 'Belongs To',
       key: null
     };
 
@@ -74188,7 +75125,7 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
         comments: DS.hasMany('comment')
       });
      ```
-       Calling `App.Post.typeForRelationship('comments')` will return `App.Comment`.
+       Calling `store.modelFor('post').typeForRelationship('comments', store)` will return `Comment`.
        @method typeForRelationship
       @static
       @param {String} name the name of the relationship
@@ -74219,11 +75156,12 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
         owner: DS.belongsTo('post')
       });
       ```
-       App.Post.inverseFor('comments') -> { type: App.Message, name: 'owner', kind: 'belongsTo' }
-      App.Message.inverseFor('owner') -> { type: App.Post, name: 'comments', kind: 'hasMany' }
+       store.modelFor('post').inverseFor('comments', store) -> { type: App.Message, name: 'owner', kind: 'belongsTo' }
+      store.modelFor('message').inverseFor('owner', store) -> { type: App.Post, name: 'comments', kind: 'hasMany' }
        @method inverseFor
       @static
       @param {String} name the name of the relationship
+      @param {DS.Store} store
       @return {Object} the inverse relationship, or null
     */
     inverseFor: function inverseFor(name, store) {
@@ -74351,11 +75289,13 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
        ```javascript
       import Ember from 'ember';
       import Blog from 'app/models/blog';
+      import User from 'app/models/user';
+      import Post from 'app/models/post';
        var relationships = Ember.get(Blog, 'relationships');
-      relationships.get(App.User);
+      relationships.get(User);
       //=> [ { name: 'users', kind: 'hasMany' },
       //     { name: 'owner', kind: 'belongsTo' } ]
-      relationships.get(App.Post);
+      relationships.get(Post);
       //=> [ { name: 'posts', kind: 'hasMany' } ]
       ```
        @property relationships
@@ -74426,7 +75366,7 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
       import Ember from 'ember';
       import Blog from 'app/models/blog';
        var relatedTypes = Ember.get(Blog, 'relatedTypes');
-      //=> [ App.User, App.Post ]
+      //=> [ User, Post ]
       ```
        @property relatedTypes
       @static
@@ -74763,6 +75703,7 @@ define("ember-data/-private/system/relationships/has-many", ["exports", "ember",
       isRelationship: true,
       options: options,
       kind: 'hasMany',
+      name: 'Has Many',
       key: null
     };
 
@@ -74833,8 +75774,6 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
       this.removeCanonicalRecord(this.canonicalState);
     }
     this.flushCanonicalLater();
-    this.setHasData(true);
-    this.setHasLoaded(true);
   };
 
   BelongsToRelationship.prototype._super$addCanonicalRecord = _emberDataPrivateSystemRelationshipsStateRelationship["default"].prototype.addCanonicalRecord;
@@ -74858,8 +75797,10 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
     if (this.inverseRecord && this.inverseRecord.isNew() && !this.canonicalState) {
       return;
     }
-    this.inverseRecord = this.canonicalState;
-    this.record.notifyBelongsToChanged(this.key);
+    if (this.inverseRecord !== this.canonicalState) {
+      this.inverseRecord = this.canonicalState;
+      this.record.notifyBelongsToChanged(this.key);
+    }
     this._super$flushCanonical();
   };
 
@@ -74951,7 +75892,7 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
         return null;
       }
       var toReturn = this.inverseRecord.getRecord();
-      (0, _emberDataPrivateDebug.assert)("You looked up the '" + this.key + "' relationship on a '" + this.record.type.modelName + "' with id " + this.record.id + " but some of the associated records were not loaded. Either make sure they are all loaded together with the parent record, or specify that the relationship is async (`DS.belongsTo({ async: true })`)", toReturn === null || !toReturn.get('isEmpty'));
+      (0, _emberDataPrivateDebug.assert)("You looked up the '" + this.key + "' relationship on a '" + this.record.modelName + "' with id " + this.record.id + " but some of the associated records were not loaded. Either make sure they are all loaded together with the parent record, or specify that the relationship is async (`DS.belongsTo({ async: true })`)", toReturn === null || !toReturn.get('isEmpty'));
       return toReturn;
     }
   };
@@ -74964,11 +75905,16 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
     }
 
     // reload record, if it is already loaded
-    if (this.inverseRecord && this.inverseRecord.record) {
+    if (this.inverseRecord && this.inverseRecord.hasRecord) {
       return this.inverseRecord.record.reload();
     }
 
     return this.findRecord();
+  };
+
+  BelongsToRelationship.prototype.updateData = function (data) {
+    var internalModel = this.store._pushResourceIdentifier(this, data);
+    this.setCanonicalRecord(internalModel);
   };
 });
 define("ember-data/-private/system/relationships/state/create", ["exports", "ember", "ember-data/-private/system/relationships/state/has-many", "ember-data/-private/system/relationships/state/belongs-to", "ember-data/-private/system/empty-object"], function (exports, _ember, _emberDataPrivateSystemRelationshipsStateHasMany, _emberDataPrivateSystemRelationshipsStateBelongsTo, _emberDataPrivateSystemEmptyObject) {
@@ -75027,29 +75973,40 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
     this._super$constructor(store, record, inverseKey, relationshipMeta);
     this.belongsToType = relationshipMeta.type;
     this.canonicalState = [];
-    this.manyArray = _emberDataPrivateSystemManyArray["default"].create({
-      canonicalState: this.canonicalState,
-      store: this.store,
-      relationship: this,
-      type: this.store.modelFor(this.belongsToType),
-      record: record
-    });
     this.isPolymorphic = relationshipMeta.options.polymorphic;
-    this.manyArray.isPolymorphic = this.isPolymorphic;
   }
 
   ManyRelationship.prototype = Object.create(_emberDataPrivateSystemRelationshipsStateRelationship["default"].prototype);
+  ManyRelationship.prototype.getManyArray = function () {
+    if (!this._manyArray) {
+      this._manyArray = _emberDataPrivateSystemManyArray["default"].create({
+        canonicalState: this.canonicalState,
+        store: this.store,
+        relationship: this,
+        type: this.store.modelFor(this.belongsToType),
+        record: this.record,
+        meta: this.meta,
+        isPolymorphic: this.isPolymorphic
+      });
+    }
+    return this._manyArray;
+  };
+
   ManyRelationship.prototype.constructor = ManyRelationship;
   ManyRelationship.prototype._super$constructor = _emberDataPrivateSystemRelationshipsStateRelationship["default"];
 
   ManyRelationship.prototype.destroy = function () {
-    this.manyArray.destroy();
+    if (this._manyArray) {
+      this._manyArray.destroy();
+    }
   };
 
   ManyRelationship.prototype._super$updateMeta = _emberDataPrivateSystemRelationshipsStateRelationship["default"].prototype.updateMeta;
   ManyRelationship.prototype.updateMeta = function (meta) {
     this._super$updateMeta(meta);
-    this.manyArray.set('meta', meta);
+    if (this._manyArray) {
+      this._manyArray.set('meta', meta);
+    }
   };
 
   ManyRelationship.prototype._super$addCanonicalRecord = _emberDataPrivateSystemRelationshipsStateRelationship["default"].prototype.addCanonicalRecord;
@@ -75071,7 +76028,8 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
       return;
     }
     this._super$addRecord(record, idx);
-    this.manyArray.internalAddRecords([record], idx);
+    // make lazy later
+    this.getManyArray().internalAddRecords([record], idx);
   };
 
   ManyRelationship.prototype._super$removeCanonicalRecordFromOwn = _emberDataPrivateSystemRelationshipsStateRelationship["default"].prototype.removeCanonicalRecordFromOwn;
@@ -75091,7 +76049,9 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
 
   ManyRelationship.prototype._super$flushCanonical = _emberDataPrivateSystemRelationshipsStateRelationship["default"].prototype.flushCanonical;
   ManyRelationship.prototype.flushCanonical = function () {
-    this.manyArray.flushCanonical();
+    if (this._manyArray) {
+      this._manyArray.flushCanonical();
+    }
     this._super$flushCanonical();
   };
 
@@ -75101,11 +76061,12 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
       return;
     }
     this._super$removeRecordFromOwn(record, idx);
+    var manyArray = this.getManyArray();
     if (idx !== undefined) {
       //TODO(Igor) not used currently, fix
-      this.manyArray.currentState.removeAt(idx);
+      manyArray.currentState.removeAt(idx);
     } else {
-      this.manyArray.internalRemoveRecords([record]);
+      manyArray.internalRemoveRecords([record]);
     }
   };
 
@@ -75116,16 +76077,15 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
   };
 
   ManyRelationship.prototype.reload = function () {
-    var _this = this;
-
-    var manyArrayLoadedState = this.manyArray.get('isLoaded');
+    var manyArray = this.getManyArray();
+    var manyArrayLoadedState = manyArray.get('isLoaded');
 
     if (this._loadingPromise) {
       if (this._loadingPromise.get('isPending')) {
         return this._loadingPromise;
       }
       if (this._loadingPromise.get('isRejected')) {
-        this.manyArray.set('isLoaded', manyArrayLoadedState);
+        manyArray.set('isLoaded', manyArrayLoadedState);
       }
     }
 
@@ -75133,8 +76093,8 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
       this._loadingPromise = (0, _emberDataPrivateSystemPromiseProxies.promiseManyArray)(this.fetchLink(), 'Reload with link');
       return this._loadingPromise;
     } else {
-      this._loadingPromise = (0, _emberDataPrivateSystemPromiseProxies.promiseManyArray)(this.store.scheduleFetchMany(this.manyArray.toArray()).then(function () {
-        return _this.manyArray;
+      this._loadingPromise = (0, _emberDataPrivateSystemPromiseProxies.promiseManyArray)(this.store._scheduleFetchMany(manyArray.currentState).then(function () {
+        return manyArray;
       }), 'Reload with ids');
       return this._loadingPromise;
     }
@@ -75173,37 +76133,36 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
   };
 
   ManyRelationship.prototype.fetchLink = function () {
-    var _this2 = this;
+    var _this = this;
 
     return this.store.findHasMany(this.record, this.link, this.relationshipMeta).then(function (records) {
       if (records.hasOwnProperty('meta')) {
-        _this2.updateMeta(records.meta);
+        _this.updateMeta(records.meta);
       }
-      _this2.store._backburner.join(function () {
-        _this2.updateRecordsFromAdapter(records);
-        _this2.manyArray.set('isLoaded', true);
+      _this.store._backburner.join(function () {
+        _this.updateRecordsFromAdapter(records);
+        _this.getManyArray().set('isLoaded', true);
       });
-      return _this2.manyArray;
+      return _this.getManyArray();
     });
   };
 
   ManyRelationship.prototype.findRecords = function () {
-    var _this3 = this;
+    var manyArray = this.getManyArray();
+    var array = manyArray.toArray();
+    var internalModels = new Array(array.length);
 
-    var manyArray = this.manyArray.toArray();
-    var internalModels = new Array(manyArray.length);
-
-    for (var i = 0; i < manyArray.length; i++) {
-      internalModels[i] = manyArray[i]._internalModel;
+    for (var i = 0; i < array.length; i++) {
+      internalModels[i] = array[i]._internalModel;
     }
 
     //TODO CLEANUP
     return this.store.findMany(internalModels).then(function () {
-      if (!_this3.manyArray.get('isDestroyed')) {
+      if (!manyArray.get('isDestroyed')) {
         //Goes away after the manyArray refactor
-        _this3.manyArray.set('isLoaded', true);
+        manyArray.set('isLoaded', true);
       }
-      return _this3.manyArray;
+      return manyArray;
     });
   };
   ManyRelationship.prototype.notifyHasManyChanged = function () {
@@ -75211,9 +76170,10 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
   };
 
   ManyRelationship.prototype.getRecords = function () {
-    var _this4 = this;
+    var _this2 = this;
 
     //TODO(Igor) sync server here, once our syncing is not stupid
+    var manyArray = this.getManyArray();
     if (this.isAsync) {
       var promise;
       if (this.link) {
@@ -75221,26 +76181,31 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
           promise = this.findRecords();
         } else {
           promise = this.findLink().then(function () {
-            return _this4.findRecords();
+            return _this2.findRecords();
           });
         }
       } else {
         promise = this.findRecords();
       }
       this._loadingPromise = _emberDataPrivateSystemPromiseProxies.PromiseManyArray.create({
-        content: this.manyArray,
+        content: manyArray,
         promise: promise
       });
       return this._loadingPromise;
     } else {
-      (0, _emberDataPrivateDebug.assert)("You looked up the '" + this.key + "' relationship on a '" + this.record.type.modelName + "' with id " + this.record.id + " but some of the associated records were not loaded. Either make sure they are all loaded together with the parent record, or specify that the relationship is async (`DS.hasMany({ async: true })`)", this.manyArray.isEvery('isEmpty', false));
+      (0, _emberDataPrivateDebug.assert)("You looked up the '" + this.key + "' relationship on a '" + this.record.type.modelName + "' with id " + this.record.id + " but some of the associated records were not loaded. Either make sure they are all loaded together with the parent record, or specify that the relationship is async (`DS.hasMany({ async: true })`)", manyArray.isEvery('isEmpty', false));
 
       //TODO(Igor) WTF DO I DO HERE?
-      if (!this.manyArray.get('isDestroyed')) {
-        this.manyArray.set('isLoaded', true);
+      if (!manyArray.get('isDestroyed')) {
+        manyArray.set('isLoaded', true);
       }
-      return this.manyArray;
+      return manyArray;
     }
+  };
+
+  ManyRelationship.prototype.updateData = function (data) {
+    var internalModels = this.store._pushResourceIdentifiers(this, data);
+    this.updateRecordsFromAdapter(internalModels);
   };
 
   function setForArray(array) {
@@ -75255,10 +76220,12 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
     return set;
   }
 });
-define("ember-data/-private/system/relationships/state/relationship", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/ordered-set"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemOrderedSet) {
+define("ember-data/-private/system/relationships/state/relationship", ["exports", "ember-data/-private/debug", "ember-data/-private/system/ordered-set", "ember-data/-private/system/normalize-link"], function (exports, _emberDataPrivateDebug, _emberDataPrivateSystemOrderedSet, _emberDataPrivateSystemNormalizeLink) {
   "use strict";
 
   exports["default"] = Relationship;
+
+  /* global heimdall */
 
   function Relationship(store, record, inverseKey, relationshipMeta) {
     var async = relationshipMeta.options.async;
@@ -75282,7 +76249,7 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
   Relationship.prototype = {
     constructor: Relationship,
 
-    destroy: _ember["default"].K,
+    destroy: function destroy() {},
 
     updateMeta: function updateMeta(meta) {
       this.meta = meta;
@@ -75454,16 +76421,14 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
     },
 
     updateLink: function updateLink(link) {
-      (0, _emberDataPrivateDebug.warn)("You have pushed a record of type '" + this.record.type.modelName + "' with '" + this.key + "' as a link, but the association is not an async relationship.", this.isAsync, {
+      (0, _emberDataPrivateDebug.warn)("You pushed a record of type '" + this.record.type.modelName + "' with a relationship '" + this.key + "' configured as 'async: false'. You've included a link but no primary data, this may be an error in your payload.", this.isAsync || this.hasData, {
         id: 'ds.store.push-link-for-sync-relationship'
       });
       (0, _emberDataPrivateDebug.assert)("You have pushed a record of type '" + this.record.type.modelName + "' with '" + this.key + "' as a link, but the value of that link is not a string.", typeof link === 'string' || link === null);
-      if (link !== this.link) {
-        this.link = link;
-        this.linkPromise = null;
-        this.setHasLoaded(false);
-        this.record.notifyPropertyChange(this.key);
-      }
+
+      this.link = link;
+      this.linkPromise = null;
+      this.record.notifyPropertyChange(this.key);
     },
 
     findLink: function findLink() {
@@ -75482,12 +76447,10 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
       //TODO(Igor) move this to a proper place
       //TODO Once we have adapter support, we need to handle updated and canonical changes
       this.computeChanges(records);
-      this.setHasData(true);
-      this.setHasLoaded(true);
     },
 
-    notifyRecordRelationshipAdded: _ember["default"].K,
-    notifyRecordRelationshipRemoved: _ember["default"].K,
+    notifyRecordRelationshipAdded: function notifyRecordRelationshipAdded() {},
+    notifyRecordRelationshipRemoved: function notifyRecordRelationshipRemoved() {},
 
     /*
       `hasData` for a relationship is a flag to indicate if we consider the
@@ -75512,7 +76475,56 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
      */
     setHasLoaded: function setHasLoaded(value) {
       this.hasLoaded = value;
-    }
+    },
+
+    /*
+      `push` for a relationship allows the store to push a JSON API Relationship
+      Object onto the relationship. The relationship will then extract and set the
+      meta, data and links of that relationship.
+       `push` use `updateMeta`, `updateData` and `updateLink` to update the state
+      of the relationship.
+     */
+    push: function push(payload) {
+
+      var hasData = false;
+      var hasLink = false;
+
+      if (payload.meta) {
+        this.updateMeta(payload.meta);
+      }
+
+      if (payload.data !== undefined) {
+        hasData = true;
+        this.updateData(payload.data);
+      }
+
+      if (payload.links && payload.links.related) {
+        var relatedLink = (0, _emberDataPrivateSystemNormalizeLink["default"])(payload.links.related);
+        if (relatedLink && relatedLink.href && relatedLink.href !== this.link) {
+          hasLink = true;
+          this.updateLink(relatedLink.href);
+        }
+      }
+
+      /*
+        Data being pushed into the relationship might contain only data or links,
+        or a combination of both.
+         If we got data we want to set both hasData and hasLoaded to true since
+        this would indicate that we should prefer the local state instead of
+        trying to fetch the link or call findRecord().
+         If we have no data but a link is present we want to set hasLoaded to false
+        without modifying the hasData flag. This will ensure we fetch the updated
+        link next time the relationship is accessed.
+       */
+      if (hasData) {
+        this.setHasData(true);
+        this.setHasLoaded(true);
+      } else if (hasLink) {
+        this.setHasLoaded(false);
+      }
+    },
+
+    updateData: function updateData() {}
   };
 });
 define('ember-data/-private/system/snapshot-record-array', ['exports'], function (exports) {
@@ -75583,11 +76595,11 @@ define('ember-data/-private/system/snapshot-record-array', ['exports'], function
     @return {Array} Array of snapshots
   */
   SnapshotRecordArray.prototype.snapshots = function () {
-    if (this._snapshots) {
+    if (this._snapshots !== null) {
       return this._snapshots;
     }
-    var recordArray = this._recordArray;
-    this._snapshots = recordArray.invoke('createSnapshot');
+
+    this._snapshots = this._recordArray._takeSnapshot();
 
     return this._snapshots;
   };
@@ -75638,7 +76650,6 @@ define("ember-data/-private/system/snapshot", ["exports", "ember", "ember-data/-
       @type {Object}
     */
     this.adapterOptions = options.adapterOptions;
-
     this.include = options.include;
 
     this._changedAttributes = record.changedAttributes();
@@ -75920,7 +76931,7 @@ define("ember-data/-private/system/snapshot", ["exports", "ember", "ember-data/-
     }
   };
 });
-define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/model', 'ember-data/-private/debug', 'ember-data/-private/system/normalize-link', 'ember-data/-private/system/normalize-model-name', 'ember-data/adapters/errors', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/store/container-instance-cache', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/empty-object', 'ember-data/-private/features'], function (exports, _ember, _emberDataModel, _emberDataPrivateDebug, _emberDataPrivateSystemNormalizeLink, _emberDataPrivateSystemNormalizeModelName, _emberDataAdaptersErrors, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStoreCommon, _emberDataPrivateSystemStoreSerializerResponse, _emberDataPrivateSystemStoreSerializers, _emberDataPrivateSystemStoreFinders, _emberDataPrivateUtils, _emberDataPrivateSystemCoerceId, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateSystemStoreContainerInstanceCache, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemEmptyObject, _emberDataPrivateFeatures) {
+define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/model', 'ember-data/-private/debug', 'ember-data/-private/system/normalize-model-name', 'ember-data/adapters/errors', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/store/container-instance-cache', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/empty-object', 'ember-data/-private/features'], function (exports, _ember, _emberDataModel, _emberDataPrivateDebug, _emberDataPrivateSystemNormalizeModelName, _emberDataAdaptersErrors, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStoreCommon, _emberDataPrivateSystemStoreSerializerResponse, _emberDataPrivateSystemStoreSerializers, _emberDataPrivateSystemStoreFinders, _emberDataPrivateUtils, _emberDataPrivateSystemCoerceId, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateSystemStoreContainerInstanceCache, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemEmptyObject, _emberDataPrivateFeatures) {
   /**
     @module ember-data
   */
@@ -75931,29 +76942,37 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
   exports.badIdFormatAssertion = badIdFormatAssertion;
 
+  var A = _ember['default'].A;
   var Backburner = _ember['default']._Backburner;
-  var Map = _ember['default'].Map;
+  var computed = _ember['default'].computed;
+  var copy = _ember['default'].copy;
+  var ENV = _ember['default'].ENV;
+  var EmberError = _ember['default'].Error;
+  var get = _ember['default'].get;
+  var guidFor = _ember['default'].guidFor;
+  var inspect = _ember['default'].inspect;
+  var isNone = _ember['default'].isNone;
+  var isPresent = _ember['default'].isPresent;
+  var MapWithDefault = _ember['default'].MapWithDefault;
+  var emberRun = _ember['default'].run;
+  var set = _ember['default'].set;
+  var RSVP = _ember['default'].RSVP;
+  var Service = _ember['default'].Service;
+  var typeOf = _ember['default'].typeOf;
+  var Promise = RSVP.Promise;
 
   //Get the materialized model from the internalModel/promise that returns
   //an internal model and return it in a promiseObject. Useful for returning
   //from find methods
-  function promiseRecord(internalModel, label) {
-    var toReturn = internalModel.then(function (model) {
-      return model.getRecord();
+  function promiseRecord(internalModelPromise, label) {
+    var toReturn = internalModelPromise.then(function (internalModel) {
+      return internalModel.getRecord();
     });
+
     return (0, _emberDataPrivateSystemPromiseProxies.promiseObject)(toReturn, label);
   }
 
-  var get = _ember['default'].get;
-  var set = _ember['default'].set;
-  var once = _ember['default'].run.once;
-  var isNone = _ember['default'].isNone;
-  var isPresent = _ember['default'].isPresent;
-  var Promise = _ember['default'].RSVP.Promise;
-  var copy = _ember['default'].copy;
-  var Store;
-
-  var Service = _ember['default'].Service;
+  var Store = undefined;
 
   // Implementors Note:
   //
@@ -76058,21 +77077,28 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         store: this
       });
       this._pendingSave = [];
-      this._instanceCache = new _emberDataPrivateSystemStoreContainerInstanceCache['default']((0, _emberDataPrivateUtils.getOwner)(this));
+      this._instanceCache = new _emberDataPrivateSystemStoreContainerInstanceCache['default']((0, _emberDataPrivateUtils.getOwner)(this), this);
+
       //Used to keep track of all the find requests that need to be coalesced
-      this._pendingFetch = Map.create();
+      this._pendingFetch = MapWithDefault.create({ defaultValue: function defaultValue() {
+          return [];
+        } });
     },
 
     /**
-      The adapter to use to communicate to a backend server or other persistence layer.
-       This can be specified as an instance, class, or string.
+      The default adapter to use to communicate to a backend server or
+      other persistence layer. This will be overridden by an application
+      adapter if present.
        If you want to specify `app/adapters/custom.js` as a string, do:
        ```js
-      adapter: 'custom'
+      import DS from 'ember-data';
+       export default DS.Store.extend({
+        adapter: 'custom',
+      });
       ```
        @property adapter
-      @default DS.JSONAPIAdapter
-      @type {(DS.Adapter|String)}
+      @default '-json-api'
+      @type {String}
     */
     adapter: '-json-api',
 
@@ -76084,10 +77110,17 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         the JSON representation
        @method serialize
       @private
+      @deprecated
       @param {DS.Model} record the record to serialize
       @param {Object} options an options hash
     */
     serialize: function serialize(record, options) {
+      if (true) {
+        (0, _emberDataPrivateDebug.deprecate)('Use of store.serialize is deprecated, use record.serialize instead.', false, {
+          id: 'ds.store.serialize',
+          until: '3.0'
+        });
+      }
       var snapshot = record._internalModel.createSnapshot();
       return snapshot.serialize(options);
     },
@@ -76104,14 +77137,12 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @private
       @return DS.Adapter
     */
-    defaultAdapter: _ember['default'].computed('adapter', function () {
+    defaultAdapter: computed('adapter', function () {
       var adapter = get(this, 'adapter');
 
       (0, _emberDataPrivateDebug.assert)('You tried to set `adapter` property to an instance of `DS.Adapter`, where it should be a name', typeof adapter === 'string');
 
-      adapter = this.retrieveManagedInstance('adapter', adapter);
-
-      return adapter;
+      return this.adapterFor(adapter);
     }),
 
     // .....................
@@ -76129,7 +77160,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       ```
        To create a new instance of a `Post` that has a relationship with a `User` record:
        ```js
-      var user = this.store.peekRecord('user', 1);
+      let user = this.store.peekRecord('user', 1);
       store.createRecord('post', {
         title: "Rails is omakase",
         user: user
@@ -76143,8 +77174,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     */
     createRecord: function createRecord(modelName, inputProperties) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's createRecord method", isPresent(modelName));
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember['default'].inspect(modelName), typeof modelName === 'string');
-      var typeClass = this.modelFor(modelName);
+      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
+      var modelClass = this.modelFor(modelName);
       var properties = copy(inputProperties) || new _emberDataPrivateSystemEmptyObject['default']();
 
       // If the passed properties do not include a primary key,
@@ -76159,16 +77190,19 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       // Coerce ID to a string
       properties.id = (0, _emberDataPrivateSystemCoerceId['default'])(properties.id);
 
-      var internalModel = this.buildInternalModel(typeClass, properties.id);
+      var internalModel = this.buildInternalModel(modelClass, properties.id);
       var record = internalModel.getRecord();
 
       // Move the record out of its initial `empty` state into
       // the `loaded` state.
+      // TODO @runspired this seems really bad, store should not be changing the state
       internalModel.loadedData();
 
       // Set the properties specified on the record.
+      // TODO @runspired this is probably why we do the bad thing above
       record.setProperties(properties);
 
+      // TODO @runspired this should also be coalesced into some form of internalModel.setState()
       internalModel.eachRelationship(function (key, descriptor) {
         internalModel._relationships.get(key).setHasData(true);
       });
@@ -76203,7 +77237,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       For symmetry, a record can be deleted via the store.
        Example
        ```javascript
-      var post = store.createRecord('post', {
+      let post = store.createRecord('post', {
         title: "Rails is omakase"
       });
        store.deleteRecord(post);
@@ -76252,7 +77286,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         (0, _emberDataPrivateDebug.assert)('Using store.find(type) has been removed. Use store.findAll(type) to retrieve all records for a given type.');
       }
 
-      if (_ember['default'].typeOf(id) === 'object') {
+      if (typeOf(id) === 'object') {
         (0, _emberDataPrivateDebug.assert)('Calling store.find() with a query object is no longer supported. Use store.query() instead.');
       }
 
@@ -76261,8 +77295,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       }
 
       (0, _emberDataPrivateDebug.assert)("You need to pass the model name and id to the store's find method", arguments.length === 2);
-      (0, _emberDataPrivateDebug.assert)("You cannot pass `" + _ember['default'].inspect(id) + "` as id to the store's find method", _ember['default'].typeOf(id) === 'string' || _ember['default'].typeOf(id) === 'number');
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember['default'].inspect(modelName), typeof modelName === 'string');
+      (0, _emberDataPrivateDebug.assert)("You cannot pass `" + inspect(id) + "` as id to the store's find method", typeOf(id) === 'string' || typeOf(id) === 'number');
+      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
 
       return this.findRecord(modelName, id);
     },
@@ -76337,7 +77371,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
           revision: 1
         }
       });
-       var blogPost = store.findRecord('post', 1).then(function(post) {
+       let blogPost = store.findRecord('post', 1).then(function(post) {
         post.get('revision'); // 1
       });
        // later, once adapter#findRecord resolved with
@@ -76385,6 +77419,39 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       });
       ```
        See [peekRecord](#method_peekRecord) to get the cached version of a record.
+       ### Retrieving Related Model Records
+       If you use an adapter such as Ember's default
+      [`JSONAPIAdapter`](http://emberjs.com/api/data/classes/DS.JSONAPIAdapter.html)
+      that supports the [JSON API specification](http://jsonapi.org/) and if your server
+      endpoint supports the use of an
+      ['include' query parameter](http://jsonapi.org/format/#fetching-includes),
+      you can use `findRecord()` to automatically retrieve additional records related to
+      the one you request by supplying an `include` parameter in the `options` object.
+       For example, given a `post` model that has a `hasMany` relationship with a `comment`
+      model, when we retrieve a specific post we can have the server also return that post's
+      comments in the same request:
+       ```app/routes/post.js
+      import Ember from 'ember';
+       export default Ember.Route.extend({
+        model: function(params) {
+         return this.store.findRecord('post', params.post_id, {include: 'comments'});
+        }
+      });
+       ```
+      In this case, the post's comments would then be available in your template as
+      `model.comments`.
+       Multiple relationships can be requested using an `include` parameter consisting of a
+      comma-separated list (without white-space) while nested relationships can be specified
+      using a dot-separated sequence of relationship names. So to request both the post's
+      comments and the authors of those comments the request would look like this:
+       ```app/routes/post.js
+      import Ember from 'ember';
+       export default Ember.Route.extend({
+        model: function(params) {
+         return this.store.findRecord('post', params.post_id, {include: 'comments,comments.author'});
+        }
+      });
+       ```
        @since 1.13.0
       @method findRecord
       @param {String} modelName
@@ -76394,7 +77461,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     */
     findRecord: function findRecord(modelName, id, options) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's findRecord method", isPresent(modelName));
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember['default'].inspect(modelName), typeof modelName === 'string');
+      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
       (0, _emberDataPrivateDebug.assert)(badIdFormatAssertion, typeof id === 'string' && id.length > 0 || typeof id === 'number' && !isNaN(id));
 
       var internalModel = this._internalModelForId(modelName, id);
@@ -76412,16 +77479,16 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     _findRecord: function _findRecord(internalModel, options) {
       // Refetch if the reload option is passed
       if (options.reload) {
-        return this.scheduleFetch(internalModel, options);
+        return this._scheduleFetch(internalModel, options);
       }
 
       var snapshot = internalModel.createSnapshot(options);
-      var typeClass = internalModel.type;
-      var adapter = this.adapterFor(typeClass.modelName);
+      var modelClass = internalModel.type;
+      var adapter = this.adapterFor(modelClass.modelName);
 
       // Refetch the record if the adapter thinks the record is stale
       if (adapter.shouldReloadRecord(this, snapshot)) {
-        return this.scheduleFetch(internalModel, options);
+        return this._scheduleFetch(internalModel, options);
       }
 
       if (options.backgroundReload === false) {
@@ -76430,7 +77497,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
       // Trigger the background refetch if backgroundReload option is passed
       if (options.backgroundReload || adapter.shouldBackgroundReloadRecord(this, snapshot)) {
-        this.scheduleFetch(internalModel, options);
+        this._scheduleFetch(internalModel, options);
       }
 
       // Return the cached record
@@ -76441,7 +77508,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       options = options || {};
 
       if (options.preload) {
-        internalModel._preloadData(options.preload);
+        internalModel.preloadData(options.preload);
       }
 
       var fetchedInternalModel = this._findEmptyInternalModel(internalModel, options);
@@ -76451,7 +77518,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
     _findEmptyInternalModel: function _findEmptyInternalModel(internalModel, options) {
       if (internalModel.isEmpty()) {
-        return this.scheduleFetch(internalModel, options);
+        return this._scheduleFetch(internalModel, options);
       }
 
       //TODO double check about reloading
@@ -76473,75 +77540,64 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     */
     findByIds: function findByIds(modelName, ids) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's findByIds method", isPresent(modelName));
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember['default'].inspect(modelName), typeof modelName === 'string');
+      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
       var promises = new Array(ids.length);
 
       for (var i = 0; i < ids.length; i++) {
         promises[i] = this.findRecord(modelName, ids[i]);
       }
 
-      return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)(_ember['default'].RSVP.all(promises).then(_ember['default'].A, null, "DS: Store#findByIds of " + modelName + " complete"));
+      return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)(RSVP.all(promises).then(A, null, "DS: Store#findByIds of " + modelName + " complete"));
     },
 
     /**
       This method is called by `findRecord` if it discovers that a particular
       type/id pair hasn't been loaded yet to kick off a request to the
       adapter.
-       @method fetchRecord
+       @method _fetchRecord
       @private
       @param {InternalModel} internalModel model
       @return {Promise} promise
      */
-    // TODO rename this to have an underscore
-    fetchRecord: function fetchRecord(internalModel, options) {
-      var typeClass = internalModel.type;
+    _fetchRecord: function _fetchRecord(internalModel, options) {
+      var modelClass = internalModel.type;
       var id = internalModel.id;
-      var adapter = this.adapterFor(typeClass.modelName);
+      var adapter = this.adapterFor(modelClass.modelName);
 
-      (0, _emberDataPrivateDebug.assert)("You tried to find a record but you have no adapter (for " + typeClass + ")", adapter);
-      (0, _emberDataPrivateDebug.assert)("You tried to find a record but your adapter (for " + typeClass + ") does not implement 'findRecord'", typeof adapter.findRecord === 'function' || typeof adapter.find === 'function');
+      (0, _emberDataPrivateDebug.assert)("You tried to find a record but you have no adapter (for " + modelClass.modelName + ")", adapter);
+      (0, _emberDataPrivateDebug.assert)("You tried to find a record but your adapter (for " + modelClass.modelName + ") does not implement 'findRecord'", typeof adapter.findRecord === 'function');
 
-      var promise = (0, _emberDataPrivateSystemStoreFinders._find)(adapter, this, typeClass, id, internalModel, options);
-      return promise;
+      return (0, _emberDataPrivateSystemStoreFinders._find)(adapter, this, modelClass, id, internalModel, options);
     },
 
-    scheduleFetchMany: function scheduleFetchMany(records) {
-      var internalModels = new Array(records.length);
-      var fetches = new Array(records.length);
-      for (var i = 0; i < records.length; i++) {
-        internalModels[i] = records[i]._internalModel;
-      }
+    _scheduleFetchMany: function _scheduleFetchMany(internalModels) {
+      var fetches = new Array(internalModels.length);
 
       for (var i = 0; i < internalModels.length; i++) {
-        fetches[i] = this.scheduleFetch(internalModels[i]);
+        fetches[i] = this._scheduleFetch(internalModels[i]);
       }
 
-      return _ember['default'].RSVP.Promise.all(fetches);
+      return Promise.all(fetches);
     },
 
-    scheduleFetch: function scheduleFetch(internalModel, options) {
-      var typeClass = internalModel.type;
-
+    _scheduleFetch: function _scheduleFetch(internalModel, options) {
       if (internalModel._loadingPromise) {
         return internalModel._loadingPromise;
       }
 
-      var resolver = _ember['default'].RSVP.defer('Fetching ' + typeClass + 'with id: ' + internalModel.id);
+      var modelClass = internalModel.type;
+      var resolver = RSVP.defer('Fetching ' + modelClass.modelName + ' with id: ' + internalModel.id);
       var pendingFetchItem = {
-        record: internalModel,
+        internalModel: internalModel,
         resolver: resolver,
         options: options
       };
       var promise = resolver.promise;
 
       internalModel.loadingData(promise);
+      this._pendingFetch.get(modelClass).push(pendingFetchItem);
 
-      if (!this._pendingFetch.get(typeClass)) {
-        this._pendingFetch.set(typeClass, [pendingFetchItem]);
-      } else {
-        this._pendingFetch.get(typeClass).push(pendingFetchItem);
-      }
-      _ember['default'].run.scheduleOnce('afterRender', this, this.flushAllPendingFetches);
+      emberRun.scheduleOnce('afterRender', this, this.flushAllPendingFetches);
 
       return promise;
     },
@@ -76552,65 +77608,76 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       }
 
       this._pendingFetch.forEach(this._flushPendingFetchForType, this);
-      this._pendingFetch = Map.create();
+      this._pendingFetch.clear();
     },
 
-    _flushPendingFetchForType: function _flushPendingFetchForType(pendingFetchItems, typeClass) {
+    _flushPendingFetchForType: function _flushPendingFetchForType(pendingFetchItems, modelClass) {
       var store = this;
-      var adapter = store.adapterFor(typeClass.modelName);
+      var adapter = store.adapterFor(modelClass.modelName);
       var shouldCoalesce = !!adapter.findMany && adapter.coalesceFindRequests;
-      var records = _ember['default'].A(pendingFetchItems).mapBy('record');
+      var totalItems = pendingFetchItems.length;
+      var internalModels = new Array(totalItems);
+      var seeking = new _emberDataPrivateSystemEmptyObject['default']();
+
+      for (var i = 0; i < totalItems; i++) {
+        var pendingItem = pendingFetchItems[i];
+        var internalModel = pendingItem.internalModel;
+        internalModels[i] = internalModel;
+        seeking[internalModel.id] = pendingItem;
+      }
 
       function _fetchRecord(recordResolverPair) {
-        recordResolverPair.resolver.resolve(store.fetchRecord(recordResolverPair.record, recordResolverPair.options)); // TODO adapter options
+        var recordFetch = store._fetchRecord(recordResolverPair.internalModel, recordResolverPair.options); // TODO adapter options
+
+        recordResolverPair.resolver.resolve(recordFetch);
       }
 
-      function resolveFoundRecords(records) {
-        records.forEach(function (record) {
-          var pair = _ember['default'].A(pendingFetchItems).findBy('record', record);
+      function handleFoundRecords(foundInternalModels, expectedInternalModels) {
+        // resolve found records
+        var found = new _emberDataPrivateSystemEmptyObject['default']();
+        for (var i = 0, l = foundInternalModels.length; i < l; i++) {
+          var internalModel = foundInternalModels[i];
+          var pair = seeking[internalModel.id];
+          found[internalModel.id] = internalModel;
+
           if (pair) {
             var resolver = pair.resolver;
-            resolver.resolve(record);
+            resolver.resolve(internalModel);
           }
-        });
-        return records;
-      }
+        }
 
-      function makeMissingRecordsRejector(requestedRecords) {
-        return function rejectMissingRecords(resolvedRecords) {
-          resolvedRecords = _ember['default'].A(resolvedRecords);
-          var missingRecords = requestedRecords.reject(function (record) {
-            return resolvedRecords.includes(record);
+        // reject missing records
+        var missingInternalModels = [];
+
+        for (var i = 0, l = expectedInternalModels.length; i < l; i++) {
+          var internalModel = expectedInternalModels[i];
+
+          if (!found[internalModel.id]) {
+            missingInternalModels.push(internalModel);
+          }
+        }
+
+        if (missingInternalModels.length) {
+          (0, _emberDataPrivateDebug.warn)('Ember Data expected to find records with the following ids in the adapter response but they were missing: ' + inspect(missingInternalModels.map(function (r) {
+            return r.id;
+          })), false, {
+            id: 'ds.store.missing-records-from-adapter'
           });
-          if (missingRecords.length) {
-            (0, _emberDataPrivateDebug.warn)('Ember Data expected to find records with the following ids in the adapter response but they were missing: ' + _ember['default'].inspect(_ember['default'].A(missingRecords).mapBy('id')), false, {
-              id: 'ds.store.missing-records-from-adapter'
-            });
-          }
-          rejectRecords(missingRecords);
-        };
+          rejectInternalModels(missingInternalModels);
+        }
       }
 
-      function makeRecordsRejector(records) {
-        return function (error) {
-          rejectRecords(records, error);
-        };
-      }
+      function rejectInternalModels(internalModels, error) {
+        for (var i = 0, l = internalModels.length; i < l; i++) {
+          var pair = seeking[internalModels[i].id];
 
-      function rejectRecords(records, error) {
-        records.forEach(function (record) {
-          var pair = _ember['default'].A(pendingFetchItems).findBy('record', record);
           if (pair) {
-            var resolver = pair.resolver;
-            resolver.reject(error);
+            pair.resolver.reject(error);
           }
-        });
+        }
       }
 
-      if (pendingFetchItems.length === 1) {
-        _fetchRecord(pendingFetchItems[0]);
-      } else if (shouldCoalesce) {
-
+      if (shouldCoalesce) {
         // TODO: Improve records => snapshots => records => snapshots
         //
         // We want to provide records to all store methods and snapshots to all
@@ -76621,24 +77688,47 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         // But since the _findMany() finder is a store method we need to get the
         // records from the grouped snapshots even though the _findMany() finder
         // will once again convert the records to snapshots for adapter.findMany()
+        var snapshots = new Array(totalItems);
+        for (var i = 0; i < totalItems; i++) {
+          snapshots[i] = internalModels[i].createSnapshot();
+        }
 
-        var snapshots = _ember['default'].A(records).invoke('createSnapshot');
         var groups = adapter.groupRecordsForFindMany(this, snapshots);
-        groups.forEach(function (groupOfSnapshots) {
-          var groupOfRecords = _ember['default'].A(groupOfSnapshots).mapBy('_internalModel');
-          var requestedRecords = _ember['default'].A(groupOfRecords);
-          var ids = requestedRecords.mapBy('id');
-          if (ids.length > 1) {
-            (0, _emberDataPrivateSystemStoreFinders._findMany)(adapter, store, typeClass, ids, requestedRecords).then(resolveFoundRecords).then(makeMissingRecordsRejector(requestedRecords)).then(null, makeRecordsRejector(requestedRecords));
+
+        var _loop = function _loop(i, l) {
+          var group = groups[i];
+          var totalInGroup = groups[i].length;
+          var ids = new Array(totalInGroup);
+          var groupedInternalModels = new Array(totalInGroup);
+
+          for (var j = 0; j < totalInGroup; j++) {
+            var internalModel = group[j]._internalModel;
+
+            groupedInternalModels[j] = internalModel;
+            ids[j] = internalModel.id;
+          }
+
+          if (totalInGroup > 1) {
+            (0, _emberDataPrivateSystemStoreFinders._findMany)(adapter, store, modelClass, ids, groupedInternalModels).then(function (foundInternalModels) {
+              handleFoundRecords(foundInternalModels, groupedInternalModels);
+            })['catch'](function (error) {
+              rejectInternalModels(groupedInternalModels, error);
+            });
           } else if (ids.length === 1) {
-            var pair = _ember['default'].A(pendingFetchItems).findBy('record', groupOfRecords[0]);
+            var pair = seeking[groupedInternalModels[0].id];
             _fetchRecord(pair);
           } else {
             (0, _emberDataPrivateDebug.assert)("You cannot return an empty array from adapter's method groupRecordsForFindMany", false);
           }
-        });
+        };
+
+        for (var i = 0, l = groups.length; i < l; i++) {
+          _loop(i, l);
+        }
       } else {
-        pendingFetchItems.forEach(_fetchRecord);
+        for (var i = 0; i < totalItems; i++) {
+          _fetchRecord(pendingFetchItems[i]);
+        }
       }
     },
 
@@ -76646,14 +77736,14 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       Get the reference for the specified record.
        Example
        ```javascript
-      var userRef = store.getReference('user', 1);
+      let userRef = store.getReference('user', 1);
        // check if the user is loaded
-      var isLoaded = userRef.value() !== null;
+      let isLoaded = userRef.value() !== null;
        // get the record of the reference (null if not yet available)
-      var user = userRef.value();
+      let user = userRef.value();
        // get the identifier of the reference
       if (userRef.remoteType() === "id") {
-      var id = userRef.id();
+      let id = userRef.id();
       }
        // load user (via store.find)
       userRef.load().then(...)
@@ -76681,7 +77771,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       pushed manually into the store.
        _Note: This is an synchronous method and does not return a promise._
        ```js
-      var post = store.peekRecord('post', 1);
+      let post = store.peekRecord('post', 1);
        post.get('id'); // 1
       ```
        @since 1.13.0
@@ -76692,7 +77782,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     */
     peekRecord: function peekRecord(modelName, id) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's peekRecord method", isPresent(modelName));
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember['default'].inspect(modelName), typeof modelName === 'string');
+      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
       if (this.hasRecordForId(modelName, id)) {
         return this._internalModelForId(modelName, id).getRecord();
       } else {
@@ -76710,6 +77800,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @param {DS.Model} internalModel
       @return {Promise} promise
     */
+    // TODO @runspired this should be underscored
     reloadRecord: function reloadRecord(internalModel) {
       var modelName = internalModel.type.modelName;
       var adapter = this.adapterFor(modelName);
@@ -76719,22 +77810,33 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       (0, _emberDataPrivateDebug.assert)("You tried to reload a record but you have no adapter (for " + modelName + ")", adapter);
       (0, _emberDataPrivateDebug.assert)("You tried to reload a record but your adapter does not implement `findRecord`", typeof adapter.findRecord === 'function' || typeof adapter.find === 'function');
 
-      return this.scheduleFetch(internalModel);
+      return this._scheduleFetch(internalModel);
     },
 
     /**
-      Returns true if a record for a given type and ID is already loaded.
+     This method returns true if a record for a given modelName and id is already
+     loaded in the store. Use this function to know beforehand if a findRecord()
+     will result in a request or that it will be a cache hit.
+      Example
+      ```javascript
+     store.hasRecordForId('post', 1); // false
+     store.findRecord('post', 1).then(function() {
+        store.hasRecordForId('post', 1); // true
+      });
+     ```
        @method hasRecordForId
-      @param {(String|DS.Model)} modelName
-      @param {(String|Integer)} inputId
+      @param {String} modelName
+      @param {(String|Integer)} id
       @return {Boolean}
     */
-    hasRecordForId: function hasRecordForId(modelName, inputId) {
+    hasRecordForId: function hasRecordForId(modelName, id) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's hasRecordForId method", isPresent(modelName));
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember['default'].inspect(modelName), typeof modelName === 'string');
-      var typeClass = this.modelFor(modelName);
-      var id = (0, _emberDataPrivateSystemCoerceId['default'])(inputId);
-      var internalModel = this.typeMapFor(typeClass).idToRecord[id];
+      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
+
+      var trueId = (0, _emberDataPrivateSystemCoerceId['default'])(id);
+      var modelClass = this.modelFor(modelName);
+      var internalModel = this.typeMapFor(modelClass).idToRecord[trueId];
+
       return !!internalModel && internalModel.isLoaded();
     },
 
@@ -76749,21 +77851,21 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     */
     recordForId: function recordForId(modelName, id) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's recordForId method", isPresent(modelName));
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember['default'].inspect(modelName), typeof modelName === 'string');
+      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
       return this._internalModelForId(modelName, id).getRecord();
     },
 
-    _internalModelForId: function _internalModelForId(typeName, inputId) {
-      var typeClass = this.modelFor(typeName);
+    _internalModelForId: function _internalModelForId(modelName, inputId) {
+      var modelClass = this.modelFor(modelName);
       var id = (0, _emberDataPrivateSystemCoerceId['default'])(inputId);
-      var idToRecord = this.typeMapFor(typeClass).idToRecord;
-      var record = idToRecord[id];
+      var idToRecord = this.typeMapFor(modelClass).idToRecord;
+      var internalModel = idToRecord[id];
 
-      if (!record || !idToRecord[id]) {
-        record = this.buildInternalModel(typeClass, id);
+      if (!internalModel || !idToRecord[id]) {
+        internalModel = this.buildInternalModel(modelClass, id);
       }
 
-      return record;
+      return internalModel;
     },
 
     /**
@@ -76851,7 +77953,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       Processing by Api::V1::PersonsController#index as HTML
       Parameters: { "ids" => ["1", "2", "3"] }
       ```
-       This method returns a promise, which is resolved with a `RecordArray`
+       This method returns a promise, which is resolved with an
+      [`AdapterPopulatedRecordArray`](http://emberjs.com/api/data/classes/DS.AdapterPopulatedRecordArray.html)
       once the server returns.
        @since 1.13.0
       @method query
@@ -76866,21 +77969,25 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     _query: function _query(modelName, query, array) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's query method", isPresent(modelName));
       (0, _emberDataPrivateDebug.assert)("You need to pass a query hash to the store's query method", query);
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember['default'].inspect(modelName), typeof modelName === 'string');
-      var typeClass = this.modelFor(modelName);
-      array = array || this.recordArrayManager.createAdapterPopulatedRecordArray(typeClass, query);
+      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
+      var modelClass = this.modelFor(modelName);
+
+      array = array || this.recordArrayManager.createAdapterPopulatedRecordArray(modelClass, query);
 
       var adapter = this.adapterFor(modelName);
 
-      (0, _emberDataPrivateDebug.assert)("You tried to load a query but you have no adapter (for " + typeClass + ")", adapter);
+      (0, _emberDataPrivateDebug.assert)("You tried to load a query but you have no adapter (for " + modelClass.modelName + ")", adapter);
       (0, _emberDataPrivateDebug.assert)("You tried to load a query but your adapter does not implement `query`", typeof adapter.query === 'function');
 
-      return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)((0, _emberDataPrivateSystemStoreFinders._query)(adapter, this, typeClass, query, array));
+      var pA = (0, _emberDataPrivateSystemPromiseProxies.promiseArray)((0, _emberDataPrivateSystemStoreFinders._query)(adapter, this, modelClass, query, array));
+
+      return pA;
     },
 
     /**
       This method makes a request for one record, where the `id` is not known
-      beforehand (if the `id` is known, use `findRecord` instead).
+      beforehand (if the `id` is known, use [`findRecord`](#method_findRecord)
+      instead).
        This method can be used when it is certain that the server will return a
       single object for the primary data.
        Let's assume our API provides an endpoint for the currently logged in user
@@ -76903,8 +78010,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       });
       ```
        The request is made through the adapters' `queryRecord`:
-       ```javascript
-      // app/adapters/user.js
+       ```app/adapters/user.js
       import DS from "ember-data";
        export default DS.Adapter.extend({
         queryRecord(modelName, query) {
@@ -76958,15 +78064,23 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     queryRecord: function queryRecord(modelName, query) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's queryRecord method", isPresent(modelName));
       (0, _emberDataPrivateDebug.assert)("You need to pass a query hash to the store's queryRecord method", query);
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember['default'].inspect(modelName), typeof modelName === 'string');
+      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
 
-      var typeClass = this.modelFor(modelName);
+      var modelClass = this.modelFor(modelName);
       var adapter = this.adapterFor(modelName);
 
-      (0, _emberDataPrivateDebug.assert)("You tried to make a query but you have no adapter (for " + typeClass + ")", adapter);
+      (0, _emberDataPrivateDebug.assert)("You tried to make a query but you have no adapter (for " + modelName + ")", adapter);
       (0, _emberDataPrivateDebug.assert)("You tried to make a query but your adapter does not implement `queryRecord`", typeof adapter.queryRecord === 'function');
 
-      return (0, _emberDataPrivateSystemPromiseProxies.promiseObject)((0, _emberDataPrivateSystemStoreFinders._queryRecord)(adapter, this, typeClass, query));
+      return (0, _emberDataPrivateSystemPromiseProxies.promiseObject)((0, _emberDataPrivateSystemStoreFinders._queryRecord)(adapter, this, modelClass, query).then(function (internalModel) {
+        // the promise returned by store.queryRecord is expected to resolve with
+        // an instance of DS.Model
+        if (internalModel) {
+          return internalModel.getRecord();
+        }
+
+        return null;
+      }));
     },
 
     /**
@@ -77031,7 +78145,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
           type: 'author'
         }
       });
-       var allAuthors;
+       let allAuthors;
       store.findAll('author').then(function(authors) {
         authors.getEach('id'); // ['first']
          allAuthors = authors;
@@ -77081,6 +78195,37 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       ```
         See [peekAll](#method_peekAll) to get an array of current records in the
       store, without waiting until a reload is finished.
+       ### Retrieving Related Model Records
+       If you use an adapter such as Ember's default
+      [`JSONAPIAdapter`](http://emberjs.com/api/data/classes/DS.JSONAPIAdapter.html)
+      that supports the [JSON API specification](http://jsonapi.org/) and if your server
+      endpoint supports the use of an
+      ['include' query parameter](http://jsonapi.org/format/#fetching-includes),
+      you can use `findAll()` to automatically retrieve additional records related to
+      those requested by supplying an `include` parameter in the `options` object.
+       For example, given a `post` model that has a `hasMany` relationship with a `comment`
+      model, when we retrieve all of the post records we can have the server also return
+      all of the posts' comments in the same request:
+       ```app/routes/posts.js
+      import Ember from 'ember';
+       export default Ember.Route.extend({
+        model: function() {
+         return this.store.findAll('post', {include: 'comments'});
+        }
+      });
+       ```
+      Multiple relationships can be requested using an `include` parameter consisting of a
+      comma-separated list (without white-space) while nested relationships can be specified
+      using a dot-separated sequence of relationship names. So to request both the posts'
+      comments and the authors of those comments the request would look like this:
+       ```app/routes/posts.js
+      import Ember from 'ember';
+       export default Ember.Route.extend({
+        model: function() {
+         return this.store.findAll('post', {include: 'comments,comments.author'});
+        }
+      });
+       ```
        See [query](#method_query) to only get a subset of records from the server.
        @since 1.13.0
       @method findAll
@@ -77090,37 +78235,41 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     */
     findAll: function findAll(modelName, options) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's findAll method", isPresent(modelName));
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember['default'].inspect(modelName), typeof modelName === 'string');
-      var typeClass = this.modelFor(modelName);
+      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
 
-      return this._fetchAll(typeClass, this.peekAll(modelName), options);
+      var modelClass = this.modelFor(modelName);
+
+      var fetch = this._fetchAll(modelClass, this.peekAll(modelName), options);
+
+      return fetch;
     },
 
     /**
       @method _fetchAll
       @private
-      @param {DS.Model} typeClass
+      @param {DS.Model} modelClass
       @param {DS.RecordArray} array
       @return {Promise} promise
     */
-    _fetchAll: function _fetchAll(typeClass, array, options) {
+    _fetchAll: function _fetchAll(modelClass, array, options) {
       options = options || {};
-      var adapter = this.adapterFor(typeClass.modelName);
-      var sinceToken = this.typeMapFor(typeClass).metadata.since;
 
-      (0, _emberDataPrivateDebug.assert)("You tried to load all records but you have no adapter (for " + typeClass + ")", adapter);
+      var adapter = this.adapterFor(modelClass.modelName);
+      var sinceToken = this.typeMapFor(modelClass).metadata.since;
+
+      (0, _emberDataPrivateDebug.assert)("You tried to load all records but you have no adapter (for " + modelClass.modelName + ")", adapter);
       (0, _emberDataPrivateDebug.assert)("You tried to load all records but your adapter does not implement `findAll`", typeof adapter.findAll === 'function');
 
       if (options.reload) {
         set(array, 'isUpdating', true);
-        return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)((0, _emberDataPrivateSystemStoreFinders._findAll)(adapter, this, typeClass, sinceToken, options));
+        return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)((0, _emberDataPrivateSystemStoreFinders._findAll)(adapter, this, modelClass, sinceToken, options));
       }
 
-      var snapshotArray = array.createSnapshot(options);
+      var snapshotArray = array._createSnapshot(options);
 
       if (adapter.shouldReloadAll(this, snapshotArray)) {
         set(array, 'isUpdating', true);
-        return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)((0, _emberDataPrivateSystemStoreFinders._findAll)(adapter, this, typeClass, sinceToken, options));
+        return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)((0, _emberDataPrivateSystemStoreFinders._findAll)(adapter, this, modelClass, sinceToken, options));
       }
 
       if (options.backgroundReload === false) {
@@ -77129,7 +78278,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
       if (options.backgroundReload || adapter.shouldBackgroundReloadAll(this, snapshotArray)) {
         set(array, 'isUpdating', true);
-        (0, _emberDataPrivateSystemStoreFinders._findAll)(adapter, this, typeClass, sinceToken, options);
+        (0, _emberDataPrivateSystemStoreFinders._findAll)(adapter, this, modelClass, sinceToken, options);
       }
 
       return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)(Promise.resolve(array));
@@ -77137,11 +78286,12 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
     /**
       @method didUpdateAll
-      @param {DS.Model} typeClass
+      @param {DS.Model} modelClass
       @private
     */
-    didUpdateAll: function didUpdateAll(typeClass) {
-      var liveRecordArray = this.recordArrayManager.liveRecordArrayFor(typeClass);
+    didUpdateAll: function didUpdateAll(modelClass) {
+      var liveRecordArray = this.recordArrayManager.liveRecordArrayFor(modelClass);
+
       set(liveRecordArray, 'isUpdating', false);
     },
 
@@ -77157,7 +78307,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       return the same `RecordArray`.
        Example
        ```javascript
-      var localPosts = store.peekAll('post');
+      let localPosts = store.peekAll('post');
       ```
        @since 1.13.0
       @method peekAll
@@ -77166,17 +78316,18 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     */
     peekAll: function peekAll(modelName) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's peekAll method", isPresent(modelName));
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember['default'].inspect(modelName), typeof modelName === 'string');
-      var typeClass = this.modelFor(modelName);
+      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
+      var modelClass = this.modelFor(modelName);
+      var liveRecordArray = this.recordArrayManager.liveRecordArrayFor(modelClass);
 
-      var liveRecordArray = this.recordArrayManager.liveRecordArrayFor(typeClass);
-      this.recordArrayManager.populateLiveRecordArray(liveRecordArray, typeClass);
+      this.recordArrayManager.syncLiveRecordArray(liveRecordArray, modelClass);
 
       return liveRecordArray;
     },
 
     /**
      This method unloads all records in the store.
+     It schedules unloading to happen during the next run loop.
       Optionally you can pass a type which unload all records for a given type.
       ```javascript
      store.unloadAll();
@@ -77186,7 +78337,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
      @param {String} modelName
     */
     unloadAll: function unloadAll(modelName) {
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember['default'].inspect(modelName), !modelName || typeof modelName === 'string');
+      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), !modelName || typeof modelName === 'string');
+
       if (arguments.length === 0) {
         var typeMaps = this.typeMaps;
         var keys = Object.keys(typeMaps);
@@ -77198,8 +78350,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
         types.forEach(this.unloadAll, this);
       } else {
-        var typeClass = this.modelFor(modelName);
-        var typeMap = this.typeMapFor(typeClass);
+        var modelClass = this.modelFor(modelName);
+        var typeMap = this.typeMapFor(modelClass);
         var records = typeMap.records.slice();
         var record = undefined;
 
@@ -77244,7 +78396,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         return post.get('unread');
       }).then(function(unreadPosts) {
         unreadPosts.get('length'); // 5
-        var unreadPost = unreadPosts.objectAt(0);
+        let unreadPost = unreadPosts.objectAt(0);
         unreadPost.set('unread', false);
         unreadPosts.get('length'); // 4
       });
@@ -77259,15 +78411,15 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     */
     filter: function filter(modelName, query, _filter) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's filter method", isPresent(modelName));
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember['default'].inspect(modelName), typeof modelName === 'string');
+      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
 
-      if (!_ember['default'].ENV.ENABLE_DS_FILTER) {
+      if (!ENV.ENABLE_DS_FILTER) {
         (0, _emberDataPrivateDebug.assert)('The filter API has been moved to a plugin. To enable store.filter using an environment flag, or to use an alternative, you can visit the ember-data-filter addon page. https://github.com/ember-data/ember-data-filter', false);
       }
 
-      var promise;
+      var promise = undefined;
       var length = arguments.length;
-      var array;
+      var array = undefined;
       var hasQuery = length === 3;
 
       // allow an optional server query
@@ -77293,24 +78445,19 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     },
 
     /**
-      This method returns if a certain record is already loaded
-      in the store. Use this function to know beforehand if a findRecord()
-      will result in a request or that it will be a cache hit.
-        Example
-       ```javascript
-      store.recordIsLoaded('post', 1); // false
-      store.findRecord('post', 1).then(function() {
-        store.recordIsLoaded('post', 1); // true
-      });
-      ```
-       @method recordIsLoaded
+      This method has been deprecated and is an alias for store.hasRecordForId, which should
+      be used instead.
+       @deprecated
+      @method recordIsLoaded
       @param {String} modelName
       @param {string} id
       @return {boolean}
     */
     recordIsLoaded: function recordIsLoaded(modelName, id) {
-      (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's recordIsLoaded method", isPresent(modelName));
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember['default'].inspect(modelName), typeof modelName === 'string');
+      (0, _emberDataPrivateDebug.deprecate)('Use of recordIsLoaded is deprecated, use hasRecordForId instead.', false, {
+        id: 'ds.store.recordIsLoaded',
+        until: '3.0'
+      });
       return this.hasRecordForId(modelName, id);
     },
 
@@ -77354,7 +78501,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         snapshot: snapshot,
         resolver: resolver
       });
-      once(this, 'flushPendingSave');
+      emberRun.once(this, this.flushPendingSave);
     },
 
     /**
@@ -77373,8 +78520,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         var snapshot = pendingItem.snapshot;
         var resolver = pendingItem.resolver;
         var record = snapshot._internalModel;
-        var adapter = _this.adapterFor(record.type.modelName);
-        var operation;
+        var adapter = _this.adapterFor(record.modelClass.modelName);
+        var operation = undefined;
 
         if (get(record, 'currentState.stateName') === 'root.deleted.saved') {
           return resolver.resolve();
@@ -77402,14 +78549,16 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @param {Object} data optional data (see above)
     */
     didSaveRecord: function didSaveRecord(internalModel, dataArg) {
-      var data;
+      var data = undefined;
       if (dataArg) {
         data = dataArg.data;
       }
       if (data) {
         // normalize relationship IDs into records
-        this._backburner.schedule('normalizeRelationships', this, '_setupRelationships', internalModel, data);
+        this._backburner.schedule('normalizeRelationships', this, this._setupRelationships, internalModel, data);
         this.updateId(internalModel, data);
+      } else {
+        (0, _emberDataPrivateDebug.assert)('Your ' + internalModel.type.modelName + ' record was saved to the server, but the response does not have an id and no id has been set client side. Records must have ids. Please update the server response to provide an id in the response or generate the id on the client side either before saving the record or while normalizing the response.', internalModel.id);
       }
 
       //We first make sure the primary data has been updated
@@ -77456,7 +78605,18 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       var oldId = internalModel.id;
       var id = (0, _emberDataPrivateSystemCoerceId['default'])(data.id);
 
-      (0, _emberDataPrivateDebug.assert)("An adapter cannot assign a new id to a record that already has an id. " + internalModel + " had id: " + oldId + " and you tried to update it with " + id + ". This likely happened because your server returned data in response to a find or update that had a different id than the one you sent.", oldId === null || id === oldId);
+      // ID absolutely can't be missing if the oldID is empty (missing Id in response for a new record)
+      (0, _emberDataPrivateDebug.assert)('\'' + internalModel.type.modelName + '\' was saved to the server, but the response does not have an id and your record does not either.', !(id === null && oldId === null));
+
+      // ID absolutely can't be different than oldID if oldID is not null
+      (0, _emberDataPrivateDebug.assert)('\'' + internalModel.type.modelName + ':' + oldId + '\' was saved to the server, but the response returned the new id \'' + id + '\'. The store cannot assign a new id to a record that already has an id.', !(oldId !== null && id !== oldId));
+
+      // ID can be null if oldID is not null (altered ID in response for a record)
+      // however, this is more than likely a developer error.
+      if (oldId !== null && id === null) {
+        (0, _emberDataPrivateDebug.warn)('Your ' + internalModel.type.modelName + ' record was saved to the server, but the response does not have an id.', !(oldId !== null && id === null));
+        return;
+      }
 
       this.typeMapFor(internalModel.type).idToRecord[id] = internalModel;
 
@@ -77467,12 +78627,12 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       Returns a map of IDs to client IDs for a given type.
        @method typeMapFor
       @private
-      @param {DS.Model} typeClass
+      @param {DS.Model} modelClass
       @return {Object} typeMap
     */
-    typeMapFor: function typeMapFor(typeClass) {
+    typeMapFor: function typeMapFor(modelClass) {
       var typeMaps = get(this, 'typeMaps');
-      var guid = _ember['default'].guidFor(typeClass);
+      var guid = guidFor(modelClass);
       var typeMap = typeMaps[guid];
 
       if (typeMap) {
@@ -77483,7 +78643,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         idToRecord: new _emberDataPrivateSystemEmptyObject['default'](),
         records: [],
         metadata: new _emberDataPrivateSystemEmptyObject['default'](),
-        type: typeClass
+        type: modelClass
       };
 
       typeMaps[guid] = typeMap;
@@ -77515,10 +78675,10 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     /*
       In case someone defined a relationship to a mixin, for example:
       ```
-        var Comment = DS.Model.extend({
+        let Comment = DS.Model.extend({
           owner: belongsTo('commentable'. { polymorphic: true})
         });
-        var Commentable = Ember.Mixin.create({
+        let Commentable = Ember.Mixin.create({
           comments: hasMany('comment')
         });
       ```
@@ -77534,8 +78694,15 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       // container._registry = 1.11 - 2.0
       // container = < 1.11
       var owner = (0, _emberDataPrivateUtils.getOwner)(this);
+      var mixin = undefined;
 
-      var mixin = owner._lookupFactory('mixin:' + normalizedModelName);
+      if (owner.factoryFor) {
+        var MaybeMixin = owner.factoryFor('mixin:' + normalizedModelName);
+        mixin = MaybeMixin && MaybeMixin['class'];
+      } else {
+        mixin = owner._lookupFactory('mixin:' + normalizedModelName);
+      }
+
       if (mixin) {
         //Cache the class as a model
         owner.register('model:' + normalizedModelName, _emberDataModel['default'].extend(mixin));
@@ -77561,7 +78728,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     */
     modelFor: function modelFor(modelName) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's modelFor method", isPresent(modelName));
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember['default'].inspect(modelName), typeof modelName === 'string');
+      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
 
       var factory = this.modelFactoryFor(modelName);
       if (!factory) {
@@ -77569,7 +78736,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         factory = this._modelForMixin(modelName);
       }
       if (!factory) {
-        throw new _ember['default'].Error("No model was found for '" + modelName + "'");
+        throw new EmberError("No model was found for '" + modelName + "'");
       }
       factory.modelName = factory.modelName || (0, _emberDataPrivateSystemNormalizeModelName['default'])(modelName);
 
@@ -77578,12 +78745,19 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
     modelFactoryFor: function modelFactoryFor(modelName) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's modelFactoryFor method", isPresent(modelName));
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember['default'].inspect(modelName), typeof modelName === 'string');
+      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
       var normalizedKey = (0, _emberDataPrivateSystemNormalizeModelName['default'])(modelName);
 
       var owner = (0, _emberDataPrivateUtils.getOwner)(this);
 
-      return owner._lookupFactory('model:' + normalizedKey);
+      if (owner.factoryFor) {
+        var MaybeModel = owner.factoryFor('model:' + normalizedKey);
+        var MaybeModelFactory = MaybeModel && MaybeModel['class'];
+
+        return MaybeModelFactory;
+      } else {
+        return owner._lookupFactory('model:' + normalizedKey);
+      }
     },
 
     /**
@@ -77716,8 +78890,37 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         updated.
     */
     push: function push(data) {
+      var pushed = this._push(data);
+
+      if (Array.isArray(pushed)) {
+        var records = pushed.map(function (internalModel) {
+          return internalModel.getRecord();
+        });
+
+        return records;
+      }
+
+      if (pushed === null) {
+        return null;
+      }
+
+      var record = pushed.getRecord();
+
+      return record;
+    },
+
+    /*
+      Push some data into the store, without creating materialized records.
+       @method _push
+      @private
+      @param {Object} data
+      @return {DS.InternalModel|Array<DS.InternalModel>} pushed InternalModel(s)
+    */
+    _push: function _push(data) {
       var included = data.included;
-      var i, length;
+      var i = undefined,
+          length = undefined;
+
       if (included) {
         for (i = 0, length = included.length; i < length; i++) {
           this._pushInternalModel(included[i]);
@@ -77727,9 +78930,11 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       if (Array.isArray(data.data)) {
         length = data.data.length;
         var internalModels = new Array(length);
+
         for (i = 0; i < length; i++) {
-          internalModels[i] = this._pushInternalModel(data.data[i]).getRecord();
+          internalModels[i] = this._pushInternalModel(data.data[i]);
         }
+
         return internalModels;
       }
 
@@ -77737,15 +78942,21 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         return null;
       }
 
-      (0, _emberDataPrivateDebug.assert)('Expected an object in the \'data\' property in a call to \'push\' for ' + data.type + ', but was ' + _ember['default'].typeOf(data.data), _ember['default'].typeOf(data.data) === 'object');
+      (0, _emberDataPrivateDebug.assert)('Expected an object in the \'data\' property in a call to \'push\' for ' + data.type + ', but was ' + typeOf(data.data), typeOf(data.data) === 'object');
 
       var internalModel = this._pushInternalModel(data.data);
 
-      return internalModel.getRecord();
+      return internalModel;
     },
 
-    _hasModelFor: function _hasModelFor(type) {
-      return !!(0, _emberDataPrivateUtils.getOwner)(this)._lookupFactory('model:' + type);
+    _hasModelFor: function _hasModelFor(modelName) {
+      var owner = (0, _emberDataPrivateUtils.getOwner)(this);
+
+      if (owner.factoryFor) {
+        return !!owner.factoryFor('model:' + modelName);
+      } else {
+        return !!owner._lookupFactory('model:' + modelName);
+      }
     },
 
     _pushInternalModel: function _pushInternalModel(data) {
@@ -77756,25 +78967,25 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       (0, _emberDataPrivateDebug.assert)('You tried to push data with a type \'' + modelName + '\' but no model could be found with that name.', this._hasModelFor(modelName));
 
       (0, _emberDataPrivateDebug.runInDebug)(function () {
-        // If Ember.ENV.DS_WARN_ON_UNKNOWN_KEYS is set to true and the payload
+        // If ENV.DS_WARN_ON_UNKNOWN_KEYS is set to true and the payload
         // contains unknown attributes or relationships, log a warning.
 
-        if (_ember['default'].ENV.DS_WARN_ON_UNKNOWN_KEYS) {
+        if (ENV.DS_WARN_ON_UNKNOWN_KEYS) {
           (function () {
-            var type = _this2.modelFor(modelName);
+            var modelClass = _this2.modelFor(modelName);
 
             // Check unknown attributes
             var unknownAttributes = Object.keys(data.attributes || {}).filter(function (key) {
-              return !get(type, 'fields').has(key);
+              return !get(modelClass, 'fields').has(key);
             });
-            var unknownAttributesMessage = 'The payload for \'' + type.modelName + '\' contains these unknown attributes: ' + unknownAttributes + '. Make sure they\'ve been defined in your model.';
+            var unknownAttributesMessage = 'The payload for \'' + modelClass.modelName + '\' contains these unknown attributes: ' + unknownAttributes + '. Make sure they\'ve been defined in your model.';
             (0, _emberDataPrivateDebug.warn)(unknownAttributesMessage, unknownAttributes.length === 0, { id: 'ds.store.unknown-keys-in-payload' });
 
             // Check unknown relationships
             var unknownRelationships = Object.keys(data.relationships || {}).filter(function (key) {
-              return !get(type, 'fields').has(key);
+              return !get(modelClass, 'fields').has(key);
             });
-            var unknownRelationshipsMessage = 'The payload for \'' + type.modelName + '\' contains these unknown relationships: ' + unknownRelationships + '. Make sure they\'ve been defined in your model.';
+            var unknownRelationshipsMessage = 'The payload for \'' + modelClass.modelName + '\' contains these unknown relationships: ' + unknownRelationships + '. Make sure they\'ve been defined in your model.';
             (0, _emberDataPrivateDebug.warn)(unknownRelationshipsMessage, unknownRelationships.length === 0, { id: 'ds.store.unknown-keys-in-payload' });
           })();
         }
@@ -77784,7 +78995,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       var internalModel = this._load(data);
 
       this._backburner.join(function () {
-        _this2._backburner.schedule('normalizeRelationships', _this2, '_setupRelationships', internalModel, data);
+        _this2._backburner.schedule('normalizeRelationships', _this2, _this2._setupRelationships, internalModel, data);
       });
 
       return internalModel;
@@ -77809,7 +79020,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        export default DS.ActiveModelSerializer;
       ```
        ```js
-      var pushData = {
+      let pushData = {
         posts: [
           { id: 1, post_title: "Great post", comment_ids: [2] }
         ],
@@ -77842,15 +79053,15 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     pushPayload: function pushPayload(modelName, inputPayload) {
       var _this3 = this;
 
-      var serializer;
-      var payload;
+      var serializer = undefined;
+      var payload = undefined;
       if (!inputPayload) {
         payload = modelName;
         serializer = defaultSerializer(this);
         (0, _emberDataPrivateDebug.assert)("You cannot use `store#pushPayload` without a modelName unless your default serializer defines `pushPayload`", typeof serializer.pushPayload === 'function');
       } else {
         payload = inputPayload;
-        (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember['default'].inspect(modelName), typeof modelName === 'string');
+        (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
         serializer = this.serializerFor(modelName);
       }
       if (false) {
@@ -77870,8 +79081,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        Example
        ```js
       socket.on('message', function(message) {
-        var modelName = message.model;
-        var data = message.data;
+        let modelName = message.model;
+        let data = message.data;
         store.push(store.normalize(modelName, data));
       });
       ```
@@ -77882,7 +79093,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     */
     normalize: function normalize(modelName, payload) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's normalize method", isPresent(modelName));
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember['default'].inspect(modelName), typeof modelName === 'string');
+      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
       var serializer = this.serializerFor(modelName);
       var model = this.modelFor(modelName);
       return serializer.normalize(model, payload);
@@ -77893,21 +79104,21 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       initial data.
        @method buildRecord
       @private
-      @param {DS.Model} type
+      @param {DS.Model} modelClass
       @param {String} id
       @param {Object} data
       @return {InternalModel} internal model
     */
-    buildInternalModel: function buildInternalModel(type, id, data) {
-      var typeMap = this.typeMapFor(type);
+    buildInternalModel: function buildInternalModel(modelClass, id, data) {
+      var typeMap = this.typeMapFor(modelClass);
       var idToRecord = typeMap.idToRecord;
 
-      (0, _emberDataPrivateDebug.assert)('The id ' + id + ' has already been used with another record of type ' + type.toString() + '.', !id || !idToRecord[id]);
-      (0, _emberDataPrivateDebug.assert)('\'' + _ember['default'].inspect(type) + '\' does not appear to be an ember-data model', typeof type._create === 'function');
+      (0, _emberDataPrivateDebug.assert)('The id ' + id + ' has already been used with another record for modelClass ' + modelClass + '.', !id || !idToRecord[id]);
+      (0, _emberDataPrivateDebug.assert)('\'' + inspect(modelClass) + '\' does not appear to be an ember-data model', typeof modelClass._create === 'function');
 
       // lookupFactory should really return an object that creates
       // instances with the injections applied
-      var internalModel = new _emberDataPrivateSystemModelInternalModel['default'](type, id, this, null, data);
+      var internalModel = new _emberDataPrivateSystemModelInternalModel['default'](modelClass, id, this, data);
 
       // if we're creating an item, this process will be done
       // later, once the object has been persisted.
@@ -77937,8 +79148,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @param {InternalModel} internalModel
     */
     _dematerializeRecord: function _dematerializeRecord(internalModel) {
-      var type = internalModel.type;
-      var typeMap = this.typeMapFor(type);
+      var modelClass = internalModel.type;
+      var typeMap = this.typeMapFor(modelClass);
       var id = internalModel.id;
 
       internalModel.updateRecordArrays();
@@ -77971,9 +79182,11 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     */
     adapterFor: function adapterFor(modelName) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's adapterFor method", isPresent(modelName));
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store.adapterFor has been removed. Please pass a dasherized string instead of ' + _ember['default'].inspect(modelName), typeof modelName === 'string');
+      (0, _emberDataPrivateDebug.assert)('Passing classes to store.adapterFor has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
 
-      return this.lookupAdapter(modelName);
+      var normalizedModelName = (0, _emberDataPrivateSystemNormalizeModelName['default'])(modelName);
+
+      return this._instanceCache.get('adapter', normalizedModelName);
     },
 
     _adapterRun: function _adapterRun(fn) {
@@ -78003,82 +79216,62 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     */
     serializerFor: function serializerFor(modelName) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's serializerFor method", isPresent(modelName));
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store.serializerFor has been removed. Please pass a dasherized string instead of ' + _ember['default'].inspect(modelName), typeof modelName === 'string');
+      (0, _emberDataPrivateDebug.assert)('Passing classes to store.serializerFor has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
 
-      var fallbacks = ['application', this.adapterFor(modelName).get('defaultSerializer'), '-default'];
-
-      var serializer = this.lookupSerializer(modelName, fallbacks);
-      return serializer;
-    },
-
-    /**
-      Retrieve a particular instance from the
-      container cache. If not found, creates it and
-      placing it in the cache.
-       Enabled a store to manage local instances of
-      adapters and serializers.
-       @method retrieveManagedInstance
-      @private
-      @param {String} modelName the object modelName
-      @param {String} name the object name
-      @param {Array} fallbacks the fallback objects to lookup if the lookup for modelName or 'application' fails
-      @return {Ember.Object}
-    */
-    retrieveManagedInstance: function retrieveManagedInstance(type, modelName, fallbacks) {
       var normalizedModelName = (0, _emberDataPrivateSystemNormalizeModelName['default'])(modelName);
 
-      var instance = this._instanceCache.get(type, normalizedModelName, fallbacks);
-      set(instance, 'store', this);
-      return instance;
+      return this._instanceCache.get('serializer', normalizedModelName);
     },
 
     lookupAdapter: function lookupAdapter(name) {
-      return this.retrieveManagedInstance('adapter', name, this.get('_adapterFallbacks'));
+      (0, _emberDataPrivateDebug.deprecate)('Use of lookupAdapter is deprecated, use adapterFor instead.', false, {
+        id: 'ds.store.lookupAdapter',
+        until: '3.0'
+      });
+      return this.adapterFor(name);
     },
 
-    _adapterFallbacks: _ember['default'].computed('adapter', function () {
-      var adapter = this.get('adapter');
-      return ['application', adapter, '-json-api'];
-    }),
-
-    lookupSerializer: function lookupSerializer(name, fallbacks) {
-      return this.retrieveManagedInstance('serializer', name, fallbacks);
+    lookupSerializer: function lookupSerializer(name) {
+      (0, _emberDataPrivateDebug.deprecate)('Use of lookupSerializer is deprecated, use serializerFor instead.', false, {
+        id: 'ds.store.lookupSerializer',
+        until: '3.0'
+      });
+      return this.serializerFor(name);
     },
 
     willDestroy: function willDestroy() {
       this._super.apply(this, arguments);
       this.recordArrayManager.destroy();
+      this._instanceCache.destroy();
 
       this.unloadAll();
-    }
+    },
 
+    _pushResourceIdentifier: function _pushResourceIdentifier(relationship, resourceIdentifier) {
+      if (isNone(resourceIdentifier)) {
+        return;
+      }
+
+      (0, _emberDataPrivateDebug.assert)('A ' + relationship.parentType + ' record was pushed into the store with the value of ' + relationship.key + ' being ' + inspect(resourceIdentifier) + ', but ' + relationship.key + ' is a belongsTo relationship so the value must not be an array. You should probably check your data payload or serializer.', !Array.isArray(resourceIdentifier));
+
+      //TODO:Better asserts
+      return this._internalModelForId(resourceIdentifier.type, resourceIdentifier.id);
+    },
+
+    _pushResourceIdentifiers: function _pushResourceIdentifiers(relationship, resourceIdentifiers) {
+      if (isNone(resourceIdentifiers)) {
+        return;
+      }
+
+      (0, _emberDataPrivateDebug.assert)('A ' + relationship.parentType + ' record was pushed into the store with the value of ' + relationship.key + ' being \'' + inspect(resourceIdentifiers) + '\', but ' + relationship.key + ' is a hasMany relationship so the value must be an array. You should probably check your data payload or serializer.', Array.isArray(resourceIdentifiers));
+
+      var _internalModels = new Array(resourceIdentifiers.length);
+      for (var i = 0; i < resourceIdentifiers.length; i++) {
+        _internalModels[i] = this._pushResourceIdentifier(relationship, resourceIdentifiers[i]);
+      }
+      return _internalModels;
+    }
   });
-
-  function deserializeRecordId(store, key, relationship, id) {
-    if (isNone(id)) {
-      return;
-    }
-
-    (0, _emberDataPrivateDebug.assert)('A ' + relationship.parentType + ' record was pushed into the store with the value of ' + key + ' being ' + _ember['default'].inspect(id) + ', but ' + key + ' is a belongsTo relationship so the value must not be an array. You should probably check your data payload or serializer.', !Array.isArray(id));
-
-    //TODO:Better asserts
-    return store._internalModelForId(id.type, id.id);
-  }
-
-  function deserializeRecordIds(store, key, relationship, ids) {
-    if (isNone(ids)) {
-      return;
-    }
-
-    (0, _emberDataPrivateDebug.assert)('A ' + relationship.parentType + ' record was pushed into the store with the value of ' + key + ' being \'' + _ember['default'].inspect(ids) + '\', but ' + key + ' is a hasMany relationship so the value must be an array. You should probably check your data payload or serializer.', Array.isArray(ids));
-    var _ids = new Array(ids.length);
-
-    for (var i = 0; i < ids.length; i++) {
-      _ids[i] = deserializeRecordId(store, key, relationship, ids[i]);
-    }
-
-    return _ids;
-  }
 
   // Delegation to the adapter and promise management
 
@@ -78089,8 +79282,10 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
   function _commit(adapter, store, operation, snapshot) {
     var internalModel = snapshot._internalModel;
     var modelName = snapshot.modelName;
-    var typeClass = store.modelFor(modelName);
-    var promise = adapter[operation](store, typeClass, snapshot);
+    var modelClass = store.modelFor(modelName);
+    (0, _emberDataPrivateDebug.assert)('You tried to update a record but you have no adapter (for ' + modelClass.modelName + ')', adapter);
+    (0, _emberDataPrivateDebug.assert)('You tried to update a record but your adapter (for ' + modelClass.modelName + ') does not implement \'' + operation + '\'', typeof adapter[operation] === 'function');
+    var promise = adapter[operation](store, modelClass, snapshot);
     var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, modelName);
     var label = 'DS: Extract and notify about ' + operation + ' completion of ' + internalModel;
 
@@ -78102,9 +79297,10 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
     return promise.then(function (adapterPayload) {
       store._adapterRun(function () {
-        var payload, data;
+        var payload = undefined,
+            data = undefined;
         if (adapterPayload) {
-          payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, snapshot.id, operation);
+          payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, modelClass, adapterPayload, snapshot.id, operation);
           if (payload.included) {
             store.push({ data: payload.included });
           }
@@ -78116,7 +79312,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       return internalModel;
     }, function (error) {
       if (error instanceof _emberDataAdaptersErrors.InvalidError) {
-        var errors = serializer.extractErrors(store, typeClass, error, snapshot.id);
+        var errors = serializer.extractErrors(store, modelClass, error, snapshot.id);
+
         store.recordWasInvalid(internalModel, errors);
       } else {
         store.recordWasError(internalModel, error);
@@ -78132,56 +79329,13 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     }
 
     record.type.eachRelationship(function (key, descriptor) {
-      var kind = descriptor.kind;
-
       if (!data.relationships[key]) {
         return;
       }
 
-      var relationship;
-
-      if (data.relationships[key].links && data.relationships[key].links.related) {
-        var relatedLink = (0, _emberDataPrivateSystemNormalizeLink['default'])(data.relationships[key].links.related);
-        if (relatedLink && relatedLink.href) {
-          relationship = record._relationships.get(key);
-          relationship.updateLink(relatedLink.href);
-        }
-      }
-
-      if (data.relationships[key].meta) {
-        relationship = record._relationships.get(key);
-        relationship.updateMeta(data.relationships[key].meta);
-      }
-
-      // If the data contains a relationship that is specified as an ID (or IDs),
-      // normalizeRelationship will convert them into DS.Model instances
-      // (possibly unloaded) before we push the payload into the store.
-      normalizeRelationship(store, key, descriptor, data.relationships[key]);
-
-      var value = data.relationships[key].data;
-
-      if (value !== undefined) {
-        if (kind === 'belongsTo') {
-          relationship = record._relationships.get(key);
-          relationship.setCanonicalRecord(value);
-        } else if (kind === 'hasMany') {
-          relationship = record._relationships.get(key);
-          relationship.updateRecordsFromAdapter(value);
-        }
-      }
+      var relationship = record._relationships.get(key);
+      relationship.push(data.relationships[key]);
     });
-  }
-
-  function normalizeRelationship(store, key, relationship, jsonPayload) {
-    var data = jsonPayload.data;
-    if (data) {
-      var kind = relationship.kind;
-      if (kind === 'belongsTo') {
-        jsonPayload.data = deserializeRecordId(store, key, relationship, data);
-      } else if (kind === 'hasMany') {
-        jsonPayload.data = deserializeRecordIds(store, key, relationship, data);
-      }
-    }
   }
 
   exports.Store = Store;
@@ -78221,9 +79375,25 @@ define('ember-data/-private/system/store/common', ['exports', 'ember'], function
 define('ember-data/-private/system/store/container-instance-cache', ['exports', 'ember', 'ember-data/-private/system/empty-object'], function (exports, _ember, _emberDataPrivateSystemEmptyObject) {
   'use strict';
 
-  exports['default'] = ContainerInstanceCache;
+  var _createClass = (function () {
+    function defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ('value' in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);
+      }
+    }return function (Constructor, protoProps, staticProps) {
+      if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;
+    };
+  })();
 
-  var assign = _ember['default'].assign || _ember['default'].merge;
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError('Cannot call a class as a function');
+    }
+  }
+
+  /* global heimdall */
+
+  var set = _ember['default'].set;
 
   /*
    * The `ContainerInstanceCache` serves as a lazy cache for looking up
@@ -78234,79 +79404,117 @@ define('ember-data/-private/system/store/container-instance-cache', ['exports', 
    * when the preferred lookup fails. For example, say you try to look up `adapter:post`,
    * but there is no entry (app/adapters/post.js in EmberCLI) for `adapter:post` in the registry.
    *
-   * The `fallbacks` array passed will then be used; the first entry in the fallbacks array
-   * that exists in the container will then be cached for `adapter:post`. So, the next time you
-   * look up `adapter:post`, you'll get the `adapter:application` instance (or whatever the fallback
-   * was if `adapter:application` doesn't exist).
+   * When an adapter or serializer is unfound, getFallbacks will be invoked with the current namespace
+   * ('adapter' or 'serializer') and the 'preferredKey' (usually a modelName).  The method should return
+   * an array of keys to check against.
+   *
+   * The first entry in the fallbacks array that exists in the container will then be cached for
+   * `adapter:post`. So, the next time you look up `adapter:post`, you'll get the `adapter:application`
+   * instance (or whatever the fallback was if `adapter:application` doesn't exist).
    *
    * @private
    * @class ContainerInstanceCache
    *
   */
-  function ContainerInstanceCache(owner) {
-    this._owner = owner;
-    this._cache = new _emberDataPrivateSystemEmptyObject['default']();
-  }
 
-  ContainerInstanceCache.prototype = new _emberDataPrivateSystemEmptyObject['default']();
-
-  assign(ContainerInstanceCache.prototype, {
-    get: function get(type, preferredKey, fallbacks) {
-      var cache = this._cache;
-      var preferredLookupKey = type + ':' + preferredKey;
-
-      if (!(preferredLookupKey in cache)) {
-        var instance = this.instanceFor(preferredLookupKey) || this._findInstance(type, fallbacks);
-        if (instance) {
-          cache[preferredLookupKey] = instance;
-        }
-      }
-      return cache[preferredLookupKey];
-    },
-
-    _findInstance: function _findInstance(type, fallbacks) {
-      for (var i = 0, _length = fallbacks.length; i < _length; i++) {
-        var fallback = fallbacks[i];
-        var lookupKey = type + ':' + fallback;
-        var instance = this.instanceFor(lookupKey);
-
-        if (instance) {
-          return instance;
-        }
-      }
-    },
-
-    instanceFor: function instanceFor(key) {
-      var cache = this._cache;
-      if (!cache[key]) {
-        var instance = this._owner.lookup(key);
-        if (instance) {
-          cache[key] = instance;
-        }
-      }
-      return cache[key];
-    },
-
-    destroy: function destroy() {
-      var cache = this._cache;
-      var cacheEntries = Object.keys(cache);
-
-      for (var i = 0, _length2 = cacheEntries.length; i < _length2; i++) {
-        var cacheKey = cacheEntries[i];
-        var cacheEntry = cache[cacheKey];
-        if (cacheEntry) {
-          cacheEntry.destroy();
-        }
-      }
-      this._owner = null;
-    },
-
-    constructor: ContainerInstanceCache,
-
-    toString: function toString() {
-      return 'ContainerInstanceCache';
+  var ContainerInstanceCache = (function () {
+    function ContainerInstanceCache(owner, store) {
+      this._owner = owner;
+      this._store = store;
+      this._namespaces = {
+        adapter: new _emberDataPrivateSystemEmptyObject['default'](),
+        serializer: new _emberDataPrivateSystemEmptyObject['default']()
+      };
     }
-  });
+
+    _createClass(ContainerInstanceCache, [{
+      key: 'get',
+      value: function get(namespace, preferredKey) {
+        var cache = this._namespaces[namespace];
+
+        if (cache[preferredKey]) {
+          return cache[preferredKey];
+        }
+
+        var preferredLookupKey = namespace + ':' + preferredKey;
+
+        var instance = this._instanceFor(preferredLookupKey) || this._findInstance(namespace, this._fallbacksFor(namespace, preferredKey));
+        if (instance) {
+          cache[preferredKey] = instance;
+          set(instance, 'store', this._store);
+        }
+
+        return cache[preferredKey];
+      }
+    }, {
+      key: '_fallbacksFor',
+      value: function _fallbacksFor(namespace, preferredKey) {
+        if (namespace === 'adapter') {
+          return ['application', this._store.get('adapter'), '-json-api'];
+        }
+
+        // serializer
+        return ['application', this.get('adapter', preferredKey).get('defaultSerializer'), '-default'];
+      }
+    }, {
+      key: '_findInstance',
+      value: function _findInstance(namespace, fallbacks) {
+        var cache = this._namespaces[namespace];
+
+        for (var i = 0, _length = fallbacks.length; i < _length; i++) {
+          var fallback = fallbacks[i];
+
+          if (cache[fallback]) {
+            return cache[fallback];
+          }
+
+          var lookupKey = namespace + ':' + fallback;
+          var instance = this._instanceFor(lookupKey);
+
+          if (instance) {
+            cache[fallback] = instance;
+            return instance;
+          }
+        }
+      }
+    }, {
+      key: '_instanceFor',
+      value: function _instanceFor(key) {
+        return this._owner.lookup(key);
+      }
+    }, {
+      key: 'destroyCache',
+      value: function destroyCache(cache) {
+        var cacheEntries = Object.keys(cache);
+
+        for (var i = 0, _length2 = cacheEntries.length; i < _length2; i++) {
+          var cacheKey = cacheEntries[i];
+          var cacheEntry = cache[cacheKey];
+          if (cacheEntry) {
+            cacheEntry.destroy();
+          }
+        }
+      }
+    }, {
+      key: 'destroy',
+      value: function destroy() {
+        this.destroyCache(this._namespaces.adapter);
+        this.destroyCache(this._namespaces.serializer);
+        this._namespaces = null;
+        this._store = null;
+        this._owner = null;
+      }
+    }, {
+      key: 'toString',
+      value: function toString() {
+        return 'ContainerInstanceCache';
+      }
+    }]);
+
+    return ContainerInstanceCache;
+  })();
+
+  exports['default'] = ContainerInstanceCache;
 });
 define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/store/common", "ember-data/-private/system/store/serializer-response", "ember-data/-private/system/store/serializers"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemStoreCommon, _emberDataPrivateSystemStoreSerializerResponse, _emberDataPrivateSystemStoreSerializers) {
   "use strict";
@@ -78343,9 +79551,13 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
       return store._adapterRun(function () {
         var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, id, 'findRecord');
         (0, _emberDataPrivateDebug.assert)('Ember Data expected the primary data returned from a `findRecord` response to be an object but instead it found an array.', !Array.isArray(payload.data));
-        //TODO Optimize
-        var record = store.push(payload);
-        return record._internalModel;
+
+        (0, _emberDataPrivateDebug.warn)("You requested a record of type '" + typeClass.modelName + "' with id '" + id + "' but the adapter returned a payload with primary data having an id of '" + payload.data.id + "'. Use 'store.findRecord()' when the requested id is the same as the one returned by the adapter. In other cases use 'store.queryRecord()' instead http://emberjs.com/api/data/classes/DS.Store.html#method_queryRecord", payload.data.id === id, {
+          id: 'ds.store.findRecord.id-mismatch'
+        });
+
+        var internalModel = store._push(payload);
+        return internalModel;
       });
     }, function (error) {
       internalModel.notFound();
@@ -78374,14 +79586,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
       (0, _emberDataPrivateDebug.assert)("You made a `findMany` request for " + typeClass.modelName + " records with ids " + ids + ", but the adapter's response did not have any data", payloadIsNotBlank(adapterPayload));
       return store._adapterRun(function () {
         var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'findMany');
-        //TODO Optimize, no need to materialize here
-        var records = store.push(payload);
-        var internalModels = new Array(records.length);
-
-        for (var i = 0; i < records.length; i++) {
-          internalModels[i] = records[i]._internalModel;
-        }
-
+        var internalModels = store._push(payload);
         return internalModels;
       });
     }, null, "DS: Extract payload of " + typeClass);
@@ -78432,9 +79637,8 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
           return null;
         }
 
-        //TODO Optimize
-        var record = store.push(payload);
-        return record._internalModel;
+        var internalModel = store._push(payload);
+        return internalModel;
       });
     }, null, "DS: Extract payload of " + internalModel + " : " + relationship.type);
   }
@@ -78442,7 +79646,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
   function _findAll(adapter, store, typeClass, sinceToken, options) {
     var modelName = typeClass.modelName;
     var recordArray = store.peekAll(modelName);
-    var snapshotArray = recordArray.createSnapshot(options);
+    var snapshotArray = recordArray._createSnapshot(options);
     var promise = adapter.findAll(store, typeClass, sinceToken, snapshotArray);
     var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, modelName);
     var label = "DS: Handle Adapter#findAll of " + typeClass;
@@ -78454,8 +79658,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
       (0, _emberDataPrivateDebug.assert)("You made a `findAll` request for " + typeClass.modelName + " records, but the adapter's response did not have any data", payloadIsNotBlank(adapterPayload));
       store._adapterRun(function () {
         var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'findAll');
-        //TODO Optimize
-        store.push(payload);
+        store._push(payload);
       });
 
       store.didUpdateAll(typeClass);
@@ -78468,23 +79671,24 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     var promise = adapter.query(store, typeClass, query, recordArray);
 
     var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, modelName);
-    var label = "DS: Handle Adapter#query of " + typeClass;
+    var label = 'DS: Handle Adapter#query of ' + typeClass;
 
     promise = Promise.resolve(promise, label);
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
-      var records, payload;
+      var internalModels = undefined,
+          payload = undefined;
       store._adapterRun(function () {
         payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'query');
-        //TODO Optimize
-        records = store.push(payload);
+        internalModels = store._push(payload);
       });
 
-      (0, _emberDataPrivateDebug.assert)('The response to store.query is expected to be an array but it was a single record. Please wrap your response in an array or use `store.queryRecord` to query for a single record.', Array.isArray(records));
-      recordArray.loadRecords(records, payload);
+      (0, _emberDataPrivateDebug.assert)('The response to store.query is expected to be an array but it was a single record. Please wrap your response in an array or use `store.queryRecord` to query for a single record.', Array.isArray(internalModels));
+      recordArray._setInternalModels(internalModels, payload);
+
       return recordArray;
-    }, null, "DS: Extract payload of query " + typeClass);
+    }, null, 'DS: Extract payload of query ' + typeClass);
   }
 
   function _queryRecord(adapter, store, typeClass, query) {
@@ -78497,7 +79701,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
-      var record;
+      var internalModel;
       store._adapterRun(function () {
         var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'queryRecord');
 
@@ -78505,11 +79709,10 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
           id: 'ds.store.queryRecord-array-response'
         });
 
-        //TODO Optimize
-        record = store.push(payload);
+        internalModel = store._push(payload);
       });
 
-      return record;
+      return internalModel;
     }, null, "DS: Extract payload of queryRecord " + typeClass);
   }
 });
@@ -78633,10 +79836,10 @@ define("ember-data/-private/transforms", ["exports", "ember-data/transform", "em
   exports.StringTransform = _emberDataPrivateTransformsString["default"];
   exports.BooleanTransform = _emberDataPrivateTransformsBoolean["default"];
 });
-define('ember-data/-private/transforms/boolean', ['exports', 'ember', 'ember-data/transform', 'ember-data/-private/features'], function (exports, _ember, _emberDataTransform, _emberDataPrivateFeatures) {
-  'use strict';
+define("ember-data/-private/transforms/boolean", ["exports", "ember", "ember-data/transform"], function (exports, _ember, _emberDataTransform) {
+  "use strict";
 
-  var isNone = _ember['default'].isNone;
+  var isNone = _ember["default"].isNone;
 
   /**
     The `DS.BooleanTransform` class is used to serialize and deserialize
@@ -78674,14 +79877,12 @@ define('ember-data/-private/transforms/boolean', ['exports', 'ember', 'ember-dat
     @extends DS.Transform
     @namespace DS
    */
-  exports['default'] = _emberDataTransform['default'].extend({
+  exports["default"] = _emberDataTransform["default"].extend({
     deserialize: function deserialize(serialized, options) {
       var type = typeof serialized;
 
-      if (true) {
-        if (isNone(serialized) && options.allowNull === true) {
-          return null;
-        }
+      if (isNone(serialized) && options.allowNull === true) {
+        return null;
       }
 
       if (type === "boolean") {
@@ -78696,10 +79897,8 @@ define('ember-data/-private/transforms/boolean', ['exports', 'ember', 'ember-dat
     },
 
     serialize: function serialize(deserialized, options) {
-      if (true) {
-        if (isNone(deserialized) && options.allowNull === true) {
-          return null;
-        }
+      if (isNone(deserialized) && options.allowNull === true) {
+        return null;
       }
 
       return Boolean(deserialized);
@@ -78869,15 +80068,13 @@ define('ember-data/-private/utils', ['exports', 'ember'], function (exports, _em
     ember-container-inject-owner is a new feature in Ember 2.3 that finally provides a public
     API for looking items up.  This function serves as a super simple polyfill to avoid
     triggering deprecations.
-  */
+   */
   function getOwner(context) {
     var owner;
 
     if (_ember['default'].getOwner) {
       owner = _ember['default'].getOwner(context);
-    }
-
-    if (!owner && context.container) {
+    } else if (context.container) {
       owner = context.container;
     }
 
@@ -78942,8 +80139,6 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
   */
 
   'use strict';
-
-  var get = _ember['default'].get;
 
   /**
     An adapter is an object that receives requests from a store and
@@ -79183,7 +80378,7 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       @return {Object} serialized snapshot
     */
     serialize: function serialize(snapshot, options) {
-      return get(snapshot.record, 'store').serializerFor(snapshot.modelName).serialize(snapshot, options);
+      return snapshot.serialize(options);
     },
 
     /**
@@ -79523,6 +80718,69 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
   var PRIMARY_ATTRIBUTE_KEY = 'base';
 
   /**
+    A `DS.AdapterError` is used by an adapter to signal that an error occurred
+    during a request to an external API. It indicates a generic error, and
+    subclasses are used to indicate specific error states. The following
+    subclasses are provided:
+  
+    - `DS.InvalidError`
+    - `DS.TimeoutError`
+    - `DS.AbortError`
+    - `DS.UnauthorizedError`
+    - `DS.ForbiddenError`
+    - `DS.NotFoundError`
+    - `DS.ConflictError`
+    - `DS.ServerError`
+  
+    To create a custom error to signal a specific error state in communicating
+    with an external API, extend the `DS.AdapterError`. For example if the
+    external API exclusively used HTTP `503 Service Unavailable` to indicate
+    it was closed for maintenance:
+  
+    ```app/adapters/maintenance-error.js
+    import DS from 'ember-data';
+  
+    export default DS.AdapterError.extend({ message: "Down for maintenance." });
+    ```
+  
+    This error would then be returned by an adapter's `handleResponse` method:
+  
+    ```app/adapters/application.js
+    import DS from 'ember-data';
+    import MaintenanceError from './maintenance-error';
+  
+    export default DS.JSONAPIAdapter.extend({
+      handleResponse(status) {
+        if (503 === status) {
+          return new MaintenanceError();
+        }
+  
+        return this._super(...arguments);
+      }
+    });
+    ```
+  
+    And can then be detected in an application and used to send the user to an
+    `under-maintenance` route:
+  
+    ```app/routes/application.js
+    import Ember from 'ember';
+    import MaintenanceError from '../adapters/maintenance-error';
+  
+    export default Ember.Route.extend({
+      actions: {
+        error(error, transition) {
+          if (error instanceof MaintenanceError) {
+            this.transitionTo('under-maintenance');
+            return;
+          }
+  
+          // ...other error handling logic
+        }
+      }
+    });
+    ```
+  
     @class AdapterError
     @namespace DS
   */
@@ -79637,6 +80895,34 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
   exports.InvalidError = InvalidError;
 
   /**
+    A `DS.TimeoutError` is used by an adapter to signal that a request
+    to the external API has timed out. I.e. no response was received from
+    the external API within an allowed time period.
+  
+    An example use case would be to warn the user to check their internet
+    connection if an adapter operation has timed out:
+  
+    ```app/routes/application.js
+    import Ember from 'ember';
+    import DS from 'ember-data';
+  
+    const { TimeoutError } = DS;
+  
+    export default Ember.Route.extend({
+      actions: {
+        error(error, transition) {
+          if (error instanceof TimeoutError) {
+            // alert the user
+            alert('Are you still connected to the internet?');
+            return;
+          }
+  
+          // ...other error handling logic
+        }
+      }
+    });
+    ```
+  
     @class TimeoutError
     @namespace DS
   */
@@ -79645,6 +80931,11 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
   exports.TimeoutError = TimeoutError;
 
   /**
+    A `DS.AbortError` is used by an adapter to signal that a request to
+    the external API was aborted. For example, this can occur if the user
+    navigates away from the current page after a request to the external API
+    has been initiated but before a response has been received.
+  
     @class AbortError
     @namespace DS
   */
@@ -79653,6 +80944,35 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
   exports.AbortError = AbortError;
 
   /**
+    A `DS.UnauthorizedError` equates to a HTTP `401 Unauthorized` response
+    status. It is used by an adapter to signal that a request to the external
+    API was rejected because authorization is required and has failed or has not
+    yet been provided.
+  
+    An example use case would be to redirect the user to a log in route if a
+    request is unauthorized:
+  
+    ```app/routes/application.js
+    import Ember from 'ember';
+    import DS from 'ember-data';
+  
+    const { UnauthorizedError } = DS;
+  
+    export default Ember.Route.extend({
+      actions: {
+        error(error, transition) {
+          if (error instanceof UnauthorizedError) {
+            // go to the sign in route
+            this.transitionTo('login');
+            return;
+          }
+  
+          // ...other error handling logic
+        }
+      }
+    });
+    ```
+  
     @class UnauthorizedError
     @namespace DS
   */
@@ -79661,6 +80981,12 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
   exports.UnauthorizedError = UnauthorizedError;
 
   /**
+    A `DS.ForbiddenError` equates to a HTTP `403 Forbidden` response status.
+    It is used by an adapter to signal that a request to the external API was
+    valid but the server is refusing to respond to it. If authorization was
+    provided and is valid, then the authenticated user does not have the
+    necessary permissions for the request.
+  
     @class ForbiddenError
     @namespace DS
   */
@@ -79669,6 +80995,38 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
   exports.ForbiddenError = ForbiddenError;
 
   /**
+    A `DS.NotFoundError` equates to a HTTP `404 Not Found` response status.
+    It is used by an adapter to signal that a request to the external API
+    was rejected because the resource could not be found on the API.
+  
+    An example use case would be to detect if the user has entered a route
+    for a specific model that does not exist. For example:
+  
+    ```app/routes/post.js
+    import Ember from 'ember';
+    import DS from 'ember-data';
+  
+    const { NotFoundError } = DS;
+  
+    export default Ember.Route.extend({
+      model(params) {
+        return this.get('store').findRecord('post', params.post_id);
+      },
+  
+      actions: {
+        error(error, transition) {
+          if (error instanceof NotFoundError) {
+            // redirect to a list of all posts instead
+            this.transitionTo('posts');
+          } else {
+            // otherwise let the error bubble
+            return true;
+          }
+        }
+      }
+    });
+    ```
+  
     @class NotFoundError
     @namespace DS
   */
@@ -79677,6 +81035,12 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
   exports.NotFoundError = NotFoundError;
 
   /**
+    A `DS.ConflictError` equates to a HTTP `409 Conflict` response status.
+    It is used by an adapter to indicate that the request could not be processed
+    because of a conflict in the request. An example scenario would be when
+    creating a record with a client generated id but that id is already known
+    to the external API.
+  
     @class ConflictError
     @namespace DS
   */
@@ -79685,6 +81049,10 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
   exports.ConflictError = ConflictError;
 
   /**
+    A `DS.ServerError` equates to a HTTP `500 Internal Server Error` response
+    status. It is used by the adapter to indicate that a request has failed
+    because of an error in the external API.
+  
     @class ServerError
     @namespace DS
   */
@@ -79693,8 +81061,50 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
   exports.ServerError = ServerError;
 
   /**
+    Convert an hash of errors into an array with errors in JSON-API format.
+  
+    ```javascript
+    import DS from 'ember-data';
+  
+    const { errorsHashToArray } = DS;
+  
+    let errors = {
+      base: "Invalid attributes on saving this record",
+      name: "Must be present",
+      age: ["Must be present", "Must be a number"]
+    };
+  
+    let errorsArray = errorsHashToArray(errors);
+    // [
+    //   {
+    //     title: "Invalid Document",
+    //     detail: "Invalid attributes on saving this record",
+    //     source: { pointer: "/data" }
+    //   },
+    //   {
+    //     title: "Invalid Attribute",
+    //     detail: "Must be present",
+    //     source: { pointer: "/data/attributes/name" }
+    //   },
+    //   {
+    //     title: "Invalid Attribute",
+    //     detail: "Must be present",
+    //     source: { pointer: "/data/attributes/age" }
+    //   },
+    //   {
+    //     title: "Invalid Attribute",
+    //     detail: "Must be a number",
+    //     source: { pointer: "/data/attributes/age" }
+    //   }
+    // ]
+    ```
+  
     @method errorsHashToArray
-    @private
+    @public
+    @namespace
+    @for DS
+    @param {Object} errors hash with errors as properties
+    @return {Array} array of errors in JSON-API format
   */
 
   function errorsHashToArray(errors) {
@@ -79725,8 +81135,44 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
   }
 
   /**
+    Convert an array of errors in JSON-API format into an object.
+  
+    ```javascript
+    import DS from 'ember-data';
+  
+    const { errorsArrayToHash } = DS;
+  
+    let errorsArray = [
+      {
+        title: "Invalid Attribute",
+        detail: "Must be present",
+        source: { pointer: "/data/attributes/name" }
+      },
+      {
+        title: "Invalid Attribute",
+        detail: "Must be present",
+        source: { pointer: "/data/attributes/age" }
+      },
+      {
+        title: "Invalid Attribute",
+        detail: "Must be a number",
+        source: { pointer: "/data/attributes/age" }
+      }
+    ];
+  
+    let errors = errorsArrayToHash(errorsArray);
+    // {
+    //   "name": ["Must be present"],
+    //   "age":  ["Must be present", "must be a number"]
+    // }
+    ```
+  
     @method errorsArrayToHash
-    @private
+    @public
+    @namespace
+    @for DS
+    @param {Array} errors array of errors in JSON-API format
+    @return {Object}
   */
 
   function errorsArrayToHash(errors) {
@@ -79755,6 +81201,7 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
   }
 });
 define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters/rest', 'ember-data/-private/features', 'ember-data/-private/debug'], function (exports, _ember, _emberDataAdaptersRest, _emberDataPrivateFeatures, _emberDataPrivateDebug) {
+  /* global heimdall */
   /**
     @module ember-data
   */
@@ -79762,6 +81209,135 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
   'use strict';
 
   /**
+    The `JSONAPIAdapter` is the default adapter used by Ember Data. It
+    is responsible for transforming the store's requests into HTTP
+    requests that follow the [JSON API](http://jsonapi.org/format/)
+    format.
+  
+    ## JSON API Conventions
+  
+    The JSONAPIAdapter uses JSON API conventions for building the url
+    for a record and selecting the HTTP verb to use with a request. The
+    actions you can take on a record map onto the following URLs in the
+    JSON API adapter:
+  
+  <table>
+    <tr>
+      <th>
+        Action
+      </th>
+      <th>
+        HTTP Verb
+      </th>
+      <th>
+        URL
+      </th>
+    </tr>
+    <tr>
+      <th>
+        `store.findRecord('post', 123)`
+      </th>
+      <td>
+        GET
+      </td>
+      <td>
+        /posts/123
+      </td>
+    </tr>
+    <tr>
+      <th>
+        `store.findAll('post')`
+      </th>
+      <td>
+        GET
+      </td>
+      <td>
+        /posts
+      </td>
+    </tr>
+    <tr>
+      <th>
+        Update `postRecord.save()`
+      </th>
+      <td>
+        PATCH
+      </td>
+      <td>
+        /posts/123
+      </td>
+    </tr>
+    <tr>
+      <th>
+        Create `store.createRecord('post').save()`
+      </th>
+      <td>
+        POST
+      </td>
+      <td>
+        /posts
+      </td>
+    </tr>
+    <tr>
+      <th>
+        Delete `postRecord.destroyRecord()`
+      </th>
+      <td>
+        DELETE
+      </td>
+      <td>
+        /posts/123
+      </td>
+    </tr>
+  </table>
+  
+    ## Success and failure
+  
+    The JSONAPIAdapter will consider a success any response with a
+    status code of the 2xx family ("Success"), as well as 304 ("Not
+    Modified"). Any other status code will be considered a failure.
+  
+    On success, the request promise will be resolved with the full
+    response payload.
+  
+    Failed responses with status code 422 ("Unprocessable Entity") will
+    be considered "invalid". The response will be discarded, except for
+    the `errors` key. The request promise will be rejected with a
+    `DS.InvalidError`. This error object will encapsulate the saved
+    `errors` value.
+  
+    Any other status codes will be treated as an adapter error. The
+    request promise will be rejected, similarly to the invalid case,
+    but with an instance of `DS.AdapterError` instead.
+  
+    ### Endpoint path customization
+  
+    Endpoint paths can be prefixed with a `namespace` by setting the
+    namespace property on the adapter:
+  
+    ```app/adapters/application.js
+    import DS from 'ember-data';
+  
+    export default DS.JSONAPIAdapter.extend({
+      namespace: 'api/1'
+    });
+    ```
+    Requests for the `person` model would now target `/api/1/people/1`.
+  
+    ### Host customization
+  
+    An adapter can target other hosts by setting the `host` property.
+  
+    ```app/adapters/application.js
+    import DS from 'ember-data';
+  
+    export default DS.JSONAPIAdapter.extend({
+      host: 'https://api.example.com'
+    });
+    ```
+  
+    Requests for the `person` model would now target
+    `https://api.example.com/people/1`.
+  
     @since 1.13.0
     @class JSONAPIAdapter
     @constructor
@@ -79805,9 +81381,17 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
        For example, if you have an initial payload of:
        ```javascript
       {
-        post: {
+        data: {
           id: 1,
-          comments: [1, 2]
+          type: 'post',
+          relationship: {
+            comments: {
+              data: [
+                { id: 1, type: 'comment' },
+                { id: 2, type: 'comment' }
+              ]
+            }
+          }
         }
       }
       ```
@@ -79835,14 +81419,6 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
     */
     coalesceFindRequests: false,
 
-    /**
-      @method findMany
-      @param {DS.Store} store
-      @param {DS.Model} type
-      @param {Array} ids
-      @param {Array} snapshots
-      @return {Promise} promise
-    */
     findMany: function findMany(store, type, ids, snapshots) {
       if (false && !this._hasCustomizedAjax()) {
         return this._super.apply(this, arguments);
@@ -79852,24 +81428,12 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
       }
     },
 
-    /**
-      @method pathForType
-      @param {String} modelName
-      @return {String} path
-    **/
     pathForType: function pathForType(modelName) {
       var dasherized = _ember['default'].String.dasherize(modelName);
       return _ember['default'].String.pluralize(dasherized);
     },
 
     // TODO: Remove this once we have a better way to override HTTP verbs.
-    /**
-      @method updateRecord
-      @param {DS.Store} store
-      @param {DS.Model} type
-      @param {DS.Snapshot} snapshot
-      @return {Promise} promise
-    */
     updateRecord: function updateRecord(store, type, snapshot) {
       if (false && !this._hasCustomizedAjax()) {
         return this._super.apply(this, arguments);
@@ -79969,6 +81533,7 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
   exports['default'] = JSONAPIAdapter;
 });
 define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'ember-data/adapters/errors', 'ember-data/-private/adapters/build-url-mixin', 'ember-data/-private/features', 'ember-data/-private/debug', 'ember-data/-private/utils/parse-response-headers'], function (exports, _ember, _emberDataAdapter, _emberDataAdaptersErrors, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateFeatures, _emberDataPrivateDebug, _emberDataPrivateUtilsParseResponseHeaders) {
+  /* global heimdall */
   /**
     @module ember-data
   */
@@ -80019,7 +81584,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
   
     ```js
     {
-      "post": {
+      "posts": {
         "id": 1,
         "title": "I'm Running to Reform the W3C's Tag",
         "author": "Yehuda Katz"
@@ -80074,11 +81639,56 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
   
     ```js
     {
-      "person": {
+      "people": {
         "id": 5,
         "firstName": "Barack",
         "lastName": "Obama",
         "occupation": "President"
+      }
+    }
+    ```
+  
+    #### Relationships
+  
+    Relationships are usually represented by ids to the record in the
+    relationship. The related records can then be sideloaded in the
+    response under a key for the type.
+  
+    ```js
+    {
+      "posts": {
+        "id": 5,
+        "title": "I'm Running to Reform the W3C's Tag",
+        "author": "Yehuda Katz",
+        "comments": [1, 2]
+      },
+      "comments": [{
+        "id": 1,
+        "author": "User 1",
+        "message": "First!",
+      }, {
+        "id": 2,
+        "author": "User 2",
+        "message": "Good Luck!",
+      }]
+    }
+    ```
+  
+    If the records in the relationship are not known when the response
+    is serialized its also possible to represent the relationship as a
+    url using the `links` key in the response. Ember Data will fetch
+    this url to resolve the relationship when it is accessed for the
+    first time.
+  
+    ```js
+    {
+      "posts": {
+        "id": 5,
+        "title": "I'm Running to Reform the W3C's Tag",
+        "author": "Yehuda Katz",
+        "links": {
+          "comments": "/posts/5/comments"
+        }
       }
     }
     ```
@@ -80517,6 +82127,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
        @method findHasMany
       @param {DS.Store} store
       @param {DS.Snapshot} snapshot
+      @param {Object} relationship meta object describing the relationship
       @param {String} url
       @return {Promise} promise
     */
@@ -81636,10 +83247,19 @@ define('ember-data/serializer', ['exports', 'ember'], function (exports, _ember)
   exports['default'] = _ember['default'].Object.extend({
 
     /**
-      The `store` property is the application's `store` that contains all records.
-      It's injected as a service.
-      It can be used to push records from a non flat data structure server
-      response.
+      The `store` property is the application's `store` that contains
+      all records. It can be used to look up serializers for other model
+      types that may be nested inside the payload response.
+       Example:
+       ```js
+      Serializer.extend({
+        extractRelationship: function(relationshipModelName, relationshipHash) {
+          var modelClass = this.store.modelFor(relationshipModelName);
+          var relationshipSerializer = this.store.serializerFor(relationshipModelName);
+          return relationshipSerializer.normalize(modelClass, relationshipHash);
+        }
+      });
+      ```
        @property store
       @type {DS.Store}
       @public
@@ -81649,6 +83269,23 @@ define('ember-data/serializer', ['exports', 'ember'], function (exports, _ember)
       The `normalizeResponse` method is used to normalize a payload from the
       server to a JSON-API Document.
        http://jsonapi.org/format/#document-structure
+       Example:
+       ```js
+      Serializer.extend({
+        normalizeResponse(store, primaryModelClass, payload, id, requestType) {
+          if (requestType === 'findRecord') {
+            return this.normalize(primaryModelClass, payload);
+          } else {
+            return payload.reduce(function(documentHash, item) {
+              let { data, included } = this.normalize(primaryModelClass, item);
+              documentHash.included.push(...included);
+              documentHash.data.push(data);
+              return documentHash;
+            }, { data: [], included: [] })
+          }
+        }
+      });
+      ```
        @since 1.13.0
       @method normalizeResponse
       @param {DS.Store} store
@@ -81666,8 +83303,29 @@ define('ember-data/serializer', ['exports', 'ember'], function (exports, _ember)
        `serialize` takes an optional `options` hash with a single option:
        - `includeId`: If this is `true`, `serialize` should include the ID
         in the serialized object it builds.
+       Example:
+       ```js
+      Serializer.extend({
+        serialize(snapshot, options) {
+          var json = {
+            id: snapshot.id
+          };
+           snapshot.eachAttribute((key, attribute) => {
+            json[key] = snapshot.attr(key);
+          });
+           snapshot.eachRelationship((key, relationship) => {
+            if (relationship.kind === 'belongsTo') {
+              json[key] = snapshot.belongsTo(key, { id: true });
+            } else if (relationship.kind === 'hasMany') {
+              json[key] = snapshot.hasMany(key, { ids: true });
+            }
+          });
+           return json;
+        },
+      });
+      ```
        @method serialize
-      @param {DS.Model} record
+      @param {DS.Snapshot} snapshot
       @param {Object} [options]
       @return {Object}
     */
@@ -81678,6 +83336,19 @@ define('ember-data/serializer', ['exports', 'ember'], function (exports, _ember)
       external data source into the normalized form `store.push()` expects. You
       should override this method, munge the hash and return the normalized
       payload.
+       Example:
+       ```js
+      Serializer.extend({
+        normalize(modelClass, resourceHash) {
+          var data = {
+            id:            resourceHash.id,
+            type:          modelClass.modelName,
+            attributes:    resourceHash
+          };
+          return { data: data };
+        }
+      })
+      ```
        @method normalize
       @param {DS.Model} typeClass
       @param {Object} hash
@@ -82057,7 +83728,7 @@ define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'em
       }
     },
 
-    /**
+    /*
       Serializes a hasMany relationship as an array of objects containing only `id` and `type`
       keys.
       This has its use case on polymorphic hasMany relationships where the server is not storing
@@ -82373,6 +84044,39 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
   
     to the format that the Ember Data store expects.
   
+    ### Customizing meta
+  
+    Since a JSON API Document can have meta defined in multiple locations you can
+    use the specific serializer hooks if you need to customize the meta.
+  
+    One scenario would be to camelCase the meta keys of your payload. The example
+    below shows how this could be done using `normalizeArrayResponse` and
+    `extractRelationship`.
+  
+    ```app/serializers/application.js
+    export default JSONAPISerializer.extend({
+  
+      normalizeArrayResponse(store, primaryModelClass, payload, id, requestType) {
+        let normalizedDocument = this._super(...arguments);
+  
+        // Customize document meta
+        normalizedDocument.meta = camelCaseKeys(normalizedDocument.meta);
+  
+        return normalizedDocument;
+      },
+  
+      extractRelationship(relationshipHash) {
+        let normalizedRelationship = this._super(...arguments);
+  
+        // Customize relationship meta
+        normalizedRelationship.meta = camelCaseKeys(normalizedRelationship.meta);
+  
+        return normalizedRelationship;
+      }
+  
+    });
+    ```
+  
     @since 1.13.0
     @class JSONAPISerializer
     @namespace DS
@@ -82535,12 +84239,6 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       return normalized;
     },
 
-    /**
-      @method extractAttributes
-      @param {DS.Model} modelClass
-      @param {Object} resourceHash
-      @return {Object}
-    */
     extractAttributes: function extractAttributes(modelClass, resourceHash) {
       var _this = this;
 
@@ -82552,17 +84250,17 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
           if (resourceHash.attributes[attributeKey] !== undefined) {
             attributes[key] = resourceHash.attributes[attributeKey];
           }
+          (0, _emberDataPrivateDebug.runInDebug)(function () {
+            if (resourceHash.attributes[attributeKey] === undefined && resourceHash.attributes[key] !== undefined) {
+              (0, _emberDataPrivateDebug.assert)('Your payload for \'' + modelClass.modelName + '\' contains \'' + key + '\', but your serializer is setup to look for \'' + attributeKey + '\'. This is most likely because Ember Data\'s JSON API serializer dasherizes attribute keys by default. You should subclass JSONAPISerializer and implement \'keyForAttribute(key) { return key; }\' to prevent Ember Data from customizing your attribute keys.', false);
+            }
+          });
         });
       }
 
       return attributes;
     },
 
-    /**
-      @method extractRelationship
-      @param {Object} relationshipHash
-      @return {Object}
-    */
     extractRelationship: function extractRelationship(relationshipHash) {
 
       if (_ember['default'].typeOf(relationshipHash.data) === 'object') {
@@ -82583,12 +84281,6 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       return relationshipHash;
     },
 
-    /**
-      @method extractRelationships
-      @param {Object} modelClass
-      @param {Object} resourceHash
-      @return {Object}
-    */
     extractRelationships: function extractRelationships(modelClass, resourceHash) {
       var _this2 = this;
 
@@ -82602,6 +84294,11 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
             var relationshipHash = resourceHash.relationships[relationshipKey];
             relationships[key] = _this2.extractRelationship(relationshipHash);
           }
+          (0, _emberDataPrivateDebug.runInDebug)(function () {
+            if (resourceHash.relationships[relationshipKey] === undefined && resourceHash.relationships[key] !== undefined) {
+              (0, _emberDataPrivateDebug.assert)('Your payload for \'' + modelClass.modelName + '\' contains \'' + key + '\', but your serializer is setup to look for \'' + relationshipKey + '\'. This is most likely because Ember Data\'s JSON API serializer dasherizes relationship keys by default. You should subclass JSONAPISerializer and implement \'keyForRelationship(key) { return key; }\' to prevent Ember Data from customizing your relationship keys.', false);
+            }
+          });
         });
       }
 
@@ -82636,7 +84333,11 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
     },
 
     /**
-      @method modelNameFromPayloadKey
+      Dasherizes and singularizes the model name in the payload to match
+      the format Ember Data uses internally for the model name.
+       For example the key `posts` would be converted to `post` and the
+      key `studentAssesments` would be converted to `student-assesment`.
+       @method modelNameFromPayloadKey
       @param {String} key
       @return {String} the model's modelName
     */
@@ -82646,7 +84347,10 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
     },
 
     /**
-      @method payloadKeyFromModelName
+      Converts the model name to a pluralized version of the model name.
+       For example `post` would be converted to `posts` and
+      `student-assesment` would be converted to `student-assesments`.
+       @method payloadKeyFromModelName
       @param {String} modelName
       @return {String}
     */
@@ -82655,12 +84359,6 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       return (0, _emberInflector.pluralize)(modelName);
     },
 
-    /**
-      @method normalize
-      @param {DS.Model} modelClass
-      @param {Object} resourceHash the resource hash from the adapter
-      @return {Object} the normalized resource hash
-    */
     normalize: function normalize(modelClass, resourceHash) {
       if (resourceHash.attributes) {
         this.normalizeUsingDeclaredMapping(modelClass, resourceHash.attributes);
@@ -82733,12 +84431,6 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       return dasherize(key);
     },
 
-    /**
-      @method serialize
-      @param {DS.Snapshot} snapshot
-      @param {Object} options
-      @return {Object} json
-    */
     serialize: function serialize(snapshot, options) {
       var data = this._super.apply(this, arguments);
 
@@ -82763,13 +84455,6 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       return { data: data };
     },
 
-    /**
-     @method serializeAttribute
-     @param {DS.Snapshot} snapshot
-     @param {Object} json
-     @param {String} key
-     @param {Object} attribute
-    */
     serializeAttribute: function serializeAttribute(snapshot, json, key, attribute) {
       var type = attribute.type;
 
@@ -82792,12 +84477,6 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       }
     },
 
-    /**
-     @method serializeBelongsTo
-     @param {DS.Snapshot} snapshot
-     @param {Object} json
-     @param {Object} relationship
-    */
     serializeBelongsTo: function serializeBelongsTo(snapshot, json, relationship) {
       var key = relationship.key;
 
@@ -82843,12 +84522,6 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       }
     },
 
-    /**
-     @method serializeHasMany
-     @param {DS.Snapshot} snapshot
-     @param {Object} json
-     @param {Object} relationship
-    */
     serializeHasMany: function serializeHasMany(snapshot, json, relationship) {
       var key = relationship.key;
       var shouldSerializeHasMany = '_shouldSerializeHasMany';
@@ -82999,6 +84672,10 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
   (0, _emberDataPrivateDebug.runInDebug)(function () {
     JSONAPISerializer.reopen({
       willMergeMixin: function willMergeMixin(props) {
+        var constructor = this.constructor;
+        (0, _emberDataPrivateDebug.warn)('You\'ve defined \'extractMeta\' in ' + constructor.toString() + ' which is not used for serializers extending JSONAPISerializer. Read more at http://emberjs.com/api/data/classes/DS.JSONAPISerializer.html#toc_customizing-meta on how to customize meta when using JSON API.', _ember['default'].isNone(props.extractMeta) || props.extractMeta === _emberDataSerializersJson['default'].prototype.extractMeta, {
+          id: 'ds.serializer.json-api.extractMeta'
+        });
         (0, _emberDataPrivateDebug.warn)('The JSONAPISerializer does not work with the EmbeddedRecordsMixin because the JSON API spec does not describe how to format embedded resources.', !props.isEmbeddedRecordsMixin, {
           id: 'ds.serializer.embedded-records-mixin-not-supported'
         });
@@ -83007,7 +84684,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
         return 'Encountered a resource object with an undefined type (resolved resource using ' + this.constructor.toString() + ')';
       },
       warnMessageNoModelForType: function warnMessageNoModelForType(modelName, originalType, usedLookup) {
-        return 'Encountered a resource object with type "' + originalType + '", but no model was found for model name "' + modelName + '" (resolved model name using \'' + this.constructor.toString() + '.' + usedLookup + '("' + originalType + '")).';
+        return 'Encountered a resource object with type "' + originalType + '", but no model was found for model name "' + modelName + '" (resolved model name using \'' + this.constructor.toString() + '.' + usedLookup + '("' + originalType + '")\').';
       }
     });
   });
@@ -83714,42 +85391,17 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     },
 
     /**
-      @method normalizeAttributes
-      @private
-    */
-    normalizeAttributes: function normalizeAttributes(typeClass, hash) {
-      var _this4 = this;
-
-      var payloadKey;
-
-      if (this.keyForAttribute) {
-        typeClass.eachAttribute(function (key) {
-          payloadKey = _this4.keyForAttribute(key, 'deserialize');
-          if (key === payloadKey) {
-            return;
-          }
-          if (hash[payloadKey] === undefined) {
-            return;
-          }
-
-          hash[key] = hash[payloadKey];
-          delete hash[payloadKey];
-        });
-      }
-    },
-
-    /**
       @method normalizeRelationships
       @private
     */
     normalizeRelationships: function normalizeRelationships(typeClass, hash) {
-      var _this5 = this;
+      var _this4 = this;
 
       var payloadKey;
 
       if (this.keyForRelationship) {
         typeClass.eachRelationship(function (key, relationship) {
-          payloadKey = _this5.keyForRelationship(key, relationship.kind, 'deserialize');
+          payloadKey = _this4.keyForRelationship(key, relationship.kind, 'deserialize');
           if (key === payloadKey) {
             return;
           }
@@ -84006,27 +85658,30 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
       @return {Object} json
     */
     serialize: function serialize(snapshot, options) {
-      var _this6 = this;
+      var _this5 = this;
 
       var json = {};
 
       if (options && options.includeId) {
-        var id = snapshot.id;
-
-        if (id) {
-          json[get(this, 'primaryKey')] = id;
+        if (false) {
+          this.serializeId(snapshot, json, get(this, 'primaryKey'));
+        } else {
+          var id = snapshot.id;
+          if (id) {
+            json[get(this, 'primaryKey')] = id;
+          }
         }
       }
 
       snapshot.eachAttribute(function (key, attribute) {
-        _this6.serializeAttribute(snapshot, json, key, attribute);
+        _this5.serializeAttribute(snapshot, json, key, attribute);
       });
 
       snapshot.eachRelationship(function (key, relationship) {
         if (relationship.kind === 'belongsTo') {
-          _this6.serializeBelongsTo(snapshot, json, relationship);
+          _this5.serializeBelongsTo(snapshot, json, relationship);
         } else if (relationship.kind === 'hasMany') {
-          _this6.serializeHasMany(snapshot, json, relationship);
+          _this5.serializeHasMany(snapshot, json, relationship);
         }
       });
 
@@ -84220,7 +85875,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
       @param {Object} json
       @param {Object} relationship
     */
-    serializePolymorphicType: _ember['default'].K,
+    serializePolymorphicType: function serializePolymorphicType() {},
 
     /**
       `extractMeta` is used to deserialize any meta information in the
@@ -84326,7 +85981,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
       @return {Object} json The deserialized errors
     */
     extractErrors: function extractErrors(store, typeClass, payload, id) {
-      var _this7 = this;
+      var _this6 = this;
 
       if (payload && typeof payload === 'object' && payload.errors) {
         payload = (0, _emberDataAdaptersErrors.errorsArrayToHash)(payload.errors);
@@ -84334,7 +85989,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
         this.normalizeUsingDeclaredMapping(typeClass, payload);
 
         typeClass.eachAttribute(function (name) {
-          var key = _this7.keyForAttribute(name, 'deserialize');
+          var key = _this6.keyForAttribute(name, 'deserialize');
           if (key !== name && payload[key] !== undefined) {
             payload[name] = payload[key];
             delete payload[key];
@@ -84342,7 +85997,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
         });
 
         typeClass.eachRelationship(function (name) {
-          var key = _this7.keyForRelationship(name, 'deserialize');
+          var key = _this6.keyForRelationship(name, 'deserialize');
           if (key !== name && payload[key] !== undefined) {
             payload[name] = payload[key];
             delete payload[key];
@@ -84445,6 +86100,39 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
         return this.modelNameFromPayloadKey !== JSONSerializer.prototype.modelNameFromPayloadKey;
       }
 
+    });
+  }
+
+  if (false) {
+
+    JSONSerializer.reopen({
+
+      /**
+       serializeId can be used to customize how id is serialized
+       For example, your server may expect integer datatype of id
+        By default the snapshot's id (String) is set on the json hash via json[primaryKey] = snapshot.id.
+        ```app/serializers/application.js
+       import DS from 'ember-data';
+        export default DS.JSONSerializer.extend({
+       serializeId(snapshot, json, primaryKey) {
+           var id = snapshot.id;
+           json[primaryKey] = parseInt(id, 10);
+         }
+       });
+       ```
+        @method serializeId
+       @public
+       @param {DS.Snapshot} snapshot
+       @param {Object} json
+       @param {String} primaryKey
+       */
+      serializeId: function serializeId(snapshot, json, primaryKey) {
+        var id = snapshot.id;
+
+        if (id) {
+          json[primaryKey] = id;
+        }
+      }
     });
   }
 
@@ -85481,7 +87169,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
 define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
-  exports["default"] = "2.9.0";
+  exports["default"] = "2.11.1";
 });
 define("ember-inflector/index", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
   /* global define, module */
@@ -85500,10 +87188,15 @@ define("ember-inflector/index", ["exports", "ember", "ember-inflector/lib/system
   if (typeof define !== 'undefined' && define.amd) {
     define('ember-inflector', ['exports'], function (__exports__) {
       __exports__['default'] = _emberInflectorLibSystem.Inflector;
-      return _emberInflectorLibSystem.Inflector;
+      __exports__.pluralize = _emberInflectorLibSystem.pluralize;
+      __exports__.singularize = _emberInflectorLibSystem.singularize;
+
+      return __exports__;
     });
   } else if (typeof module !== 'undefined' && module['exports']) {
     module['exports'] = _emberInflectorLibSystem.Inflector;
+    _emberInflectorLibSystem.Inflector.singularize = _emberInflectorLibSystem.singularize;
+    _emberInflectorLibSystem.Inflector.pluralize = _emberInflectorLibSystem.pluralize;
   }
 });
 define('ember-inflector/lib/ext/string', ['exports', 'ember', 'ember-inflector/lib/system/string'], function (exports, _ember, _emberInflectorLibSystemString) {
@@ -86118,6 +87811,7 @@ define('ember-resolver/resolver', ['exports', 'ember', 'ember-resolver/utils/mod
   var _Ember$String = _ember['default'].String;
   var underscore = _Ember$String.underscore;
   var classify = _Ember$String.classify;
+  var dasherize = _Ember$String.dasherize;
   var get = _ember['default'].get;
   var DefaultResolver = _ember['default'].DefaultResolver;
 
@@ -86226,7 +87920,6 @@ define('ember-resolver/resolver', ['exports', 'ember', 'ember-resolver/utils/mod
       if (!this.pluralizedTypes.config) {
         this.pluralizedTypes.config = 'config';
       }
-
       this._deprecatedPodModulePrefix = false;
     },
 
@@ -86235,13 +87928,20 @@ define('ember-resolver/resolver', ['exports', 'ember', 'ember-resolver/utils/mod
     },
 
     _normalize: function _normalize(fullName) {
-      // replace `.` with `/` in order to make nested controllers work in the following cases
-      // 1. `needs: ['posts/post']`
-      // 2. `{{render "posts/post"}}`
-      // 3. `this.render('posts/post')` from Route
+      // A) Convert underscores to dashes
+      // B) Convert camelCase to dash-case, except for helpers where we want to avoid shadowing camelCase expressions
+      // C) replace `.` with `/` in order to make nested controllers work in the following cases
+      //      1. `needs: ['posts/post']`
+      //      2. `{{render "posts/post"}}`
+      //      3. `this.render('posts/post')` from Route
+
       var split = fullName.split(':');
       if (split.length > 1) {
-        return split[0] + ':' + _ember['default'].String.dasherize(split[1].replace(/\./g, '/'));
+        if (split[0] === 'helper') {
+          return split[0] + ':' + split[1].replace(/_/g, '-');
+        } else {
+          return split[0] + ':' + dasherize(split[1].replace(/\./g, '/'));
+        }
       } else {
         return fullName;
       }
@@ -86344,7 +88044,7 @@ define('ember-resolver/resolver', ['exports', 'ember', 'ember-resolver/utils/mod
         // allow treat all dashed and all underscored as the same thing
         // supports components with dashes and other stuff with underscores.
         if (tmpModuleName) {
-          tmpModuleName = this.chooseModuleName(tmpModuleName);
+          tmpModuleName = this.chooseModuleName(tmpModuleName, parsedName);
         }
 
         if (tmpModuleName && this._moduleRegistry.has(tmpModuleName)) {
@@ -86361,7 +88061,9 @@ define('ember-resolver/resolver', ['exports', 'ember', 'ember-resolver/utils/mod
       }
     },
 
-    chooseModuleName: function chooseModuleName(moduleName) {
+    chooseModuleName: function chooseModuleName(moduleName, parsedName) {
+      var _this = this;
+
       var underscoredModuleName = underscore(moduleName);
 
       if (moduleName !== underscoredModuleName && this._moduleRegistry.has(moduleName) && this._moduleRegistry.has(underscoredModuleName)) {
@@ -86372,19 +88074,27 @@ define('ember-resolver/resolver', ['exports', 'ember', 'ember-resolver/utils/mod
         return moduleName;
       } else if (this._moduleRegistry.has(underscoredModuleName)) {
         return underscoredModuleName;
-      } else {
-        // workaround for dasherized partials:
-        // something/something/-something => something/something/_something
-        var partializedModuleName = moduleName.replace(/\/-([^\/]*)$/, '/_$1');
-
-        if (this._moduleRegistry.has(partializedModuleName)) {
-          _ember['default'].deprecate('Modules should not contain underscores. ' + 'Attempted to lookup "' + moduleName + '" which ' + 'was not found. Please rename "' + partializedModuleName + '" ' + 'to "' + moduleName + '" instead.', false, { id: 'ember-resolver.underscored-modules', until: '3.0.0' });
-
-          return partializedModuleName;
-        } else {
-          return moduleName;
-        }
       }
+      // workaround for dasherized partials:
+      // something/something/-something => something/something/_something
+      var partializedModuleName = moduleName.replace(/\/-([^\/]*)$/, '/_$1');
+
+      if (this._moduleRegistry.has(partializedModuleName)) {
+        _ember['default'].deprecate('Modules should not contain underscores. ' + 'Attempted to lookup "' + moduleName + '" which ' + 'was not found. Please rename "' + partializedModuleName + '" ' + 'to "' + moduleName + '" instead.', false, { id: 'ember-resolver.underscored-modules', until: '3.0.0' });
+
+        return partializedModuleName;
+      }
+      _ember['default'].runInDebug(function () {
+        var isCamelCaseHelper = parsedName.type === 'helper' && !!moduleName.match(/[a-z]+[A-Z]+/);
+        if (isCamelCaseHelper) {
+          _this._camelCaseHelperWarnedNames = _this._camelCaseHelperWarnedNames || [];
+          var alreadyWarned = _this._camelCaseHelperWarnedNames.indexOf(parsedName.fullName) > -1;
+          if (!alreadyWarned && _this._moduleRegistry.has(dasherize(moduleName))) {
+            _this._camelCaseHelperWarnedNames.push(parsedName.fullName);
+            _ember['default'].warn('Attempted to lookup "' + parsedName.fullName + '" which ' + 'was not found. In previous versions of ember-resolver, a bug would have ' + 'caused the module at "' + dasherize(moduleName) + '" to be ' + 'returned for this camel case helper name. This has been fixed. ' + 'Use the dasherized name to resolve the module that would have been ' + 'returned in previous versions.', false, { id: 'ember-resolver.camelcase-helper-names', until: '3.0.0' });
+          }
+        }
+      });
     },
 
     // used by Ember.DefaultResolver.prototype._logLookup
