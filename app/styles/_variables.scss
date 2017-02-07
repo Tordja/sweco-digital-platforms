@@ -10,7 +10,6 @@ $enable-hover-media-query:  true;
 $enable-grid-classes:       true;
 $enable-print-styles:       true;
 
-
 // Spacing
 $spacer:   1rem;
 $spacer-x: $spacer;
@@ -229,7 +228,7 @@ $hr-border-width:         $border-width;
 
 // Blockquote
 $blockquote-small-color:  $text-muted;
-$blockquote-font-size:    $font-size-lg;
+$blockquote-font-size:    $font-size-base;
 $blockquote-border-color: $light-gray;
 $blockquote-border-width: 0;
 
@@ -258,7 +257,7 @@ $caret-width:             .3em;
 $caret-width-lg:          $caret-width;
 
 // Transition for btn, nav and such
-$transition: all .4s ease;
+$transition:              all .4s ease;
 
 // Tables
 $table-cell-padding:      .31rem $spacer-x .32rem;
@@ -733,8 +732,8 @@ $list-group-item-padding-y:             .6rem;
 $list-group-item-heading-margin-bottom: ($spacer-y / 2);
 
 // Cards
-$card-spacer-x:                         1.25rem;
-$card-spacer-y:                         .75rem;
+$card-spacer-x:                         $spacer-x;
+$card-spacer-y:                         $spacer-y;
 $card-border-width:                     1px;
 $card-border-radius:                    none;
 $card-border-color:                     transparent;
@@ -742,9 +741,9 @@ $card-border-radius-inner:              none;
 $card-cap-bg:                           $disabled-bg;
 $card-bg:                               $white; // $gray-superlight
 $card-link-hover-color:                 $white;
-$card-img-overlay-padding:              1.25rem;
-$card-deck-margin:                      .625rem;
-$card-columns-sm-up-column-gap:         1.25rem;
+$card-img-overlay-padding:              $spacer-x;
+$card-deck-margin:                      $spacer-x;
+$card-columns-sm-up-column-gap:         $spacer-x;
 
 // Image thumbnails
 $thumbnail-padding:                     .25rem;

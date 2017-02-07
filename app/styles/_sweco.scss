@@ -38,19 +38,22 @@ body.navbarNorth
 // If .navbar-south add .navbarSouth class to body
 body.navbarSouth
 {
-  padding-bottom: $navbar-south-height;
+  #content
+  {
+    padding-bottom: $navbar-south-height !important;
+  }
 }
 
 // Windows fix for scroll on fixed-navbars on scroll and modal open
-.ie-9,
 .ie-10,
 .ie-11,
-.win.chrome
+.win.chrome,
+.win.firefox
 {
   @include media-breakpoint-up(sm)
   {
-    .navbar-fixed-top,
-    .navbar-fixed-bottom
+    .navbar.fixed-top,
+    .navbar.fixed-bottom
     {
       padding-left: calc(100vw - 100%) !important;
       .container > .row,
@@ -153,11 +156,28 @@ h1, h2, h3, h4, h5, h6,
 .h1, .h2, .h3, .h4, .h5, .h6,
 legend,
 label,
-strong, b, dt, th,
 .btn, .nav, .pagination, .badge , .breadcrumb, .list-group
 {
   font-family: $headings-font-family;
   font-weight: normal !important;
+}
+
+// Typography heavy
+strong, b, dt, th
+{
+  font-family: $font-family-heavy;
+  font-weight: normal !important;
+}
+
+// Typography font-smoothing
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6,
+legend,
+label,
+blockquote
+strong, b, dt, th,
+.btn, .nav, .pagination, .badge , .breadcrumb, .list-group, .lead
+{
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -275,24 +295,27 @@ h6,
   padding: ($spacer-y * 2) 0;
 }
 
-.lead,
-blockquote
+.lead
 {
   font-family: $font-family-base;
-  font-size: $font-size-base !important;
-  line-height: $line-height-base !important;
-  border: 0 !important;
-  @include media-breakpoint-up(sm)
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  @include media-breakpoint-up(md)
   {
-    font-size: $font-size-lg !important;
-    line-height: $lead-line-height !important;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    font-size: $font-size-lg;
+    line-height: $lead-line-height;
   }
+}
+
+blockquote
+{
+  font-family: $font-family-medium;
+  border: 0 !important;
   .blockquote-footer
   {
-    margin-left: ($spacer-x / 2);
-    margin-right: ($spacer-x / 2);
+    font-family: $font-family-base;
+    margin-left: .35rem;
+    margin-right: .35rem;
     &:before,
     &:after
     {
@@ -480,7 +503,11 @@ h1, h2, h3, h4, h5, h6,
     {
       position: absolute;
       top: 0;
-      right: $spacer-y;
+      right: ($spacer-y * 2);
+      @include media-breakpoint-down(xs)
+      {
+        right: $spacer-y;
+      }
     }
     .nav-item + .nav-item
     {
@@ -528,9 +555,10 @@ h1, h2, h3, h4, h5, h6,
   }
   &.navbar-north
   {
+    display: block;
     min-height: $navbar-north-height;
     box-shadow: 0 5px $box-shadow-size $box-shadow;
-    .logotype
+    .logotype-white
     {
       margin-left: -$spacer-x;
     }
@@ -572,10 +600,11 @@ h1, h2, h3, h4, h5, h6,
   }
   &.navbar-south
   {
+    display: block;
     min-height: $navbar-south-height;
     box-shadow: 0 -5px $box-shadow-size $box-shadow;
-    // When fading in, animate it to slide up
-    &.fade:not(.in)
+    // When show fade in, animate it to slide up
+    &.fade.show
     {
       transform: translate3d(0, 100%, 0);
     }
@@ -1059,9 +1088,9 @@ ul.dropdown-menu
   position: relative;
   display: block;
   background-color: $white;
-  @include clearfix;
   padding: $spacer-y ($spacer-x * 2);
   margin-bottom: ($spacer-y * 2);
+  @extend .clearfix;
   @include media-breakpoint-down(xs)
   {
     padding-left: $spacer-x !important;
@@ -1277,13 +1306,6 @@ select.form-control[multiple]
       background-color: $btn-info-bg !important;
       transition: $transition;
     }
-    &:hover
-    {
-      &:before
-      {
-        background-color: darken($btn-info-bg, 10%) !important;
-      }
-    }
   }
   .custom-file-input
   {
@@ -1293,6 +1315,21 @@ select.form-control[multiple]
       {
         background-color: $input-bg-focus !important;
         border-color: $input-border-focus !important;
+        &:before
+        {
+          background-color: darken($btn-info-bg, 10%) !important;
+        }
+      }
+    }
+    &:hover
+    {
+      cursor: pointer;
+      + .custom-file-control
+      {
+        &:before
+        {
+          background-color: darken($btn-info-bg, 10%) !important;
+        }
       }
     }
   }
@@ -1910,36 +1947,26 @@ select.form-control[multiple]
   }
 }
 
-// Flexbox horizontal
-.flexbox-row
+// card deck split
+.card-deck-split
 {
-  display: flex;
-  flex-direction: row;
-}
-
-// Flexbox vertical
-.flexbox-col
-{
-  display: flex;
-  flex-direction: column;
-}
-
-// Flex stretch
-.flexbox-stretch
-{
-  align-items: stretch;
-}
-
-// Flex center
-.flexbox-center
-{
-  justify-content: center;
-}
-
-// Flexbox no flex
-.flexbox-0
-{
-  flex: 0 auto;
+  .card
+  {
+    flex: 1;
+    padding: $spacer-y ($spacer-x * 2);
+    @include media-breakpoint-down(xs)
+    {
+      padding-left: $spacer-x !important;
+      padding-right: $spacer-x !important;
+    }
+    @include media-breakpoint-down(md)
+    {
+      flex: auto;
+      width: 100%;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+  }
 }
 
 // Download
@@ -1966,10 +1993,13 @@ select.form-control[multiple]
       position: relative;
       background-color: $modal-header-bg;
       padding: $modal-title-padding;
+      display: flex;
+      flex-direction: row;
       .modal-title
       {
         color: $modal-header-color;
         margin: 0;
+        flex: 1;
       }
       .close
       {
@@ -2032,7 +2062,8 @@ select.form-control[multiple]
       width: 100%;
       border-top: 1px $modal-footer-border-color solid;
       padding: 0;
-      @extend .flexbox-row;
+      display: flex;
+      flex-direction: row;
       .btn
       {
         flex: 1;
@@ -2079,7 +2110,8 @@ select.form-control[multiple]
     {
       height: 100vh;
       min-height: 100%;
-      @extend .flexbox-col;
+      display: flex;
+      flex-direction: column;
       padding: 0;
       overflow: hidden;
       .modal-header
@@ -2114,9 +2146,9 @@ select.form-control[multiple]
   }
 }
 
-.modal.fade:not(.in).modal-page .modal-dialog
+.modal.fade:not(.show).modal-page .modal-dialog
 {
-  transform: translate3d(0, 0, 0);
+  transform: translate3d(100%, 0, 0);
   .project-header
   {
     opacity: 0;
