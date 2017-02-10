@@ -1,6 +1,6 @@
 @charset "UTF-8";
 /*!
- * Sweco Bootstrap v.1.2.0
+ * Sweco Bootstrap v.1.2.1
  */
 @font-face {
   font-family: 'SwecoSans-Regular';
@@ -9096,11 +9096,39 @@ header.header-image {
     outline: 0 !important;
     box-shadow: none;
     cursor: pointer; }
+  .btn.btn-primary:hover, .card.card-info .card-footer .btn-primary.btn:hover, .btn.btn-primary:focus, .card.card-info .card-footer .btn-primary.btn:focus, .btn.btn-primary.focus, .card.card-info .card-footer .btn-primary.focus.btn, .btn.btn-primary:active, .card.card-info .card-footer .btn-primary.btn:active, .btn.btn-primary.active, .card.card-info .card-footer .btn-primary.active.btn,
+  .open > .btn.btn-primary.dropdown-toggle, .card.card-info .card-footer
+  .open > .btn-primary.dropdown-toggle.btn {
+    color: #fff;
+    background-color: #353a3f; }
   .btn.btn-secondary:hover, .btn.btn-default:hover, .card .card-footer .btn:hover, .btn.btn-secondary:focus, .btn.btn-default:focus, .card .card-footer .btn:focus, .btn.btn-secondary.focus, .btn.focus.btn-default, .card .card-footer .btn.focus, .btn.btn-secondary:active, .btn.btn-default:active, .card .card-footer .btn:active, .btn.btn-secondary.active, .btn.active.btn-default, .card .card-footer .btn.active,
   .open > .btn.btn-secondary.dropdown-toggle,
   .open > .btn.dropdown-toggle.btn-default, .card .card-footer
   .open > .btn.dropdown-toggle {
+    color: #4d535a;
     background-color: #eee !important; }
+  .btn.btn-info:hover, .navbar .search .btn.btn-search:hover, .card.card-info .card-footer .btn:hover, .bootstrap-datetimepicker-widget table td .btn:hover, .btn.btn-info:focus, .navbar .search .btn.btn-search:focus, .card.card-info .card-footer .btn:focus, .bootstrap-datetimepicker-widget table td .btn:focus, .btn.btn-info.focus, .navbar .search .btn.focus.btn-search, .card.card-info .card-footer .focus.btn, .bootstrap-datetimepicker-widget table td .btn.focus, .btn.btn-info:active, .navbar .search .btn.btn-search:active, .card.card-info .card-footer .btn:active, .bootstrap-datetimepicker-widget table td .btn:active, .btn.btn-info.active, .navbar .search .btn.active.btn-search, .card.card-info .card-footer .active.btn, .bootstrap-datetimepicker-widget table td .btn.active,
+  .open > .btn.btn-info.dropdown-toggle, .navbar .search
+  .open > .btn.dropdown-toggle.btn-search, .card.card-info .card-footer
+  .open > .dropdown-toggle.btn, .bootstrap-datetimepicker-widget table td
+  .open > .btn.dropdown-toggle {
+    color: #fff;
+    background-color: #617295; }
+  .btn.btn-success:hover, .card.card-info .card-footer .btn-success.btn:hover, .btn.btn-success:focus, .card.card-info .card-footer .btn-success.btn:focus, .btn.btn-success.focus, .card.card-info .card-footer .btn-success.focus.btn, .btn.btn-success:active, .card.card-info .card-footer .btn-success.btn:active, .btn.btn-success.active, .card.card-info .card-footer .btn-success.active.btn,
+  .open > .btn.btn-success.dropdown-toggle, .card.card-info .card-footer
+  .open > .btn-success.dropdown-toggle.btn {
+    color: #fff;
+    background-color: #43653b; }
+  .btn.btn-warning:hover, .card.card-info .card-footer .btn-warning.btn:hover, .btn.btn-warning:focus, .card.card-info .card-footer .btn-warning.btn:focus, .btn.btn-warning.focus, .card.card-info .card-footer .btn-warning.focus.btn, .btn.btn-warning:active, .card.card-info .card-footer .btn-warning.btn:active, .btn.btn-warning.active, .card.card-info .card-footer .btn-warning.active.btn,
+  .open > .btn.btn-warning.dropdown-toggle, .card.card-info .card-footer
+  .open > .btn-warning.dropdown-toggle.btn {
+    color: #fff;
+    background-color: #a2668c; }
+  .btn.btn-danger:hover, .card.card-info .card-footer .btn-danger.btn:hover, .btn.btn-danger:focus, .card.card-info .card-footer .btn-danger.btn:focus, .btn.btn-danger.focus, .card.card-info .card-footer .btn-danger.focus.btn, .btn.btn-danger:active, .card.card-info .card-footer .btn-danger.btn:active, .btn.btn-danger.active, .card.card-info .card-footer .btn-danger.active.btn,
+  .open > .btn.btn-danger.dropdown-toggle, .card.card-info .card-footer
+  .open > .btn-danger.dropdown-toggle.btn {
+    color: #fff;
+    background-color: #520c04; }
   .btn.disabled, .card.card-info .card-footer .disabled.btn, .btn[disabled], .card.card-info .card-footer [disabled].btn,
   fieldset[disabled] .btn,
   fieldset[disabled] .card.card-info .card-footer .btn, .card.card-info .card-footer
