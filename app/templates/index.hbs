@@ -10,7 +10,7 @@
           <div class="row">
             <div class="offset-1 col-10 offset-md-2 col-md-8">
               <div class="jumbo">
-                <h1>Sweco visual identity manual<br/>digital platforms<span class="version">v.1.2.0</span></h1>
+                <h1>Sweco visual identity manual<br/>digital platforms<span class="version">v.1.2.1</span></h1>
                 <p class="lead">Quickly get a project started with any of our examples ranging from using parts of the framework to custom components and layouts.</p>
                 <div class="d-flex justify-content-center">
                   <button class="btn btn-info btn-front-page" {{action 'frontPage'}}><span class="hidden-lg-down">Sweco </span>Digital Platforms<i class="fa fa-right fa-angle-right"></i></button>
@@ -1078,7 +1078,7 @@
       </div>
 <!-- CARDS START -->
       <div class="row">
-        <div class="col-sm-12 col-md-6 col-lg-3">
+        <div class="col-12 col-md-6 col-lg-3">
 <!-- CARD 1 START -->
           <div class="card">
             <div class="card-img-block">
@@ -1095,7 +1095,7 @@
           </div>
 <!-- CARD 1 STOP -->
         </div>
-        <div class="col-sm-12 col-md-6 col-lg-3">
+        <div class="col-12 col-md-6 col-lg-3">
 <!-- CARD 2 START -->
           <div class="card">
             <div class="card-img-block">
@@ -1111,7 +1111,7 @@
           </div>
 <!-- CARD 2 STOP -->
         </div>
-        <div class="col-sm-12 col-md-6 col-lg-3">
+        <div class="col-12 col-md-6 col-lg-3">
 <!-- CARD 3 START -->
           <div class="card card-info">
             <div class="card-img-block">
@@ -1127,7 +1127,7 @@
           </div>
 <!-- CARD 3 STOP -->
         </div>
-        <div class="col-sm-12 col-md-6 col-lg-3">
+        <div class="col-12 col-md-6 col-lg-3">
 <!-- CARD 4 START -->
           <div class="card card-info">
             <div class="card-img-block">
@@ -1340,11 +1340,11 @@
         <h3 id="download">Download options</h3>
 
         <div class="row">
-          <div class="col-sm-12">
-            <h4>Precompiled code</h4>
+          <div class="col-12">
+            <h4>The latest version</h4>
             <p>Quickly add Sweco's visual identity to your project.</p>
-            <div class="download">
-              <p class="mb-0"><i class="fa fa-download" aria-hidden="true"></i><a href="https://github.com/sweco/sweco-digital-platforms/raw/master/dist.zip" aria-label="Download latest distributed release as zip-archive Sweco visual identity manual - digital platforms to your computer." download="Sweco visual identity manual - digital platforms zip-archive">Download Sweco digital platforms</a></p>
+            <div class="mb-4">
+              <a href="https://github.com/sweco/sweco-digital-platforms/raw/master/dist.zip" class="btn btn-info" aria-label="Download latest distributed release as zip-archive Sweco visual identity manual - digital platforms to your computer." download="Sweco visual identity manual - digital platforms zip-archive"><i class="fa fa-download" aria-hidden="true"></i>Download Sweco digital platforms</a>
             </div>
 
             <h4>What's included</h4>
@@ -1382,20 +1382,6 @@
                 <dd><i class="fa fa-terminal" aria-hidden="true"></i><code>bower install sweco/sweco-digital-platforms</code></dd>
               </dl>
             </div>
-            <h4>Using Sass</h4>
-            <p>Requires a Sass compiler, <a href="https://github.com/postcss/autoprefixer" target="_blank">Autoprefixer</a>, <a href="https://github.com/luisrudge/postcss-flexbugs-fixes" target="_blank">Postcss-flexbugs-fixes</a>.<br>Copy Scss dependencies in your Scss reposititory: bootstrap/scss/** and font-awesome/scss/**, using <a href="http://gruntjs.com/" target="_blank">Grunt</a>.</p>
-            <p>Your application Scss file should look something like this:</p>
-<figure class="html"><pre><code>
-  // Sweco digital platforms
-  @import "sweco-digital-platforms/style/sweco-bootstrap";
-
-  // Your application variables
-  @import "variables";
-
-  // Your application custom SCSS
-  @import "application";
-
-</code></pre></figure>
           </div>
         </div>
 <!-- DOWNLOAD STOP -->
@@ -1406,13 +1392,17 @@
         <h3 id="starter-template">Starter template</h3>
 
         <div class="row">
-          <div class="col-sm-12">
+          <div class="col-12">
             <p>Be sure to have your pages set up with the latest design and development standards. That means:</p>
             <ul>
               <li>Using an HTML5 doctype</li>
               <li>Forcing Internet Explorer to use its latest rendering mode</li>
               <li>And, utilizing the viewport meta tag.</li>
             </ul>
+
+            <h4>Take a look into the source code of the starter-template</h4>
+            <p><a href="https://github.com/sweco/sweco-digital-platforms/blob/master/sweco-bootstrap/starter-template.html" target="_blank">Starter-template example page</a> included in distributed release. Feel free to copy/paste the exaples.</p>
+
             <p>Put it all together and your pages should look like this:</p>
 
 <figure class="html"><pre><code>
@@ -1475,12 +1465,32 @@
             <h4>Please, use the Bootstrap 4 utilities classes</h4>
             <p>Bootstrap 4 includes dozens of utilities classes with a single purpose to reduce the frequency of highly repetitive declarations.<br><a href="http://v4-alpha.getbootstrap.com/utilities/flexbox/" target="_blank">Utilities classes</a></p>
 
-            <h4>Take a look into the source code of the starter-template</h4>
-            <p><a href="https://github.com/sweco/sweco-digital-platforms/blob/master/sweco-bootstrap/starter-template.html" target="_blank">Starter-template example page</a> included in distributed release. Feel free to copy/paste the exaples.</p>
-
           </div>
         </div>
 <!-- STARTER TEMPLATE STOP -->
+      </div>
+
+<!-- SASS START -->
+      <div class="well">
+        <h3 id="sass">Using Sass</h3>
+        <div class="row">
+          <div class="col-12">
+            <p>Requires a Sass compiler, <a href="https://github.com/postcss/autoprefixer" target="_blank">Autoprefixer</a>, <a href="https://github.com/luisrudge/postcss-flexbugs-fixes" target="_blank">Postcss-flexbugs-fixes</a>.<br>Copy Scss dependencies in your Scss reposititory: bootstrap/scss/** and font-awesome/scss/**, using <a href="http://gruntjs.com/" target="_blank">Grunt</a>.</p>
+            <p>Your application Scss file should look something like this:</p>
+<figure class="html"><pre><code>
+  // Sweco digital platforms
+  @import "sweco-digital-platforms/style/sweco-bootstrap.scss";
+
+  // Your application variables
+  @import "variables.scss";
+
+  // Your application custom SCSS
+  @import "application.scss";
+
+</code></pre></figure>
+          </div>
+        </div>
+<!-- SASS STOP -->
       </div>
 
       <div class="well">
