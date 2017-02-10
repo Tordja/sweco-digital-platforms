@@ -751,6 +751,19 @@ header.header-image
     box-shadow: $btn-focus-box-shadow;
     cursor: pointer;
   }
+  &.btn-primary
+  {
+    &:hover,
+    &:focus,
+    &.focus,
+    &:active,
+    &.active,
+    .open > &.dropdown-toggle
+    {
+      color: $btn-primary-color;
+      background-color: darken($btn-primary-bg, 10%);
+    }
+  }
   &.btn-secondary
   {
     &:hover,
@@ -760,7 +773,60 @@ header.header-image
     &.active,
     .open > &.dropdown-toggle
     {
+      color: $btn-secondary-color;
       background-color: $component-bg-hover !important;
+    }
+  }
+  &.btn-info
+  {
+    &:hover,
+    &:focus,
+    &.focus,
+    &:active,
+    &.active,
+    .open > &.dropdown-toggle
+    {
+      color: $btn-info-color;
+      background-color: darken($btn-info-bg, 10%);
+    }
+  }
+  &.btn-success
+  {
+    &:hover,
+    &:focus,
+    &.focus,
+    &:active,
+    &.active,
+    .open > &.dropdown-toggle
+    {
+      color: $btn-success-color;
+      background-color: darken($btn-success-bg, 10%);
+    }
+  }
+  &.btn-warning
+  {
+    &:hover,
+    &:focus,
+    &.focus,
+    &:active,
+    &.active,
+    .open > &.dropdown-toggle
+    {
+      color: $btn-warning-color;
+      background-color: darken($btn-warning-bg, 10%);
+    }
+  }
+  &.btn-danger
+  {
+    &:hover,
+    &:focus,
+    &.focus,
+    &:active,
+    &.active,
+    .open > &.dropdown-toggle
+    {
+      color: $btn-danger-color;
+      background-color: darken($btn-danger-bg, 10%);
     }
   }
   &.disabled,
