@@ -45,6 +45,7 @@ body.navbarSouth
 }
 
 // Windows fix for scroll on fixed-navbars on scroll and modal open
+.ie-9,
 .ie-10,
 .ie-11,
 .win.chrome,
@@ -553,11 +554,18 @@ h1, h2, h3, h4, h5, h6,
       }
     }
   }
+  &.fixed-top
+  {
+    box-shadow: 0 5px $box-shadow-size $box-shadow;
+  }
+  &.fixed-bottom
+  {
+    box-shadow: 0 -5px $box-shadow-size $box-shadow;
+  }
   &.navbar-north
   {
     display: block;
     min-height: $navbar-north-height;
-    box-shadow: 0 5px $box-shadow-size $box-shadow;
     .logotype-white
     {
       margin-left: -$spacer-x;
@@ -607,7 +615,6 @@ h1, h2, h3, h4, h5, h6,
   {
     display: block;
     min-height: $navbar-south-height;
-    box-shadow: 0 -5px $box-shadow-size $box-shadow;
     // When show fade in, animate it to slide up
     &.fade.show
     {
