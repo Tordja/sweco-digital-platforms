@@ -1249,32 +1249,6 @@ fieldset
 }
 
 // Input group
-.input-group
-{
-  .form-control
-  {
-    /*
-    min-height: 2.6rem;
-    &.form-control-lg
-    {
-      min-height: 3.3rem;
-    }
-    &.form-control-sm
-    {
-      min-height: 2rem;
-    }
-    */
-  }
-  &.input-group-lg
-  {
-    /*
-    .btn
-    {
-      min-height: $input-height-lg;
-    }
-    */
-  }
-}
 .ie .input-group .form-control
 {
   min-height: 41px;
@@ -1310,16 +1284,6 @@ input[type="radio"]
     padding-top: .3rem;
     padding-bottom: .3rem;
   }
-  /*
-  .input-group-btn .btn
-  {
-    font-size: $font-size-base;
-    padding-top: .32rem;
-    padding-bottom: .32rem;
-    height: $input-height-sm;
-    max-height: 2rem;
-  }
-  */
 }
 
 // Textarea
@@ -1911,8 +1875,13 @@ select.form-control[multiple]
         display: none;
       }
     }
+    .list-group-item-heading
+    {
+      width: 100%;
+    }
     p
     {
+      width: 100%;
       font-family: $font-family-regular;
       text-transform: none;
     }
