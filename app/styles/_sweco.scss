@@ -2221,7 +2221,7 @@ select.form-control[multiple]
   {
     color: $text-color;
     width: 0;
-    height: 3px;
+    height: 4px;
     transition: all 0.3s ease-out;
     background-color: $blue-dark;
   }
@@ -2253,6 +2253,7 @@ select.form-control[multiple]
         @extend .h5;
         margin: 0;
         padding: .625rem $spacer-x;
+        padding-right: ($spacer-x * 2);
       }
     }
     .card-block
