@@ -2235,3 +2235,72 @@ select.form-control[multiple]
     display: none;
   }
 }
+
+// Accordion Collapse
+.accordion
+{
+  border-top: 1px solid $component-bg-hover;
+  .card
+  {
+    margin-bottom: 0;
+    .card-header
+    {
+      background-color: transparent;
+      padding: 0;
+      border-bottom: 1px solid $component-bg-hover;
+      a[data-toggle="collapse"]
+      {
+        @extend .h5;
+        margin: 0;
+        padding: .625rem $spacer-x;
+      }
+    }
+    .card-block
+    {
+      padding: $spacer-y $spacer-x;
+      border-bottom: 1px solid $component-bg-hover;
+      p:last-child
+      {
+        margin-bottom: 0;
+      }
+    }
+  }
+  a[data-toggle="collapse"]
+  {
+    display: block;
+    position: relative;
+    transition: $transition;
+    @include hover-focus-active
+    {
+      outline: 0;
+      text-decoration: none;
+      background-color: $component-bg-hover;
+    }
+    &:after
+    {
+      position: absolute;
+      top: 5px;
+      right: 8px;
+      display: inline-block;
+      font-family: FontAwesome;
+      color: inherit;
+      font-size: $font-size-lg;
+      width: 16px !important;
+      height: 16px !important;
+      content: "\f105" !important;
+      vertical-align: text-top;
+      margin: 0;
+      transition: $transition;
+    }
+    &[aria-expanded="true"]
+    {
+      color: $component-active-color !important;
+      background-color: $component-active-bg;
+      &:after
+      {
+        transform: rotate(90deg);
+        top: 18px;
+      }
+    }
+  }
+}
