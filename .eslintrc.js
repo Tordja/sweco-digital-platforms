@@ -6,11 +6,14 @@ module.exports = {
   },
   extends: 'eslint:recommended',
   env: {
-    browser: true
+    browser: true,
+    node: true
   },
   globals: {
     $: true,
-    Ember: true
+    Ember: true,
+    progressJs: true,
+    Bloodhound: true
   },
   rules: {
   }
