@@ -615,10 +615,14 @@ h1, h2, h3, h4, h5, h6,
   {
     display: block;
     min-height: $navbar-south-height;
-    // When show fade in, animate it to slide up
-    &.fade.show
+    // When show fading in, animate it to slide up
+    &.fade
     {
-      transform: translate3d(0, 100%, 0);
+      transform: translate3d(0, 100%, 0) !important;
+      &.show
+      {
+        transform: translate3d(0, 0, 0) !important;
+      }
     }
   }
 }
