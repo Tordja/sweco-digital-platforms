@@ -1968,11 +1968,12 @@ select.form-control[multiple]
       @extend .btn-sm;
       @extend .btn-block;
       font-size: $font-size-sm;
+      line-height: 1.1; 
       white-space: pre-wrap;
       position: relative;
       text-align: left;
-      padding-top: .47rem;
-      padding-bottom: .47rem;
+      padding-top: .45rem;
+      padding-bottom: .45rem;
       padding-left: $spacer-x;
       padding-right: $spacer-x;
       text-decoration: none;
