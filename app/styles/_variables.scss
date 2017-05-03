@@ -305,8 +305,8 @@ $btn-padding-y:                  .625rem;
 $btn-line-height:                1.25;
 $btn-font-weight:                normal;
 $btn-box-shadow:                 none;
-$btn-focus-box-shadow:           none;
-$btn-active-box-shadow:          none;
+$btn-focus-box-shadow:           none !important;
+$btn-active-box-shadow:          none !important;
 
 $btn-primary-color:              $white;
 $btn-primary-bg:                 $brand-primary;

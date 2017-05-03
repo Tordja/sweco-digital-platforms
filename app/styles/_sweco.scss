@@ -766,10 +766,10 @@ header.header-image
   {
     &:hover,
     &:focus,
-    &.focus,
     &:active,
+    &.focus,
     &.active,
-    .open > &.dropdown-toggle
+    .show > &.dropdown-toggle
     {
       color: $btn-primary-color;
       background-color: darken($btn-primary-bg, 10%);
@@ -779,10 +779,10 @@ header.header-image
   {
     &:hover,
     &:focus,
-    &.focus,
     &:active,
+    &.focus,
     &.active,
-    .open > &.dropdown-toggle
+    .show > &.dropdown-toggle
     {
       color: $btn-secondary-color;
       background-color: $component-bg-hover !important;
@@ -792,10 +792,10 @@ header.header-image
   {
     &:hover,
     &:focus,
-    &.focus,
     &:active,
+    &.focus,
     &.active,
-    .open > &.dropdown-toggle
+    .show > &.dropdown-toggle
     {
       color: $btn-info-color;
       background-color: darken($btn-info-bg, 10%);
@@ -805,10 +805,10 @@ header.header-image
   {
     &:hover,
     &:focus,
-    &.focus,
     &:active,
+    &.focus,
     &.active,
-    .open > &.dropdown-toggle
+    .show > &.dropdown-toggle
     {
       color: $btn-success-color;
       background-color: darken($btn-success-bg, 10%);
@@ -818,10 +818,10 @@ header.header-image
   {
     &:hover,
     &:focus,
-    &.focus,
     &:active,
+    &.focus,
     &.active,
-    .open > &.dropdown-toggle
+    .show > &.dropdown-toggle
     {
       color: $btn-warning-color;
       background-color: darken($btn-warning-bg, 10%);
@@ -831,10 +831,10 @@ header.header-image
   {
     &:hover,
     &:focus,
-    &.focus,
     &:active,
     &.active,
-    .open > &.dropdown-toggle
+    &.focus,
+    .show > &.dropdown-toggle
     {
       color: $btn-danger-color;
       background-color: darken($btn-danger-bg, 10%);
@@ -942,6 +942,27 @@ header.header-image
   padding: $btn-padding-y-xs $btn-padding-x-xs !important;
 }
 
+// btn-group
+.btn-group
+{
+  .btn + .btn
+  {
+    margin-left: 1px;
+    &:after
+    {
+      margin-left: 0 !important;
+    }
+  }
+}
+
+.btn-group-vertical
+{
+  .btn + .btn
+  {
+    margin-top: 1px;
+  }  
+}
+
 // Dropdowns
 .dropdown-menu
 {
@@ -977,6 +998,10 @@ header.header-image
   {
     padding: $dropdown-item-padding-y $dropdown-item-padding-x;
     white-space: nowrap;
+    @include hover-focus-active
+    {
+      outline: 0;
+    }
     &.active
     {
       &:hover
@@ -1015,13 +1040,12 @@ header.header-image
   }
 }
 
-.dropdown-toggle-split,
-.btn-group .btn + .btn
+.dropdown-toggle-split
 {
-  &:after
+  .btn + .btn
   {
-    margin-left: 0 !important;
-  }
+    margin-left: 0;
+  }  
 }
 
 .dropup
@@ -1936,11 +1960,11 @@ select.form-control[multiple]
   {
     display: flex !important;
     flex-direction: row !important;
-    border-top: 0 !important;
+    border-top: 1px solid $white !important;
     padding: 0 !important;
     .btn
     {
-      @extend .btn-secondary;
+      @extend .btn-info;
       @extend .btn-sm;
       @extend .btn-block;
       font-size: $font-size-sm;
@@ -1951,17 +1975,13 @@ select.form-control[multiple]
       padding-bottom: .47rem;
       padding-left: $spacer-x;
       padding-right: $spacer-x;
-      @include hover-focus
-      {
-        color: $btn-primary-color !important;
-        background-color: $btn-primary-bg !important;
-      }
-      border-width: 1px 0 0 0;
+      text-decoration: none;
+      // border-width: 1px 0 0 0;
       margin-top: 0 !important;
       flex-grow: 1;
       & + .btn
       {
-        border-left: 1px solid $btn-secondary-border !important;
+        border-left: 1px solid $white !important;
       }
       .fa
       {
@@ -1982,24 +2002,6 @@ select.form-control[multiple]
   {
     background-color: $brand-info;
     @extend .white-text;
-    .card-footer
-    {
-      .btn
-      {
-        @extend .btn;
-        @extend .btn-info;
-        @include hover-focus
-        {
-          color: $btn-info-color !important;
-          background-color: darken($btn-info-bg, 10%) !important;
-        }
-        border-top: 1px solid $white !important;
-        & + .btn
-        {
-          border-left: 1px solid $btn-secondary-border !important;
-        }
-      }
-    }
   }
 }
 
