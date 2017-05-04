@@ -11,7 +11,7 @@ export default Ember.Controller.extend({
       $('body').removeClass('body-front-page');
       $('body').removeClass('navbarSouth');
       $('.search').fadeIn(200);
-      $('.navbar-south').addClass('fade show');
+      $('.navbar-south').removeClass('show');
     },
 
     start: function() {
@@ -20,7 +20,7 @@ export default Ember.Controller.extend({
       $('body').addClass('body-front-page');
       $('body').addClass('navbarSouth');
       $('.search').fadeOut(200);
-      $('.navbar-south').removeClass('fade show');
+      $('.navbar-south').addClass('show');
     },
     // Modal
     openModal: function() {
