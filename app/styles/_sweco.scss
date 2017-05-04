@@ -29,7 +29,7 @@ body
 body.navbarNorth
 {
   padding-top: $navbar-north-height;
-  @include media-breakpoint-down(sm)
+  @include media-breakpoint-down(md)
   {
     padding-top: (($navbar-north-height * 2) - 10px);
   }
@@ -45,7 +45,6 @@ body.navbarSouth
 }
 
 // Windows fix for scroll on fixed-navbars on scroll and modal open
-.ie-9,
 .ie-10,
 .ie-11,
 .win.chrome,
@@ -575,7 +574,7 @@ h1, h2, h3, h4, h5, h6,
   {
     position: relative;
     margin-top: 10px;
-    @include media-breakpoint-down(sm)
+    @include media-breakpoint-down(md)
     {
       margin-top: 0;
       margin-bottom: 10px;
@@ -712,7 +711,7 @@ header.header-image
     {
       padding-top: $navbar-north-height;
     }
-    @include media-breakpoint-down(sm)
+    @include media-breakpoint-down(md)
     {
       margin-top: -(($navbar-north-height * 2) - 10px);
       .content-b
@@ -737,7 +736,7 @@ header.header-image
       vertical-align: middle;
       text-align: left;
       @extend .white-text;
-      @include media-breakpoint-down(sm)
+      @include media-breakpoint-down(md)
       {
         h1
         {
