@@ -1265,6 +1265,18 @@
 <!-- PROGRESS STOP -->
             </div>
 
+            <div class="well well-secondary">
+<!-- COLLAPSE START -->
+              <h4 id="collapse">Collapse</h4>
+              <button type="button" class="btn btn-info btn-collapse" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">Button collapse</button>
+              <div class="collapse" id="collapseExample">
+                <div class="card card-block mt-4 mb-2">
+                  Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+                </div>
+              </div>
+<!-- COLLAPSE STOP -->
+            </div>
+
           </div>
           <div class="col-lg-4">
             <div class="well well-secondary">
@@ -1528,17 +1540,17 @@
         <h3 id="sass">Using Sass</h3>
         <div class="row">
           <div class="col-12">
-            <p>Requires a Sass compiler, <a href="https://github.com/postcss/autoprefixer" target="_blank">Autoprefixer</a>, <a href="https://github.com/luisrudge/postcss-flexbugs-fixes" target="_blank">Postcss-flexbugs-fixes</a>.<br>Copy Scss dependencies in your Scss reposititory: bootstrap/scss/** and font-awesome/scss/**, using <a href="http://gruntjs.com/" target="_blank">Grunt</a>.</p>
+            <p>Requires a Sass compiler, <a href="https://github.com/postcss/autoprefixer" target="_blank">Autoprefixer</a>, <a href="https://github.com/luisrudge/postcss-flexbugs-fixes" target="_blank">Postcss-flexbugs-fixes</a>.<br>Point out path to Scss dependencies in your Scss reposititory: bower_components/bootstrap/scss/ and bower_components/font-awesome/scss/**.</p>
             <p>Your application Scss file should look something like this:</p>
 <figure class="html"><pre><code>
   // Sweco digital platforms
-  @import "sweco-digital-platforms/style/sweco-bootstrap.scss";
+  @import "sweco-bootstrap.scss";
 
   // Your application variables
-  @import "variables.scss";
+  @import "your-variables.scss";
 
   // Your application custom SCSS
-  @import "application.scss";
+  @import "your-application.scss";
 
 </code></pre></figure>
           </div>

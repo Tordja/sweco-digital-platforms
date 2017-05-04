@@ -962,6 +962,45 @@ header.header-image
   }  
 }
 
+// Btn-collapse
+.btn-collapse
+{
+  padding-right: 30px !important;
+  &[data-toggle="collapse"]
+  {
+    display: block;
+    position: relative;
+    transition: $transition;
+    &:after
+    {
+      position: absolute;
+      top: 6px;
+      right: 20px;
+      display: inline-block;
+      font-family: FontAwesome;
+      color: inherit;
+      font-size: $font-size-lg;
+      width: 1px;
+      height: 1px;
+      content: "\f105";
+      vertical-align: text-top;
+      margin: 0;
+      transition: $transition;
+    }
+    &[aria-expanded="true"]
+    {
+      color: $component-active-color !important;
+      background-color: $component-active-bg !important;
+      &:after
+      {
+        transform: rotate(90deg);
+        top: 17px;
+        right: 4px;
+      }
+    }
+  }
+}
+
 // Dropdowns
 .dropdown-menu
 {
