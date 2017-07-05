@@ -33,7 +33,7 @@ $bs-datetimepicker-alternate-color: $disabled-color;
   &.dropdown-menu
   {
     @extend .dropdown-menu;
-    z-index: $zindex-dropdown;
+    z-index: ($zindex-dropdown + 5);
     width: 240px;
     &.timepicker-sbs
     {
@@ -308,6 +308,23 @@ $bs-datetimepicker-alternate-color: $disabled-color;
         @include hover-focus-active
         {
           background-color: $bs-datetimepicker-btn-hover-bg
+        }
+        &.year,
+        &.month,
+        &.decade
+        {
+          width: auto;
+          height: 40px;
+          padding: 5px 10px;
+          margin: 1px;
+        }
+        &.month
+        {
+          min-width: 60px;
+        }
+        &.decade
+        {
+          min-width: 100px;
         }
         &.old
         {

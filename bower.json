@@ -9,7 +9,7 @@
     "progress.js": "0.1.0",
     "tether": "1.4.0",
     "moment": "moment/moment#2.15.2",
-    "bootstrap-datetimepicker": "Eonasdan/bootstrap-datetimepicker#4.17.43",
+    "bootstrap-datetimepicker": "Eonasdan/bootstrap-datetimepicker#4.17.47",
     "typeahead.js": "0.11.1"
   },
   "devDependencies": {}
