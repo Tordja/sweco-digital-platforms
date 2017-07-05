@@ -1,6 +1,6 @@
 @charset "UTF-8";
 /*!
- * Sweco Bootstrap v.1.4.0
+ * Sweco Bootstrap v.1.4.1
  */
 @font-face {
   font-family: 'SwecoSans-Regular';
@@ -10478,6 +10478,12 @@ select.form-control[multiple] {
 .green-color {
   color: #59854e; }
 
+.white {
+  background-color: #fff; }
+
+.white-color {
+  color: #fff; }
+
 /*
  * Datetimepicker for Bootstrap
  * version : 4.7.14
@@ -10496,7 +10502,7 @@ select.form-control[multiple] {
 .bootstrap-datetimepicker-widget {
   margin: 0; }
   .bootstrap-datetimepicker-widget.dropdown-menu, .twitter-typeahead .bootstrap-datetimepicker-widget.tt-menu {
-    z-index: 1000;
+    z-index: 1005;
     width: 240px; }
     .bootstrap-datetimepicker-widget.timepicker-sbs.dropdown-menu, .twitter-typeahead .bootstrap-datetimepicker-widget.timepicker-sbs.tt-menu {
       width: 480px; }
@@ -10646,6 +10652,15 @@ select.form-control[multiple] {
           background-color: #eee; }
         .bootstrap-datetimepicker-widget table td span:hover {
           background-color: #eee; }
+        .bootstrap-datetimepicker-widget table td span.year, .bootstrap-datetimepicker-widget table td span.month, .bootstrap-datetimepicker-widget table td span.decade {
+          width: auto;
+          height: 40px;
+          padding: 5px 10px;
+          margin: 1px; }
+        .bootstrap-datetimepicker-widget table td span.month {
+          min-width: 60px; }
+        .bootstrap-datetimepicker-widget table td span.decade {
+          min-width: 100px; }
         .bootstrap-datetimepicker-widget table td span.old {
           color: #a5a5a8; }
         .bootstrap-datetimepicker-widget table td span.disabled, .bootstrap-datetimepicker-widget table td span.disabled:hover {
@@ -10854,3 +10869,11 @@ select.form-control[multiple] {
 
 .color-blue .ultralight {
   background-color: #c0d4fd; }
+
+.color-red .color {
+  background-color: #821307;
+  color: #fff !important; }
+
+.color-green .color {
+  background-color: #59854e;
+  color: #fff !important; }
