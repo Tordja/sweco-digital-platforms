@@ -166,3 +166,21 @@
   .ultralight
   {background-color: $blue-ultralight;}
 }
+
+.color-red
+{
+  .color
+  {
+    background-color: $red;
+    color: $white !important;
+  }
+}
+
+.color-green
+{
+  .color
+  {
+    background-color: $green;
+    color: $white !important;
+  }
+}
