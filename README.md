@@ -12,12 +12,12 @@ The final design of digital platforms for Sweco group has to be approved by the 
 
 ### The guidelines
 
-The guidelines contain layout options for structuring a Sweco application with [Bootstrap 4](http://v4-alpha.getbootstrap.com/), including global styles, required scaffolding and grid system. It also covers styles for displaying content and HTML 5 elements, including normalization, typography, tables and more. Over a dozen components are provided to build buttons, dropdowns, input groups, navigation and much more.
+The guidelines contain layout options for structuring a Sweco application with [Bootstrap 4](https://getbootstrap.com/), including global styles, required scaffolding and grid system. It also covers styles for displaying content and HTML 5 elements, including normalization, typography, tables and more. Over a dozen components are provided to build buttons, dropdowns, input groups, navigation and much more.
 
 Sweco's visual guidelines for digital platforms are provided in two forms, as precompiled code and as source code. Download precompiled code to quickly add Sweco's visual identity to your project. Download source code, clone or fork for more advanced usage. To be sure to have your pages set up with the latest design and development standards use the starter template.
 
 ### Sweco's digital platforms without Bootstrap
-You can use Sweco's digital platforms without Bootstrap HTML, classes and scripts. We use a collection of CSS to provide an elegant, consistent, and simple baseline to build upon. [Read more about Reboot](http://v4-alpha.getbootstrap.com/content/reboot/#content).
+You can use Sweco's digital platforms without Bootstrap HTML, classes and scripts. We use a collection of CSS to provide an elegant, consistent, and simple baseline to build upon. [Read more about Reboot](https://getbootstrap.com/docs/4.0/content/reboot/).
 
 ### Example page
 
@@ -50,7 +50,7 @@ Within the precompiled download you'll find the following directories and files,
 
 The sweco-bootstrap.js includes a handful of JavaScript to help bring some of our components to life.
 
-* [Bootstrap 4](http://v4-alpha.getbootstrap.com/)
+* [Bootstrap 4](https://getbootstrap.com/)
 * [Font-awesome](http://fontawesome.io/icons/)
 * [Modernizr](https://modernizr.com/)
 * [jQuery](https://jquery.com/)
