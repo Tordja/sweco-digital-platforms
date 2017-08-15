@@ -135,6 +135,7 @@ Remove old global ember-cli, Clear NPM and Bower cache. Then install new global 
     bower cache clean
     npm install -g ember-cli
     npm install
+    npm install minimatch@3.0.4 --save-dev
     bower install
     ember s
 
@@ -148,6 +149,7 @@ Linux/Mac/Windows Bash-shell (For ex. Git prompt)
     rm -rf bower_components
     npm install
     bower install
+    npm install minimatch@3.0.4 --save-dev
     ember s
 
 REM Windows CMD (Grunt dependencies needs the command patch, if it´s not done by Cygwin, then use bash-prompt)
