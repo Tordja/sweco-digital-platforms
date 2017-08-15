@@ -32,7 +32,7 @@ Within the precompiled download you'll find the following directories and files,
   ├── css/
   │   └── sweco-bootstrap.min.css
   ├── scripts/
-  │   └── sweco-bootstrap.min.js
+  │   └── sweco-bootstrap.min.js (All javascript frameworks and dependencies minified)
   ├── fonts/
   │   ├── SwecoSans-Regular.*
   │   ├── SwecoSans-Medium.*
@@ -51,12 +51,12 @@ Within the precompiled download you'll find the following directories and files,
 The sweco-bootstrap.js includes a handful of JavaScript to help bring some of our components to life.
 
 * [Bootstrap 4](https://getbootstrap.com/)
+* [jQuery](https://jquery.com/)
+* [Popper.js](https://popper.js.org/)
 * [Font-awesome](http://fontawesome.io/icons/)
 * [Modernizr](https://modernizr.com/)
-* [jQuery](https://jquery.com/)
 * [jQuery-browser-detection](https://github.com/schickling/jquery-browser-detection)
 * [Progress.js](http://usablica.github.io/progress.js/)
-* [Tether](http://tether.io/)
 * [Moment with locales](https://github.com/moment/moment)
 * [Bootstrap datetimepicker](http://eonasdan.github.io/bootstrap-datetimepicker/)
 * [Typeahead.js](https://twitter.github.io/typeahead.js/)
