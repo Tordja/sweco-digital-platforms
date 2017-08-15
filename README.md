@@ -16,8 +16,8 @@ The guidelines contain layout options for structuring a Sweco application with [
 
 Sweco's visual guidelines for digital platforms are provided in two forms, as precompiled code and as source code. Download precompiled code to quickly add Sweco's visual identity to your project. Download source code, clone or fork for more advanced usage. To be sure to have your pages set up with the latest design and development standards use the starter template.
 
-### Sweco's digital platforms without Bootstrap
-You can use Sweco's digital platforms without Bootstrap HTML, classes and scripts. We use a collection of CSS to provide an elegant, consistent, and simple baseline to build upon. [Read more about Reboot](https://getbootstrap.com/docs/4.0/content/reboot/).
+### Sweco's digital platforms without Bootstrap 4
+You can use Sweco's digital platforms without Bootstrap 4 HTML, classes and scripts. We use a collection of CSS to provide an elegant, consistent, and simple baseline to build upon. [Read more about Reboot](https://getbootstrap.com/docs/4.0/content/reboot/).
 
 ### Example page
 
