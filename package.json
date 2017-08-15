@@ -52,6 +52,9 @@
     "grunt-contrib-rename": "https://github.com/almero-digital-marketing/grunt-contrib-rename.git",
     "grunt-shell": "^2.0.0"
   },
+  "dependencies": {
+    "ember-popper": "^0.5.0"
+  },
   "engines": {
     "node": ">= 4"
   },

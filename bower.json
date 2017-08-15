@@ -5,7 +5,6 @@
     "jquery": "3.2.1",
     "jquery-browser-detection": "0.2.0",
     "bootstrap": "4.0.0-beta",
-    "popper.js": "1.11.1",
     "font-awesome": "4.7",
     "progress.js": "0.1.0",
     "moment": "moment/moment#2.15.2",
