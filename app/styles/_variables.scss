@@ -142,16 +142,21 @@ $border-radius:          .25rem;
 $border-radius-lg:       .3rem;
 $border-radius-sm:       .2rem;
 
-$component-color:        $text-color;
-$component-bg-hover:     $gray-superlight;
-$component-active-color: $white;
-$component-active-bg:    theme-color("primary");
+$component-color:           $text-color;
+$component-bg-hover:        $gray-superlight;
+$component-active-color:    $white;
+$component-active-bg:       $dark-gray;
+$component-active-hover-bg: darken($dark-gray, 5%);
 
 $caret-width:            .3em;
 
 $transition-base:        all .35s ease-in-out;
 $transition-fade:        opacity .15s linear;
 $transition-collapse:    height .35s ease;
+
+// Highlight & shadows
+$box-shadow-size:         15px;
+$box-shadow:              rgba(0,0,0,.3);
 
 // Fonts
 $font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -287,8 +292,8 @@ $btn-font-family:             $font-family-medium;
 $btn-font-weight:             $font-weight-normal;
 $btn-text-transform:          uppercase;
 $btn-box-shadow:              none;
-$btn-focus-box-shadow:        none;
-$btn-active-box-shadow:       none;
+$btn-focus-box-shadow:        none !important;
+$btn-active-box-shadow:       none !important;
 
 $btn-block-spacing-y:         .5rem;
 
@@ -469,3 +474,30 @@ $custom-file-text: (
     en: "Browse"
   )
 );
+
+// Dropdowns
+$dropdown-min-width:             200px;
+$dropdown-max-height:            180px;
+$dropdown-padding-y:             1px;
+$dropdown-spacer:                10px;
+$dropdown-margin-top:            $dropdown-spacer; // BS 3
+$dropdown-bg:                    $white;
+$dropdown-border-color:          $border-color;
+$dropdown-border-width:          $border-width;
+$dropdown-divider-bg:            $border-color;
+$dropdown-box-shadow:            0 0 $box-shadow-size $box-shadow;
+
+$dropdown-link-color:            $component-color;
+$dropdown-link-hover-color:      $dropdown-link-color;
+$dropdown-link-hover-bg:         $component-bg-hover;
+
+$dropdown-link-active-color:     $component-active-color;
+$dropdown-link-active-bg:        $component-active-bg;
+$dropdown-link-active-hover-bg:  $component-active-hover-bg;
+
+$dropdown-link-disabled-color:   $disabled-color;
+
+$dropdown-item-padding-y:        5px;
+$dropdown-item-padding-x:        $spacer;
+
+$dropdown-header-color:          $headings-color;
