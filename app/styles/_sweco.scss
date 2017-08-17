@@ -748,7 +748,7 @@ header.header-image
 // Button
 .btn
 {
-  transition: $transition-fade;
+  transition: $transition;
   text-transform: uppercase;
   text-decoration: none;
   outline: 0 !important;
@@ -874,6 +874,7 @@ header.header-image
 {
   @extend .btn-sm;
   font-size: $font-size-sm;
+  line-height: $input-btn-line-height-xs;
   padding: $input-btn-padding-y-xs $input-btn-padding-x-xs !important;
 }
 
@@ -1882,7 +1883,7 @@ select.form-control[multiple]
     color: $list-group-link-color;
     text-align: inherit;
     text-transform: uppercase;
-    transition: $transition;
+    transition: $transition-fade;
     padding-right: ($spacer-x * 2);
     border-left: 0;
     border-right: 0;

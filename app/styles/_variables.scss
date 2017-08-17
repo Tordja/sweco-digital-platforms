@@ -177,9 +177,10 @@ $caret-width:               .3em;
 $cursor-disabled:           default;
 
 // Transition for btn, nav and such
-$transition-base:           all .35s ease-in-out;
+$transition-base:           all .3s ease-in-out;
 $transition-fade:           opacity .15s linear;
-$transition-collapse:       height .35s ease;
+$transition-collapse:       height .3s ease;
+$transition-bg:             background-color .3s ease-in-out;
 $transition:                $transition-base; // BS 3 scss
 
 // Highlight & shadows
@@ -225,7 +226,7 @@ $line-height-h1:         $headings-line-height;
 $line-height-h2:         1.34;
 $line-height-h3:         1.4;
 $line-height-h4:         1.45;
-$line-height-h5:         $headings-line-height;
+$line-height-h5:         1.35;
 $line-height-h6:         1.24;
 
 // Display
@@ -304,16 +305,16 @@ $input-btn-padding-y:         .625rem;
 $input-btn-line-height:       1.25;
 
 $input-btn-padding-x-xs:      .25rem;
-$input-btn-padding-y-xs:      .095rem;
-$input-btn-line-height-xs:    1;
+$input-btn-padding-y-xs:      0;
+$input-btn-line-height-xs:    1.45;
 
 $input-btn-padding-x-sm:      .5rem;
-$input-btn-padding-y-sm:      .32rem;
-$input-btn-line-height-sm:    1.45;
+$input-btn-padding-y-sm:      .19rem;
+$input-btn-line-height-sm:    1.75;
 
 $input-btn-padding-x-lg:      $input-btn-padding-x;
-$input-btn-padding-y-lg:      .72rem;
-$input-btn-line-height-lg:    1.25;
+$input-btn-padding-y-lg:      .535rem;
+$input-btn-line-height-lg:    1.5;
 
 // Buttons
 $btn-font-family:             $font-family-medium;
@@ -455,15 +456,13 @@ $custom-select-disabled-color:      $disabled-color;
 $custom-select-bg:                  $white;
 $custom-select-disabled-bg:         $input-disabled-bg;
 $custom-select-bg-size:             14px 12px; // In pixels because image dimensions
-$custom-select-indicator-color:     #333;
-$custom-select-indicator:           str-replace(url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iTGFnZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiIHdpZHRoPSIxM3B4IiBoZWlnaHQ9IjExcHgiIHZpZXdCb3g9Ii0yOTcgNDE1LjkgMTMgMTEiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgLTI5NyA0MTUuOSAxMyAxMTsiIHhtbDpzcGFjZT0icHJlc2VydmUiPjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+LnN0MHtmaWxsOiMzQTNBM0E7fTwvc3R5bGU+PHBhdGggY2xhc3M9InN0MCIgZD0iTS0yOTAuNCw0MjQuOWMwLjEsMCwwLjIsMCwwLjMtMC4xbDUuMS01LjZjMC4xLTAuMSwwLjEtMC4yLDAuMS0wLjNjMC0wLjEsMC0wLjItMC4xLTAuM2wtMC42LTAuNmMtMC4xLTAuMS0wLjItMC4xLTAuMy0wLjFjLTAuMSwwLTAuMiwwLTAuMywwLjFsLTQuMyw0LjdsLTQuMy00LjdjLTAuMS0wLjEtMC4yLTAuMS0wLjMtMC4xYy0wLjEsMC0wLjIsMC0wLjMsMC4xbC0wLjYsMC42Yy0wLjEsMC4xLTAuMSwwLjItMC4xLDAuM2MwLDAuMSwwLDAuMiwwLjEsMC4zbDUuMSw1LjZDLTI5MC42LDQyNC45LTI5MC41LDQyNC45LTI5MC40LDQyNC45eiIvPjwvc3ZnPg=="));
+$custom-select-indicator-color:     $text-color;
+$custom-select-indicator:           url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iTGFnZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiIHdpZHRoPSIxM3B4IiBoZWlnaHQ9IjExcHgiIHZpZXdCb3g9Ii0yOTcgNDE1LjkgMTMgMTEiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgLTI5NyA0MTUuOSAxMyAxMTsiIHhtbDpzcGFjZT0icHJlc2VydmUiPjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+LnN0MHtmaWxsOiMzQTNBM0E7fTwvc3R5bGU+PHBhdGggY2xhc3M9InN0MCIgZD0iTS0yOTAuNCw0MjQuOWMwLjEsMCwwLjIsMCwwLjMtMC4xbDUuMS01LjZjMC4xLTAuMSwwLjEtMC4yLDAuMS0wLjNjMC0wLjEsMC0wLjItMC4xLTAuM2wtMC42LTAuNmMtMC4xLTAuMS0wLjItMC4xLTAuMy0wLjFjLTAuMSwwLTAuMiwwLTAuMywwLjFsLTQuMyw0LjdsLTQuMy00LjdjLTAuMS0wLjEtMC4yLTAuMS0wLjMtMC4xYy0wLjEsMC0wLjIsMC0wLjMsMC4xbC0wLjYsMC42Yy0wLjEsMC4xLTAuMSwwLjItMC4xLDAuM2MwLDAuMSwwLDAuMiwwLjEsMC4zbDUuMSw1LjZDLTI5MC42LDQyNC45LTI5MC41LDQyNC45LTI5MC40LDQyNC45eiIvPjwvc3ZnPg==");
 $custom-select-border-width:        $input-btn-border-width;
 $custom-select-border-color:        $input-border-color;
 $custom-select-border-radius:       $border-radius;
-
 $custom-select-focus-border-color:  $input-focus-border-color;
 $custom-select-focus-box-shadow:    none;
-
 $custom-select-sm-padding-y:        .2rem;
 $custom-select-font-size-sm:        75%;
 $custom-select-height-sm:           $input-height-sm;
@@ -638,7 +637,7 @@ $card-border-radius:        none;
 $card-inner-border-radius:  none;
 $card-border-color:         transparent;
 $card-cap-bg:               $disabled-bg;
-$card-bg:                   $white; // $gray-superligh
+$card-bg:                   $white;
 $card-img-overlay-padding:  $spacer;
 $card-deck-margin:          ($grid-gutter-width / 2);
 $card-columns-count:        3;
@@ -706,7 +705,7 @@ $modal-header-bg:                $brand-primary;
 $modal-header-color:             $white;
 $modal-content-bg:               $white;
 $modal-content-border-color:     $border-color;
-$modal-content-border-width:     $border-width;
+$modal-content-border-width:     0;
 $modal-content-box-shadow-xs:    0 5px $box-shadow-size $box-shadow;
 $modal-content-box-shadow-sm-up: 0 5px $box-shadow-size $box-shadow;
 $modal-backdrop-bg:              $black;
