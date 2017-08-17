@@ -413,7 +413,6 @@ table
   &.table
   {
     @extend .table-bordered;
-    @extend .table-hover;
     thead
     {
       th
