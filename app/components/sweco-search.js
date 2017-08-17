@@ -2,7 +2,8 @@ import Ember from 'ember';
 
 export default Ember.Component.extend({
   customClass: 'form-control',
-
+  tagName: '',
+  
   actions: {
     search: function() {
       var value = this.get('value');
