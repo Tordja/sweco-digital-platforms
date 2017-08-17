@@ -33,6 +33,10 @@
         @extend .pull-right;
         color: $white;
         margin-top: 3px;
+        &.text-color
+        {
+          color: $text-color !important;
+        }
       }
       code
       {
