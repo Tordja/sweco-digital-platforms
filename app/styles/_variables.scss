@@ -95,6 +95,20 @@ $brand-danger:          $red;           // Validation and states
 $brand-success:         $green;         // Validation and states
 $brand-inverse:         $dark-gray;
 
+// Form states and alerts
+$state-success-text:             $brand-success;
+$state-success-bg:               transparent;
+$state-success-border:           $brand-success;
+$state-info-text:                $brand-info;
+$state-info-bg:                  transparent;
+$state-info-border:              $brand-info;
+$state-warning-text:             $brand-warning;
+$state-warning-bg:               transparent;
+$state-warning-border:           $brand-warning;
+$state-danger-text:              $brand-danger;
+$state-danger-bg:                transparent;
+$state-danger-border:            $brand-danger;
+
 // Options
 $enable-rounded:            false;
 $enable-shadows:            true;
@@ -160,9 +174,13 @@ $component-active-hover-bg: darken($dark-gray, 5%);
 
 $caret-width:               .3em;
 
+$cursor-disabled:           default;
+
+// Transition for btn, nav and such
 $transition-base:           all .35s ease-in-out;
 $transition-fade:           opacity .15s linear;
 $transition-collapse:       height .35s ease;
+$transition:                $transition-base; // BS 3 polyfill
 
 // Highlight & shadows
 $box-shadow-size:           15px;
@@ -304,40 +322,39 @@ $btn-text-transform:          uppercase;
 $btn-box-shadow:              none;
 $btn-focus-box-shadow:        none !important;
 $btn-active-box-shadow:       none !important;
-
 $btn-block-spacing-y:         .5rem;
-
 $btn-border-radius:           $border-radius;
 $btn-border-radius-lg:        $border-radius-lg;
 $btn-border-radius-sm:        $border-radius-sm;
-
 $btn-transition:              all .15s ease-in-out;
+
+$btn-outline-box-width:       400px;
 
 $btn-disabled-bg-color:       $disabled-bg;
 $btn-link-disabled-color:     $disabled-color;
 
 $btn-primary-color:           $white;
-$btn-primary-bg:              theme-color("primary");
+$btn-primary-bg:              $brand-primary;
 $btn-primary-border:          $btn-primary-bg;
 
 $btn-secondary-color:         $gray-dark;
-$btn-secondary-bg:            theme-color("secondary");
+$btn-secondary-bg:            $brand-secondary;
 $btn-secondary-border:        $gray;
 
 $btn-info-color:              $white;
-$btn-info-bg:                 theme-color("info");
+$btn-info-bg:                 $brand-info;
 $btn-info-border:             $btn-info-bg;
 
 $btn-success-color:           $white;
-$btn-success-bg:              theme-color("success");
+$btn-success-bg:              $brand-success;
 $btn-success-border:          $btn-success-bg;
 
 $btn-warning-color:           $white;
-$btn-warning-bg:              theme-color("warning");
+$btn-warning-bg:              $brand-warning;
 $btn-warning-border:          $btn-warning-bg;
 
 $btn-danger-color:            $white;
-$btn-danger-bg:               theme-color("danger");
+$btn-danger-bg:               $brand-danger;
 $btn-danger-border:           $btn-danger-bg;
 
 // Fieldset
@@ -526,6 +543,8 @@ $nav-text-transform:                 uppercase;
 $nav-link-padding-y:                 .6rem;
 $nav-link-padding-x:                 1rem;
 $nav-link-color:                     $text-color;
+$nav-link-hover-color:               darken($text-color, 10%);
+$nav-link-hover-bg:                  $component-bg-hover;
 $nav-border-color:                   $border-color-light;
 
 $nav-disabled-link-color:            $disabled-color;
@@ -654,6 +673,7 @@ $popover-header-padding-x:  $spacer-x;
 $popover-body-color:        $white;
 $popover-body-padding-y:    $spacer-y;
 $popover-body-padding-x:    $spacer-x;
+$popover-body-max-height:   280px;
 
 $popover-arrow-width:       10px;
 $popover-arrow-height:      5px;
@@ -682,8 +702,9 @@ $modal-inner-padding:            0;
 $modal-dialog-margin:            10px;
 $modal-dialog-margin-y-sm-up:    90px;
 $modal-title-line-height:        $line-height-base;
-$modal-content-bg:               $brand-primary;
+$modal-header-bg:                $brand-primary;
 $modal-header-color:             $white;
+$modal-content-bg:               $white;
 $modal-content-border-color:     $border-color;
 $modal-content-border-width:     $border-width;
 $modal-content-box-shadow-xs:    0 5px $box-shadow-size $box-shadow;
@@ -736,6 +757,8 @@ $list-group-action-color:             $component-color;
 $list-group-action-hover-color:       $component-color;
 $list-group-action-active-color:      $component-active-color;
 $list-group-action-active-bg:         $component-active-bg;
+$list-group-link-color:               $component-color;
+$list-group-link-hover-color:         $list-group-link-color;
 
 // Image thumbnails
 $thumbnail-padding:             .25rem;

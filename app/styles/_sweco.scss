@@ -206,36 +206,42 @@ dt, th
 h1,
 .h1
 {
+  font-size: $font-size-h1;
   line-height: $line-height-h1;
 }
 
 h2,
 .h2
 {
+  font-size: $font-size-h2;
   line-height: $line-height-h2;
 }
 
 h3,
 .h3
 {
+  font-size: $font-size-h3;
   line-height: $line-height-h3;
 }
 
 h4,
 .h4
 {
+  font-size: $font-size-h4;
   line-height: $line-height-h4;
 }
 
 h5,
 .h5
 {
+  font-size: $font-size-h5;
   line-height: $line-height-h5;
 }
 
 h6,
 .h6
 {
+  font-size: $font-size-h6;
   line-height: $line-height-h6;
 }
 
@@ -493,7 +499,7 @@ h1, h2, h3, h4, h5, h6,
   // Dropdown
   .dropdown-menu
   {
-    z-index: $zindex-navbar-dropdown;
+    z-index: $zindex-fixed-dropdown;
   }
   // Navbar navigation
   .nav
@@ -607,7 +613,7 @@ h1, h2, h3, h4, h5, h6,
       position: absolute;
       top: 9px;
       right: 60px;
-      z-index: ($zindex-navbar-fixed + 5);
+      z-index: ($zindex-fixed-dropdown + 5);
     }
   }
   &.navbar-south
@@ -641,7 +647,7 @@ h1, h2, h3, h4, h5, h6,
   position: fixed;
   top: 0;
   left: 0;
-  z-index: $zindex-fixed-content;
+  z-index: $zindex-sticky;
   width: 100%;
   min-width: 100%;
   height: 100vh;
@@ -866,7 +872,7 @@ header.header-image
   &.btn-outline-danger,
   &.btn-outline-success
   {
-    transition: $btn-outline-transition;
+    transition: $transition;
   }
   &.btn-outline-secondary
   {
@@ -938,7 +944,7 @@ header.header-image
 {
   @extend .btn-sm;
   font-size: $font-size-sm;
-  padding: $btn-padding-y-xs $btn-padding-x-xs !important;
+  padding: $input-btn-padding-y-xs $input-btn-padding-x-xs !important;
 }
 
 // btn-group
@@ -1194,7 +1200,7 @@ ul.dropdown-menu
   {
     .popover-arrow:after
     {
-      border-bottom-color: $popover-title-bg !important;
+      border-bottom-color: $popover-header-bg !important;
     }
   }
   .popover-title
@@ -1208,7 +1214,7 @@ ul.dropdown-menu
     position: relative;
     font-size: $font-size-base;
     @extend .inner-y;
-    max-height: $popover-content-max-height;
+    max-height: $popover-body-max-height;
   }
   .close
   {
@@ -1405,7 +1411,7 @@ select.form-control[multiple]
     &:after
     {
       @extend label;
-      color: $input-color-placeholder !important;
+      color: $input-placeholder-color !important;
     }
     &:before
     {
@@ -1426,8 +1432,8 @@ select.form-control[multiple]
     {
       + .custom-file-control
       {
-        background-color: $input-bg-focus !important;
-        border-color: $input-border-focus !important;
+        background-color: $input-focus-bg !important;
+        border-color: $input-focus-border-color !important;
         &:before
         {
           background-color: darken($btn-info-bg, 10%) !important;
@@ -1672,6 +1678,11 @@ select.form-control[multiple]
         background-color: $nav-link-hover-bg;
         outline: 0;
       }
+      &.disabled,
+      &[disabled]
+      {
+        cursor: $cursor-disabled;
+      }
     }
   }
   &.nav-tabs
@@ -1684,7 +1695,7 @@ select.form-control[multiple]
       margin-bottom: -$nav-tabs-border-width;
       > a
       {
-        padding: $nav-link-padding;
+        padding: $nav-link-padding-y $nav-link-padding-x;
         border: $nav-tabs-border-width solid transparent;
         @include hover-focus
         {
@@ -1697,9 +1708,9 @@ select.form-control[multiple]
       {
         @include plain-hover-focus
         {
-          color: $nav-tabs-active-link-hover-color;
-          background-color: $nav-tabs-active-link-hover-bg;
-          border-color: $nav-tabs-active-link-hover-border-color $nav-tabs-active-link-hover-border-color transparent;
+          color: $nav-tabs-link-active-color;
+          background-color: $nav-tabs-link-active-bg;
+          border-color: $nav-tabs-link-active-border-color $nav-tabs-link-active-border-color transparent;
         }
       }
     }
@@ -1721,7 +1732,7 @@ select.form-control[multiple]
     a
     {
       position: relative;
-      padding: $nav-link-padding;
+      padding: $nav-link-padding-y $nav-link-padding-x;
       border-right: 1px solid $nav-border-color;
       &.disabled,
       &[disabled]
@@ -1742,9 +1753,9 @@ select.form-control[multiple]
       padding-left: ($spacer-x * 2);
       @include plain-hover-focus
       {
-        color: $nav-pills-active-link-color;
+        color: $nav-pills-link-active-color;
         cursor: default;
-        background-color: $nav-pills-active-link-bg;
+        background-color: $nav-pills-link-active-bg;
       }
       &:before
       {
@@ -1933,11 +1944,15 @@ select.form-control[multiple]
     &.active
     {
       color: $component-active-color;
+      .list-group-item-heading
+      {
+        color: $component-active-color;
+      }
       @include hover-focus-active
       {
         background-color: $component-active-bg;
         color: $component-active-color;
-        cursor: default;
+        cursor: $cursor-disabled;
       }
     }
     &.list-group-item-action
@@ -2089,7 +2104,7 @@ select.form-control[multiple]
     {
       position: relative;
       background-color: $modal-header-bg;
-      padding: $modal-title-padding;
+      padding: $modal-header-padding;
       display: flex;
       flex-direction: row;
       .modal-title
