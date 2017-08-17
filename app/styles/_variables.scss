@@ -84,9 +84,9 @@ $theme-colors: (
 );
 
 // Color jumps
-$theme-color-interval: 5%;
+$theme-color-interval: 10%;
 
-// Colors Bootstrap 3 scss polyfill
+// Colors Bootstrap 3 scss
 $brand-primary:         $dark-gray;
 $brand-secondary:       $white;
 $brand-info:            $blue-dark;
@@ -180,7 +180,7 @@ $cursor-disabled:           default;
 $transition-base:           all .35s ease-in-out;
 $transition-fade:           opacity .15s linear;
 $transition-collapse:       height .35s ease;
-$transition:                $transition-base; // BS 3 polyfill
+$transition:                $transition-base; // BS 3 scss
 
 // Highlight & shadows
 $box-shadow-size:           15px;
@@ -337,8 +337,8 @@ $btn-primary-color:           $white;
 $btn-primary-bg:              $brand-primary;
 $btn-primary-border:          $btn-primary-bg;
 
-$btn-secondary-color:         $gray-dark;
-$btn-secondary-bg:            $brand-secondary;
+$btn-secondary-color:         $text-color;
+$btn-secondary-bg:            $white;
 $btn-secondary-border:        $gray;
 
 $btn-info-color:              $white;
@@ -682,8 +682,8 @@ $popover-arrow-outer-width: 9px;
 $popover-arrow-outer-color: $popover-bg;
 
 // Badges
-$badge-color:               $white;
-$badge-font-size:           80%;
+$badge-color:               $white !important;
+$badge-font-size:           85%;
 $badge-font-weight:         normal;
 $badge-padding-y:           .3em;
 $badge-padding-x:           .5em;
