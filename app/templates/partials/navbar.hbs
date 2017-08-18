@@ -3,18 +3,23 @@
     <div class="container">
       <div class="row">
         <div class="col-12 col-lg-3 order-1">
-  <!-- LOGOTYPE START -->
+<!-- LOGOTYPE START -->
           <a href="./" class="logotype-white" {{action 'start'}} role="banner">SWECO</a>
-  <!-- LOGOTYPE STOP -->
+<!-- LOGOTYPE STOP -->
         </div>
-  <!-- NAVBAR TOGGLER START -->
+        <div class="col-12 col-lg-6 order-3">
+<!-- SEARCH START -->
+          {{sweco-search value=query search='search' clear='clear'}}
+<!-- SEARCH STOP -->
+        </div>
+<!-- NAVBAR TOGGLER START -->
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNorthNav" aria-controls="navbarNorthNav" aria-expanded="false" aria-label="Toggle navigation">
           <i class="fa fa-bars" aria-hidden="true"></i>
         </button>
-  <!-- NAVBAR TOGGLER STOP -->
-  <!-- NAV START -->
-        <div class="collapse navbar-collapse col-12 col-lg-3 order-3" id="navbarNorthNav">
-          <ul class="nav flex-md-column">
+<!-- NAVBAR TOGGLER STOP -->
+<!-- NAV START -->
+        <div class="collapse navbar-collapse col-12 col-lg-3 order-2" id="navbarNorthNav">
+          <ul class="nav">
             <li class="nav-item">
               <a class="nav-link active" href="./" {{action 'start'}}>Start</a>
             </li>
@@ -23,12 +28,7 @@
             </li>
           </ul>
         </div>
-  <!-- NAV STOP -->
-        <div class="col-12 col-lg-6 order-2">
-  <!-- SEARCH START -->
-          {{sweco-search value=query search='search' clear='clear'}}
-  <!-- SEARCH STOP -->
-        </div>
+<!-- NAV STOP -->
       </div>
     </div>
 <!-- PROGRESS START -->

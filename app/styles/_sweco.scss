@@ -503,11 +503,14 @@ h1, h2, h3, h4, h5, h6,
     {
       justify-content: flex-end;
       flex-basis: auto;
+      order: 3;
     }
     @include media-breakpoint-down(md)
     {
+      order: 2;
       .nav
       {
+        flex-direction: column !important;
         .nav-item
         {
           margin-bottom: 15px;
@@ -601,6 +604,7 @@ h1, h2, h3, h4, h5, h6,
   }
   &.navbar-north
   {
+    display: block;
     min-height: $navbar-north-height;
     .logotype-white
     {
@@ -613,10 +617,12 @@ h1, h2, h3, h4, h5, h6,
     margin-top: 10px;
     @include media-breakpoint-up(lg)
     {
+      order: 2;
       padding: 0 $spacer-x;
     }
     @include media-breakpoint-down(md)
     {
+      order: 3;
       margin-top: 0;
       margin-bottom: 10px;
     }
