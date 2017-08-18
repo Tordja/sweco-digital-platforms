@@ -1215,9 +1215,9 @@ ul.dropdown-menu
 {
   box-shadow: $popover-box-shadow;
   border: 0;
-  &.bs-tether-target-attached-bottom
+  &.bs-popover-bottom
   {
-    .popover-arrow:after
+    .arrow:after
     {
       border-bottom-color: $popover-header-bg !important;
     }
@@ -1246,6 +1246,18 @@ ul.dropdown-menu
     {
       color: $white;
     }
+  }
+  &[x-placement^="top"] {
+    @extend .bs-popover-top;
+  }
+  &[x-placement^="right"] {
+    @extend .bs-popover-right;
+  }
+  &[x-placement^="bottom"] {
+    @extend .bs-popover-bottom;
+  }
+  &[x-placement^="left"] {
+    @extend .bs-popover-left;
   }
 }
 
