@@ -362,15 +362,15 @@ $btn-danger-border:           $btn-danger-bg;
 $fieldset-bg:                 $gray-superlight;
 
 // Forms
-$input-padding-x:             $input-btn-padding-x;
+$input-padding-x:             .75rem;
 $input-padding-y:             $input-btn-padding-y;
 $input-line-height:           $input-btn-line-height;
 
-$input-padding-x-sm:          $input-btn-padding-x;
+$input-padding-x-sm:          $input-padding-x;
 $input-padding-y-sm:          $input-btn-padding-y-sm;
 $input-line-height-sm:        $input-btn-line-height-sm;
 
-$input-padding-x-lg:          $input-btn-padding-x;
+$input-padding-x-lg:          $input-padding-x;
 $input-padding-y-lg:          $input-btn-padding-y-lg;
 $input-line-height-lg:        $input-btn-line-height-lg;
 
@@ -472,7 +472,7 @@ $custom-file-height:                2.5rem;
 $custom-file-width:                 10rem;
 $custom-file-focus-box-shadow:      none;
 
-$custom-file-padding-x:             .8rem;
+$custom-file-padding-x:             .75rem;
 $custom-file-padding-y:             .65rem;
 $custom-file-line-height:           1;
 
