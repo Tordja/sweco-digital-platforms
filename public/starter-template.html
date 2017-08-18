@@ -40,49 +40,55 @@
   </head>
   <body class="navbarNorth body-front-page">
 
-
 <!-- EXAMPLE NAVBAR NORTH START -->
-  <div class="navbar fixed-top navbar-north" role="navigation" id="navbarNorth">
-    <div class="container">
-      <div class="row">
-        <div class="col-12 col-lg-3">
+    <div class="navbar navbar-dark navbar-expand-lg fixed-top navbar-north" role="navigation" id="navbarNorth">
+      <div class="container">
+        <div class="row">
+          <div class="col-12 col-lg-3 order-1">
 <!-- LOGOTYPE START -->
-          <a href="starter-template.html" class="logotype-white" role="banner">SWECO</a>
+            <a href="starter-template.html" class="logotype-white" role="banner">SWECO</a>
 <!-- LOGOTYPE STOP -->
-        </div>
-        <div class="col-12 col-lg-6">
-<!-- SEARCH START -->
-          <div id="search" class="search">
-            <div class="input-group">
-              <input type="search" id="searchInput" name="searchInput" placeholder="The placeholder for search" tabindex="1" autocomplete="false" class="form-control">
-              <span class="input-group-btn">
-                <button class="btn btn-search" type="button" tabindex="2"><i class="fa fa-search" aria-hidden="true"></i></button>
-              </span>
-            </div>
-<!-- SEARCH RESET START -->
-            <button type="button" class="close btn-search-reset d-none"><i class="fa fa-times-circle" aria-hidden="true"></i></button>
-<!-- SEARCH RESET STOP -->
           </div>
+          <div class="col-12 col-lg-6 order-3">
+<!-- SEARCH START -->
+            <div id="search" class="search">
+              <div class="input-group">
+                <input type="search" id="searchInput" name="searchInput" placeholder="The placeholder for search" tabindex="1" autocomplete="false" class="form-control">
+                <span class="input-group-btn">
+                  <button class="btn btn-search" type="button" tabindex="2"><i class="fa fa-search" aria-hidden="true"></i></button>
+                </span>
+              </div>
+<!-- SEARCH RESET START -->
+              <button type="button" class="close btn-search-reset d-none"><i class="fa fa-times-circle" aria-hidden="true"></i></button>
+<!-- SEARCH RESET STOP -->
+            </div>
 <!-- SEARCH STOP -->
-        </div>
+          </div>
+<!-- NAVBAR TOGGLER START -->
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNorthNav" aria-controls="navbarNorthNav" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="fa fa-bars" aria-hidden="true"></i>
+          </button>
+<!-- NAVBAR TOGGLER STOP -->
 <!-- NAV START -->
-        <ul class="nav nav-top-right">
-          <li class="nav-item">
-            <a class="nav-link nav-start active" href="javascript:;">Start</a>
-          </li>
-          <li class="nav-item nav-starter-template">
-            <a class="nav-link" href="javascript:;">Starter template</a>
-          </li>
-        </ul>
+          <div class="collapse navbar-collapse col-12 col-lg-3 order-2" id="navbarNorthNav">
+            <ul class="nav">
+              <li class="nav-item">
+                <a class="nav-link nav-start active" href="javascript:;">Start</a>
+              </li>
+              <li class="nav-item nav-starter-template">
+                <a class="nav-link" href="javascript:;">Starter template</a>
+              </li>
+            </ul>
+          </div>
 <!-- NAV STOP -->
+        </div>
       </div>
-    </div>
 <!-- PROGRESS START -->
-    <div class="progressjs-navbar">
-      <div class="progressjs-container"></div>
-    </div>
+      <div class="progressjs-navbar">
+        <div class="progressjs-container"></div>
+      </div>
 <!-- PROGRESS STOP -->
-  </div>
+    </div>
 <!-- EXAMPLE NAVBAR NORTH STOP -->
 
 
@@ -90,13 +96,13 @@
     <div class="front-page front-page-img-topLeft" style="background-image: url('demo/sweco-front.jpg');">
       <div class="hero">
         <div class="container">
-          <div class="row">
-            <div class="offset-1 col-10 offset-md-2 col-md-8">
+          <div class="row justify-content-center">
+            <div class="col-10 col-md-8">
               <div class="jumbo">
                 <h1>Starter template</h1>
                 <p class="lead">Quickly get a project started with any of our examples ranging from using parts of the framework to custom components and layouts.</p>
                 <div class="d-flex justify-content-center">
-                  <button class="btn btn-info btn-front-page nav-starter-template">Starter template<i class="fa fa-right fa-angle-right"></i></button>
+                  <button class="btn btn-info btn-front-page">Sweco Digital Platforms<i class="fa fa-right fa-angle-right"></i></button>
                 </div>
               </div>
             </div>
@@ -137,12 +143,12 @@
           </div>
           <div class="col-lg-6">
             <h3>The guidelines</h3>
-            <p>The guidelines contain layout options for structuring a Sweco application with <a href="http://v4-alpha.getbootstrap.com/" target="_blank">Bootstrap 4</a>, including global styles, required scaffolding and grid system. It also covers styles for displaying content and HTML <i class="fa fa-html5"></i> elements, including normalization, typography, tables and more. Over a dozen components are provided to build buttons, dropdowns, input groups, navigation and much more.</p>
+            <p>The guidelines contain layout options for structuring a Sweco application with <a href="https://getbootstrap.com/" target="_blank">Bootstrap 4</a>, including global styles, required scaffolding and grid system. It also covers styles for displaying content and HTML <i class="fa fa-html5"></i> elements, including normalization, typography, tables and more. Over a dozen components are provided to build buttons, dropdowns, input groups, navigation and much more.</p>
 
             <p>Sweco's visual guidelines for digital platforms are provided in two forms, as precompiled code and as source code. <a href="#download">Download precompiled code</a> to quickly add Sweco's visual identity to your project. <a href="#download-source">Download source code, clone or fork</a> for more advanced usage. To be sure to have your pages set up with the latest design and development standards use the <a href="#starter-template">starter template</a>.</p>
 
             <h4>Sweco's digital platforms without Bootstrap</h4>
-            <p>You can use Sweco's digital platforms without Bootstrap HTML, classes and scripts. We use a collection of CSS to provide an elegant, consistent, and simple baseline to build upon. <a href="http://v4-alpha.getbootstrap.com/content/reboot/#content" target="_blank">Read more about Reboot</a>.</p>
+            <p>You can use Sweco's digital platforms without Bootstrap HTML, classes and scripts. We use a collection of CSS to provide an elegant, consistent, and simple baseline to build upon. <a href="https://getbootstrap.com/docs/4.0/content/reboot/" target="_blank">Read more about Reboot</a>.</p>
           </div>
         </div>
 <!-- ABOUT STOP -->
@@ -204,7 +210,6 @@
           </div>
         </div>
         <div class="colors pt-4">
-          <p><i class="fa fa-star mr-1" aria-hidden="true"></i>Brand colors<i class="fa fa-font mx-1" aria-hidden="true"></i>Text color. If text color add <code>-color</code> to class.</p>
           <div class="row">
             <div class="col-lg-3">
               <ul class="color-black">
@@ -278,6 +283,9 @@
               <ul class="color-green">
                 <li class="color white-color">.green<code>#59854e</code><i class="fa fa-exclamation-triangle" aria-hidden="true"></i></li>
               </ul>
+            </div>
+            <div class="col-lg-6">
+              <p class="my-2 text-lg-right"><span class="text-nowrap mr-2">If text color add <code>-color</code> to class.</span> <span class="text-nowrap mr-2"><i class="fa fa-star mr-2" aria-hidden="true"></i>Brand color<i class="fa fa-font mx-2" aria-hidden="true"></i>Text color.</span></p>
             </div>
           </div>
         </div>
@@ -382,7 +390,7 @@
             <li>This is abbreviations <abbr title="HyperText Markup Language" class="initialism">HTML</abbr></li>
             <li>Variables <var>y</var> = <var>m</var><var>x</var> + <var>b</var></li>
             <li>User inputs looks like this <kbd><kbd>ctrl</kbd> + <kbd>,</kbd></kbd></li>
-            <li>The <code>&lt;code&gt;</code> element.</li>
+            <li>The <code>code</code> element.</li>
             <li>
               <pre><code>&lt;p&gt;This is how code blocks is displayed&lt;/p&gt;</code></pre>
             </li>
@@ -440,7 +448,7 @@
 <!-- TABLES STOP -->
 
 <!-- TABLES SMALL START -->
-        <h3 id="tables-small" >Table small</h3>
+        <h3 id="tables-small">Table small</h3>
 
         <table class="table table-sm table-responsive">
           <thead>
@@ -473,6 +481,42 @@
           </tbody>
         </table>
 <!-- TABLES SMALL STOP -->
+
+<!-- TABLES STRIPED START -->
+        <h3 id="tables-striped">Table striped</h3>
+
+        <table class="table table-striped table-responsive">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Header content</th>
+              <th>Header content</th>
+              <th>Header content</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">1</th>
+              <td>Column content</td>
+              <td>Column content</td>
+              <td>Column content</td>
+            </tr>
+            <tr>
+              <th scope="row">2</th>
+              <td>Column content</td>
+              <td>Column content</td>
+              <td>Column content</td>
+            </tr>
+            <tr>
+              <th scope="row">3</th>
+              <td>Column content</td>
+              <td>Column content</td>
+              <td>Column content</td>
+            </tr>
+          </tbody>
+        </table>
+<!-- TABLES STRIPED STOP -->
+
       </div>
 
 
@@ -656,12 +700,12 @@
           <div class="col-lg-4">
 
             <div class="list-group">
-              <a href="#" class="list-group-item list-group-item-action justify-content-between active">Active list group item <span class="badge badge-warning badge-pill">14</span></a>
-              <a href="#" class="list-group-item list-group-item-action justify-content-between">Lorem ipsum <span class="badge badge-warning badge-pill">3</span></a>
-              <a href="#" class="list-group-item list-group-item-action justify-content-between">Lorem ipsum dolor sit <span class="badge badge-warning badge-pill">1</span></a>
-              <a href="#" class="list-group-item list-group-item-action justify-content-between">Lorem ipsum dolor sit amet</a>
-              <a href="#" class="list-group-item list-group-item-action justify-content-between">Lorem ipsum</a>
-              <a href="#" class="list-group-item list-group-item-action justify-content-between">Lorem ipsum dolor sit</a>
+              <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between active">Active list group item <span class="badge badge-warning badge-pill">14</span></a>
+              <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">Lorem ipsum <span class="badge badge-warning badge-pill">3</span></a>
+              <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">Lorem ipsum dolor sit <span class="badge badge-warning badge-pill">1</span></a>
+              <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">Lorem ipsum dolor sit amet</a>
+              <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">Lorem ipsum</a>
+              <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between">Lorem ipsum dolor sit</a>
             </div>
 
           </div>
@@ -696,7 +740,7 @@
 
             <h4>Button</h4>
             <p>
-              <button type="button" class="btn btn-info"><i class="fa fa-rocket" aria-hidden="true"></i>Info (Default, standard)</button>
+              <button type="button" class="btn btn-info"><i class="fa fa-rocket" aria-hidden="true"></i>Info (Standard)</button>
               <button type="button" class="btn btn-primary"><i class="fa fa-cloud-upload" aria-hidden="true"></i>Primary (Active, selected)</button>
               <button type="button" class="btn btn-secondary"><i class="fa fa-paper-plane" aria-hidden="true"></i>Secondary (Less important)</button>
             </p>
@@ -1200,7 +1244,7 @@
       <div class="well">
 <!-- CARD START -->
         <h3 id="card">Card</h3>
-        <p>A card is a flexible and extensible content container. It includes options for headers and footers, a wide variety of content, contextual background colors, and powerful display options. Read more about <a href="http://v4-alpha.getbootstrap.com/components/card/" target="_blank">cards</a>.</p>
+        <p>A card is a flexible and extensible content container. It includes options for headers and footers, a wide variety of content, contextual background colors, and powerful display options. Read more about <a href="https://getbootstrap.com/docs/4.0/components/card/" target="_blank">cards</a>.</p>
 <!-- CARD STOP -->
       </div>
 <!-- CARDS START -->
@@ -1208,10 +1252,8 @@
         <div class="col-12 col-md-6 col-lg-3">
 <!-- CARD 1 START -->
           <div class="card">
-            <div class="card-img-block">
-              <img src="demo/sweco-demo.jpg" alt="">
-            </div>
-            <div class="card-block">
+            <img class="card-img-top" src="demo/sweco-demo.jpg" alt="">
+            <div class="card-body">
               <h4 class="card-title">Card default</h4>
               <p class="card-text">Some quick lorem ipsum example text to build on the card title and make up the bulk of the card's content.</p>
             </div>
@@ -1225,11 +1267,9 @@
         <div class="col-12 col-md-6 col-lg-3">
 <!-- CARD 2 START -->
           <div class="card">
-            <div class="card-img-block">
-              <img src="demo/sweco-demo.jpg" alt="">
-            </div>
-            <div class="card-block">
-              <h4 class="card-title">Card default</h4>
+            <img class="card-img-top" src="demo/sweco-demo.jpg" alt="">
+            <div class="card-body">
+              <h4 class="card-title">Card info</h4>
               <p class="card-text">Some quick lorem ipsum example text to build on the card title and make up the bulk of the card's content.</p>
             </div>
             <div class="card-footer">
@@ -1241,10 +1281,8 @@
         <div class="col-12 col-md-6 col-lg-3">
 <!-- CARD 3 START -->
           <div class="card card-info">
-            <div class="card-img-block">
-              <img src="demo/sweco-demo.jpg" alt="">
-            </div>
-            <div class="card-block">
+            <img class="card-img-top" src="demo/sweco-demo.jpg" alt="">
+            <div class="card-body">
               <h4 class="card-title">Card info</h4>
               <p class="card-text">Some quick lorem ipsum example text to build on the card title and make up the bulk of the card's content.</p>
             </div>
@@ -1257,11 +1295,9 @@
         <div class="col-12 col-md-6 col-lg-3">
 <!-- CARD 4 START -->
           <div class="card card-info">
-            <div class="card-img-block">
-              <img src="demo/sweco-demo.jpg" alt="">
-            </div>
-            <div class="card-block">
-              <h4 class="card-title">Card info</h4>
+            <img class="card-img-top" src="demo/sweco-demo.jpg" alt="">
+            <div class="card-body">
+              <h4 class="card-title">Card default</h4>
               <p class="card-text">Some quick lorem ipsum example text to build on the card title and make up the bulk of the card's content.</p>
             </div>
             <div class="card-footer">
@@ -1282,11 +1318,11 @@
             <div class="well well-secondary">
 <!-- MODAL START -->
               <h4 id="modal">Modals</h4>
-              <p>Read more about <a href="http://v4-alpha.getbootstrap.com/components/modal/" target="_blank">modals</a>.</p>
+              <p>Read more about <a href="https://getbootstrap.com/docs/4.0/components/modal/" target="_blank">modals</a>.</p>
 
               <button type="button" class="btn btn-info btn-block mb-2" data-toggle="modal" data-target="#standardModal">Launch modal</button>
 <!-- MODAL STANDARD START -->
-              <div class="modal fade" id="standardModal" tabindex="-1" role="dialog" aria-labelledby="standardModalLabel" aria-hidden="true">
+              <div class="modal fade" id="standardModal" tabindex="-1" role="dialog" aria-labelledby="standardModalLabel" data-animation="false">
                 <div class="modal-dialog" role="document">
                   <div class="modal-content">
                     <div class="modal-header">
@@ -1313,7 +1349,7 @@
 
               <button type="button" class="btn btn-info btn-block mb-2" data-toggle="modal" data-target="#pageModal">Launch page modal</button>
 <!-- MODAL PAGE START -->
-              <div class="modal modal-page fade" id="pageModal" tabindex="-1" role="dialog" aria-labelledby="pageModalLabel" aria-hidden="true">
+              <div class="modal modal-page fade" id="pageModal" tabindex="-1" role="dialog" aria-labelledby="pageModalLabel" data-animation="false">
                 <div class="modal-dialog" role="document">
                   <div class="modal-content">
                     <div class="modal-header">
@@ -1353,7 +1389,7 @@
               <h4 id="collapse">Collapse</h4>
               <button type="button" class="btn btn-info btn-collapse" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">Button collapse</button>
               <div class="collapse" id="collapseExample">
-                <div class="card card-block mt-4 mb-2">
+                <div class="mt-4 mb-2">
                   Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
                 </div>
               </div>
@@ -1365,7 +1401,7 @@
             <div class="well well-secondary">
 <!-- POPOVER START -->
               <h4 id="popover">Popovers</h4>
-              <p>Read more about <a href="http://v4-alpha.getbootstrap.com/components/popovers/" target="_blank">popovers</a>.</p>
+              <p>Read more about <a href="http://getbootstrap.com/docs/4.0/components/popovers/" target="_blank">popovers</a>.</p>
 
               <button type="button" class="btn btn-info btn-block mb-2" data-container="body" data-toggle="popover" data-placement="top" title="Popover title" data-content="Vivamus sagittis lacus vel augue laoreet rutrum faucibus." {{action 'popover'}}>Popover on top</button>
               <button type="button" class="btn btn-info btn-block mb-2" data-container="body" data-toggle="popover" data-placement="right" title="Popover title" data-content="Vivamus sagittis lacus vel augue laoreet rutrum faucibus." {{action 'popover'}}>Popover on right</button>
@@ -1380,7 +1416,7 @@
               <h4 id="datepicker">Datetimepicker</h4>
               <p>Read more about <a href="http://eonasdan.github.io/bootstrap-datetimepicker/" target="_blank">datetimepicker</a>.</p>
 <!-- DATETIMEPICKER START -->
-              <!-- Example js
+              <!-- Example Javascript START
                 $('.datetimepicker').datetimepicker({
                   format: 'YYYY-MM-DD',
                   icons:
@@ -1396,7 +1432,7 @@
                     close: 'fa fa-times-circle'
                   }
                 });
-              -->
+              Example Javascript STOP -->
               <div class="form-group input-group mb-2 datetimepicker">
                 <span class="input-group-addon">
                   <i class="fa fa-calendar" aria-hidden="true"></i>
@@ -1412,7 +1448,7 @@
             <div class="well well-secondary">
 <!-- TOOLTIP START -->
               <h4 id="tooltip">Tooltips</h4>
-              <p>Read more about <a href="http://v4-alpha.getbootstrap.com/components/tooltips/" target="_blank">tooltips</a>.</p>
+              <p>Read more about <a href="http://getbootstrap.com/docs/4.0/components/tooltips/" target="_blank">tooltips</a>.</p>
 
               <button type="button" class="btn btn-info btn-block mb-2" data-toggle="tooltip" data-placement="top" title="Tooltip on top">Tooltip on top</button>
               <button type="button" class="btn btn-info btn-block mb-2" data-toggle="tooltip" data-placement="right" title="Tooltip on right">Tooltip on right</button>
@@ -1431,11 +1467,11 @@
 <!-- TYPEAHEAD STOP -->
             </div>
 
-          </div>
+          </div>         
         </div>
 <!-- COMPONENTS STOP -->
       </div>
-
+        
     </section>
 <!-- EXAMPLE CONTENT STOP -->
 
