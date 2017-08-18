@@ -486,6 +486,58 @@ h1, h2, h3, h4, h5, h6,
   .container-fluid
   {
     position: relative;
+    > .row
+    {
+      @extend .no-gutters;
+      flex-basis: 100%;
+    }
+    @include media-breakpoint-down(sm)
+    {
+      padding-right: $spacer-x;
+      padding-left: $spacer-x;
+    }
+  }
+  .navbar-collapse
+  {
+    @include media-breakpoint-up(lg)
+    {
+      justify-content: flex-end;
+      flex-basis: auto;
+    }
+    @include media-breakpoint-down(md)
+    {
+      .nav
+      {
+        .nav-item
+        {
+          margin-bottom: 15px;
+          margin-left: 0 !important;
+          .nav-link
+          {
+            display: inline-block;
+          }
+        }
+      }
+    }
+  }
+  // Navbar toggler
+  .navbar-toggler
+  {
+    position: absolute;
+    top: 15px;
+    right: $grid-gutter-width;
+    z-index: $zindex-fixed-dropdown;
+    border-width: 2px;
+    cursor: pointer;
+    @include hover-focus-active
+    {
+      outline: 0 !important;
+      border: 2px solid $white;
+    }
+    @include media-breakpoint-down(xs)
+    {
+      right: $spacer-x;
+    }
   }
   // Dropdown
   .dropdown-menu
@@ -495,17 +547,6 @@ h1, h2, h3, h4, h5, h6,
   // Navbar navigation
   .nav
   {
-    padding-top: 15px;
-    &.nav-top-right
-    {
-      position: absolute;
-      top: 0;
-      right: ($spacer-y * 2);
-      @include media-breakpoint-down(xs)
-      {
-        right: $spacer-y;
-      }
-    }
     .nav-item + .nav-item
     {
       margin-left: $spacer-x;
@@ -560,7 +601,6 @@ h1, h2, h3, h4, h5, h6,
   }
   &.navbar-north
   {
-    display: block;
     min-height: $navbar-north-height;
     .logotype-white
     {
@@ -571,6 +611,10 @@ h1, h2, h3, h4, h5, h6,
   {
     position: relative;
     margin-top: 10px;
+    @include media-breakpoint-up(lg)
+    {
+      padding: 0 $spacer-x;
+    }
     @include media-breakpoint-down(md)
     {
       margin-top: 0;
@@ -585,11 +629,6 @@ h1, h2, h3, h4, h5, h6,
     .btn-search
     {
       @extend .btn-info;
-      @include hover-focus
-      {
-        outline: 0 !important;
-        box-shadow: $btn-focus-box-shadow;
-      }
       margin-left: 0 !important;
       padding-left: 15px;
       padding-right: 14px;
@@ -757,6 +796,22 @@ header.header-image
     outline: 0 !important;
     cursor: pointer;
   }
+  &.btn-primary
+  {
+    @include hover-focus
+    {
+      background-color: darken($btn-primary-bg, 10%);
+      border-color: darken($btn-primary-bg, 10%);
+    }
+  }
+  &.btn-info
+  {
+    @include hover-focus
+    {
+      background-color: darken($btn-info-bg, 10%);
+      border-color: darken($btn-info-bg, 10%);
+    }
+  }
   &.btn-secondary
   {
     color: $btn-secondary-color;
@@ -774,6 +829,27 @@ header.header-image
   &.btn-warning
   {
     color: $btn-warning-color;
+    @include hover-focus
+    {
+      background-color: darken($btn-warning-bg, 10%);
+      border-color: darken($btn-warning-bg, 10%);
+    }
+  }
+  &.btn-danger
+  {
+    @include hover-focus
+    {
+      background-color: darken($btn-danger-bg, 10%);
+      border-color: darken($btn-danger-bg, 10%);
+    }
+  }
+  &.btn-success
+  {
+    @include hover-focus
+    {
+      background-color: darken($btn-success-bg, 10%);
+      border-color: darken($btn-success-bg, 10%);
+    }
   }
   &.disabled,
   &[disabled],
@@ -2040,8 +2116,6 @@ select.form-control[multiple]
     {
       flex: auto;
       width: 100%;
-      margin-left: 0 !important;
-      margin-right: 0 !important;
     }
   }
 }
