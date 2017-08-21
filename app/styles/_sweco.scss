@@ -501,16 +501,18 @@ h1, h2, h3, h4, h5, h6,
       padding-left: $spacer-x;
     }
   }
-  .navbar-collapse
+  // Navbar nav
+  .navbar-nav
   {
     @include media-breakpoint-up(lg)
     {
       justify-content: flex-end;
-      flex-basis: auto;
+      // flex-basis: auto;
       order: 3;
     }
     @include media-breakpoint-down(md)
     {
+      display: block;
       order: 2;
       .nav
       {
@@ -537,9 +539,13 @@ h1, h2, h3, h4, h5, h6,
     border-width: 2px;
     min-width: 50px;
     cursor: pointer;
-    @include hover-focus-active
+    @include hover-focus
     {
       outline: 0 !important;
+      border: 2px solid $white;
+    }
+    &[aria-expanded^="true"]
+    {
       border: 2px solid $white;
     }
     @include media-breakpoint-down(xs)
@@ -2098,10 +2104,6 @@ select.form-control[multiple]
 .card
 {
   margin-bottom: ($spacer-y * 2);
-  .card-img-top
-  {
-    height: 100%; // IE fix
-  }
   .card-footer
   {
     display: flex !important;
@@ -2149,6 +2151,11 @@ select.form-control[multiple]
     background-color: $brand-info;
     @extend .white-text;
   }
+}
+// IE polyfill for responsive image
+.ie .card-img-top
+{
+  height: 100%;
 }
 
 // card deck split
