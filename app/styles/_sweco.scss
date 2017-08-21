@@ -53,8 +53,7 @@ body.navbarSouth
       .container > .row,
       .progressjs-navbar
       {
-        margin-left: - 25px !important;
-        margin-right: - 5px !important;
+        margin-left: - 10px !important;
       }
     }
   }
@@ -491,6 +490,7 @@ h1, h2, h3, h4, h5, h6,
     {
       @extend .no-gutters;
       flex-basis: 100%;
+      position: relative;
     }
     @include media-breakpoint-down(sm)
     {
@@ -528,8 +528,8 @@ h1, h2, h3, h4, h5, h6,
   .navbar-toggler
   {
     position: absolute;
-    top: 15px;
-    right: $grid-gutter-width;
+    top: 10px;
+    left: calc(100% - 50px);
     z-index: $zindex-fixed-dropdown;
     border-width: 2px;
     cursor: pointer;
