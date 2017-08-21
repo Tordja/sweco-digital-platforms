@@ -50,10 +50,13 @@ body.navbarSouth
     {
       padding-right: 0 !important;
       padding-left: calc(100vw - 100%) !important;
-      .container > .row,
+      .container > .row
+      {
+        margin-left: - 7px !important;
+      }
       .progressjs-navbar
       {
-        margin-left: - 10px !important;
+        margin-left: - 17px !important;
       }
     }
   }
@@ -1458,6 +1461,9 @@ select.form-control
 select.form-control:not([size]):not([multiple])
 {
   @extend .custom-select;
+  -moz-appearance: none;
+  text-indent: 0.01px;
+  text-overflow: "";
   &.form-control
   {
     height: 2.5rem;
