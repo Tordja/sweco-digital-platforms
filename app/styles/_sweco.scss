@@ -1165,6 +1165,21 @@ header.header-image
       top: auto !important;
       bottom: -19px !important;
     }
+    &[x-placement^="bottom-start"] {
+      &:before
+      {
+        border-top-color: transparent !important;
+        border-bottom-color: rgba(0,0,0,.1) !important;
+        top: -20px !important;
+      }
+      &:after
+      {
+        margin-left: 0px !important;
+        border-top-color: transparent !important;
+        border-bottom-color: $white !important;
+        top: -19px !important;
+      }
+    }
   }
 }
 
