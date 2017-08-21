@@ -2090,30 +2090,10 @@ select.form-control[multiple]
 // Card
 .card
 {
-  display: flex;
-  flex-direction: column;
-  border: 0;
   margin-bottom: ($spacer-y * 2);
-  img
+  .card-img-top
   {
-    object-fit: cover;
-  }
-  .card-img-block
-  {
-    position: relative;
-    width: 100%;
-    height: auto;
-    overflow: hidden;
-    > img
-    {
-      object-fit: cover;
-      max-width: 100%;
-    }
-  }
-  .card-block
-  {
-    flex-grow: 1 !important;
-    padding: $spacer-y $spacer-x;
+    height: 100%; // IE fix
   }
   .card-footer
   {
@@ -2125,7 +2105,7 @@ select.form-control[multiple]
     {
       @extend .btn-info;
       @extend .btn-sm;
-      @extend .btn-block;
+      // @extend .btn-block;
       font-size: $font-size-sm;
       line-height: 1.1; 
       white-space: pre-wrap;
@@ -2136,7 +2116,6 @@ select.form-control[multiple]
       padding-left: $spacer-x;
       padding-right: $spacer-x;
       text-decoration: none;
-      // border-width: 1px 0 0 0;
       margin-top: 0 !important;
       flex-grow: 1;
       & + .btn
