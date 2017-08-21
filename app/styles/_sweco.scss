@@ -535,6 +535,7 @@ h1, h2, h3, h4, h5, h6,
     left: calc(100% - 50px);
     z-index: $zindex-fixed-dropdown;
     border-width: 2px;
+    min-width: 50px;
     cursor: pointer;
     @include hover-focus-active
     {
