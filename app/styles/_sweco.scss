@@ -1207,7 +1207,8 @@ header.header-image
   border: 0;
   &.bs-popover-bottom
   {
-    .arrow:after
+    .arrow:after,
+    .arrow:before
     {
       border-bottom-color: $popover-header-bg !important;
     }
