@@ -8532,22 +8532,22 @@ h1 > .fa, h2 > .fa, h3 > .fa, h4 > .fa, h5 > .fa, h6 > .fa,
         padding-right: 1rem;
         padding-left: 1rem; } }
   @media (min-width: 992px) {
-    .navbar .navbar-collapse {
+    .navbar .navbar-nav {
       justify-content: flex-end;
-      flex-basis: auto;
       order: 3; } }
   @media (max-width: 991px) {
-    .navbar .navbar-collapse {
+    .navbar .navbar-nav {
+      display: block;
       order: 2; }
-      .navbar .navbar-collapse .nav {
+      .navbar .navbar-nav .nav {
         flex-direction: column !important; }
-        .navbar .navbar-collapse .nav .nav-item, .navbar .navbar-collapse
+        .navbar .navbar-nav .nav .nav-item, .navbar .navbar-nav
         .nav > li {
           margin-bottom: 15px;
           margin-left: 0 !important; }
-          .navbar .navbar-collapse
-          .nav > li .nav-link, .navbar .navbar-collapse .nav .nav-item .nav-link, .navbar .navbar-collapse .nav > li .nav-link, .navbar .navbar-collapse .nav .nav-item > a, .navbar .navbar-collapse .nav .nav-item > a, .navbar .navbar-collapse .nav > li .nav-item > a, .navbar .navbar-collapse .nav .nav-item
-          .nav > li > a, .navbar .navbar-collapse
+          .navbar .navbar-nav
+          .nav > li .nav-link, .navbar .navbar-nav .nav .nav-item .nav-link, .navbar .navbar-nav .nav > li .nav-link, .navbar .navbar-nav .nav .nav-item > a, .navbar .navbar-nav .nav .nav-item > a, .navbar .navbar-nav .nav > li .nav-item > a, .navbar .navbar-nav .nav .nav-item
+          .nav > li > a, .navbar .navbar-nav
           .nav > li > a {
             display: inline-block; } }
   .navbar .navbar-toggler {
@@ -8556,9 +8556,12 @@ h1 > .fa, h2 > .fa, h3 > .fa, h4 > .fa, h5 > .fa, h6 > .fa,
     left: calc(100% - 50px);
     z-index: 1060;
     border-width: 2px;
+    min-width: 50px;
     cursor: pointer; }
-    .navbar .navbar-toggler:focus, .navbar .navbar-toggler:active, .navbar .navbar-toggler:hover {
+    .navbar .navbar-toggler:focus, .navbar .navbar-toggler:hover {
       outline: 0 !important;
+      border: 2px solid #fff; }
+    .navbar .navbar-toggler[aria-expanded^="true"] {
       border: 2px solid #fff; }
     @media (max-width: 575px) {
       .navbar .navbar-toggler {
@@ -9642,8 +9645,6 @@ select.form-control[multiple] {
 
 .card {
   margin-bottom: 2rem; }
-  .card .card-img-top {
-    height: 100%; }
   .card .card-footer {
     display: flex !important;
     flex-direction: row !important;
@@ -9675,6 +9676,9 @@ select.form-control[multiple] {
           margin-right: 0; }
   .card.card-info {
     background-color: #7e8dab; }
+
+.ie .card-img-top {
+  height: 100%; }
 
 .card-deck-split .card {
   flex: 1;
