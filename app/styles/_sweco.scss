@@ -37,7 +37,7 @@ body.navbarSouth
   }
 }
 
-// Windows fix for scroll on fixed-navbars on scroll and modal open
+// Windows fix for scroll jump on fixed-navbars on scroll
 .ie-10,
 .ie-11,
 .win.chrome,
@@ -48,6 +48,7 @@ body.navbarSouth
     .navbar.fixed-top,
     .navbar.fixed-bottom
     {
+      padding-right: 0 !important;
       padding-left: calc(100vw - 100%) !important;
       .container > .row,
       .progressjs-navbar
