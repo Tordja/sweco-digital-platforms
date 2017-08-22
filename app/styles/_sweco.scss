@@ -506,9 +506,11 @@ h1, h2, h3, h4, h5, h6,
   {
     @include media-breakpoint-up(lg)
     {
-      justify-content: flex-end;
-      // flex-basis: auto;
       order: 3;
+      .navbar-collapse
+      {
+        justify-content: flex-end;
+      }
     }
     @include media-breakpoint-down(md)
     {
