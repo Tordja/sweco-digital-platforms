@@ -54,7 +54,6 @@ The sweco-bootstrap.js includes a handful of JavaScript to help bring some of ou
 * [jQuery](https://jquery.com/)
 * [Popper.js](https://popper.js.org/)
 * [Font-awesome](http://fontawesome.io/icons/)
-* [Modernizr](https://modernizr.com/)
 * [jQuery-browser-detection](https://github.com/schickling/jquery-browser-detection)
 * [Progress.js](http://usablica.github.io/progress.js/)
 * [Moment with locales](https://github.com/moment/moment)
@@ -71,8 +70,8 @@ Have a bug or a feature request? Please first read the [existing issues](https:/
 
 You will need the following things properly installed on your computer.
 
-* [Git](http://git-scm.com/)
-* [Node.js](http://nodejs.org/) (with NPM)
+* [Git](https://git-scm.com/)
+* [Node.js](http://nodejs.org/) (with NPM, latest LTS version recommended)
 * [Bower](http://bower.io/)
 * [Ember CLI](http://ember-cli.com/)
 * [PhantomJS](http://phantomjs.org/)

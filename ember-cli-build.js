@@ -43,8 +43,6 @@ module.exports = function(defaults) {
   // please specify an object with the list of modules as keys
   // along with the exports of each module as its value.
 
-  // Modernizr
-  app.import("bower_components/modernizr/modernizr.js");
   // Jquery browser detection
   app.import("bower_components/jquery-browser-detection/src/jquery.browser.detection.js");
   // Bootstrap

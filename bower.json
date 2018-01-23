@@ -1,13 +1,12 @@
 {
   "name": "sweco-bootstrap",
   "dependencies": {
-    "modernizr": "2.8.3",
-    "jquery": "3.2.1",
+    "jquery": "3.3.1",
     "jquery-browser-detection": "0.2.0",
-    "bootstrap": "4.0.0-beta",
-    "font-awesome": "4.7",
+    "bootstrap": "4.0.0",
+    "font-awesome": "4.7.0",
     "progress.js": "0.1.0",
-    "moment": "moment/moment#2.15.2",
+    "moment": "moment/moment#2.20.1",
     "bootstrap-datetimepicker": "Eonasdan/bootstrap-datetimepicker#4.17.47",
     "typeahead.js": "0.11.1"
   },
