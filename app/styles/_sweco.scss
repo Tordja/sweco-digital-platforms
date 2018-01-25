@@ -395,9 +395,6 @@ samp
 // Table
 table
 {
-  background-color: $table-bg;
-  width: 100%;
-  max-width: 100%;
   th,
   td
   {
@@ -415,7 +412,11 @@ table
   }
   &.table
   {
+    background-color: $table-bg;
+    width: 100%;
+    max-width: 100%;
     @extend .table-bordered;
+    border: 0;
     thead
     {
       th
@@ -439,13 +440,13 @@ table
     {
       transition: $transition;
     }
-    &.table-sm
+  }
+  &.table-sm
+  {
+    th,
+    td
     {
-      th,
-      td
-      {
-        font-size: $font-size-xs;
-      }
+      font-size: $font-size-xs;
     }
   }
 }
@@ -834,7 +835,7 @@ header.header-image
   &.btn-secondary
   {
     color: $btn-secondary-color;
-    border-color: $btn-secondary-border;
+    border: 1px solid $btn-secondary-border;
     &:hover,
     &:focus,
     &:active,
@@ -884,6 +885,7 @@ header.header-image
     &:active,
     &.active
     {
+      cursor: default;
       background: $btn-disabled-bg-color !important;
       border-color: $btn-link-disabled-color !important;
       color: $btn-link-disabled-color !important;
@@ -1335,13 +1337,14 @@ fieldset
   }
 }
 
-.col-form-label
+.row
 {
-  padding-right: 0 !important;
-  &.text-right
+  .col-form-label
   {
-    padding-top: $input-padding-y;
-  }
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+  }  
 }
 
 // Form-group
@@ -1417,42 +1420,12 @@ fieldset
   }
 }
 
-// Input group
-.ie .input-group .form-control
-{
-  min-height: 41px;
-  &.form-control-lg
-  {
-    min-height: $input-height-lg;
-  }
-  &.form-control-sm
-  {
-    min-height: $input-height-sm;
-  }
-}
-
 // Checkbox and radio
 .form-check-input,
 input[type="checkbox"],
 input[type="radio"]
 {
   margin-right: .5rem;
-}
-
-// Input-group
-.input-group-addon
-{
-  color: $input-group-addon-color !important;
-}
-
-.input-group-sm
-{
-  .input-group-addon
-  {
-    font-size: $font-size-base;
-    padding-top: .3rem;
-    padding-bottom: .3rem;
-  }
 }
 
 // Textarea
@@ -1477,15 +1450,15 @@ select.form-control:not([size]):not([multiple])
   {
     height: 2.5rem;
   }
-  &.form-control-lg
-  {
-    height: 3.13rem;
-  }
   &.form-control-sm
   {
     height: 1.88rem;
-    padding-top: .31rem;
-    padding-bottom: .32rem;
+    padding-top: .2rem;
+    padding-bottom: .3rem;
+  }
+  &.form-control-lg
+  {
+    height: 3.13rem;
   }
 }
 
@@ -1799,6 +1772,7 @@ select.form-control[multiple]
       &[disabled]
       {
         cursor: $cursor-disabled;
+        color: $nav-disabled-link-color !important;
       }
     }
   }
@@ -2003,6 +1977,7 @@ select.form-control[multiple]
 {
   text-transform: uppercase;
   min-height: 20px;
+  color: $badge-color;
   &.badge-pill
   {
     border-radius: $badge-pill-border-radius;
@@ -2031,7 +2006,7 @@ select.form-control[multiple]
 // List group
 .list-group
 {
-  margin-bottom: $spacer-y !important;
+  margin-bottom: $spacer !important;
   .list-group-item
   {
     position: relative;
@@ -2093,11 +2068,13 @@ select.form-control[multiple]
       width: 100%;
       font-family: $font-family-regular;
       text-transform: none;
+      margin-bottom: ($spacer / 4);
     }
     &.disabled,
     &[disabled]
     {
       color: $list-group-disabled-color;
+      cursor: $cursor-disabled;
     }
   }
 }
@@ -2116,7 +2093,6 @@ select.form-control[multiple]
     {
       @extend .btn-info;
       @extend .btn-sm;
-      // @extend .btn-block;
       font-size: $font-size-sm;
       line-height: 1.1; 
       white-space: pre-wrap;
