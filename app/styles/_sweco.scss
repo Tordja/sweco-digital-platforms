@@ -294,7 +294,7 @@ h6,
 
 .page-header
 {
-  padding: ($spacer-y * 2) 0;
+  padding: $spacer-y 0;
 }
 
 .lead
@@ -497,8 +497,8 @@ h1, h2, h3, h4, h5, h6,
     }
     @include media-breakpoint-down(sm)
     {
-      padding-right: $spacer-x;
-      padding-left: $spacer-x;
+      padding-right: $spacer;
+      padding-left: $spacer;
     }
   }
   // Navbar nav
@@ -552,7 +552,7 @@ h1, h2, h3, h4, h5, h6,
     }
     @include media-breakpoint-down(xs)
     {
-      right: $spacer-x;
+      right: $spacer;
     }
   }
   // Dropdown
@@ -565,7 +565,7 @@ h1, h2, h3, h4, h5, h6,
   {
     .nav-item + .nav-item
     {
-      margin-left: $spacer-x;
+      margin-left: $spacer;
     }
     .nav-link
     {
@@ -621,7 +621,7 @@ h1, h2, h3, h4, h5, h6,
     min-height: $navbar-north-height;
     .logotype-white
     {
-      margin-left: -$spacer-x;
+      margin-left: -$spacer;
     }
   }
   .search
@@ -631,7 +631,7 @@ h1, h2, h3, h4, h5, h6,
     @include media-breakpoint-up(lg)
     {
       order: 2;
-      padding: 0 $spacer-x;
+      padding: 0 $spacer;
     }
     @include media-breakpoint-down(md)
     {
@@ -737,13 +737,13 @@ h1, h2, h3, h4, h5, h6,
     {
       background-color: $navbar-bg;
       @extend .white-text;
-      padding: ($spacer-y * 2) ($spacer-x * 2);
+      padding: $spacer-y $spacer-x;
     }
     .version
     {
       font-size: $font-size-sm;
       text-transform: none;
-      margin-left: ($spacer-x / 2);
+      margin-left: $spacer;
     }
   }
 }
@@ -755,7 +755,7 @@ header.header-image
   min-height: 280px;
   max-height: 480px;
   overflow: hidden;
-  margin-bottom: ($spacer-y * 2);
+  margin-bottom: $spacer-y;
   background-repeat: no-repeat;
   background-position: 50% 50%;
   background-size: cover;
@@ -1048,7 +1048,7 @@ header.header-image
     border-color: transparent;
     display: block;
     position: absolute;
-    left: ($spacer-x / 2);
+    left: $spacer;
     z-index: $zindex-dropdown;
     border-width: 10px;
   }
@@ -1245,7 +1245,7 @@ header.header-image
   {
     color: $white;
     position: relative;
-    padding-right: ($spacer-x * 3);
+    padding-right: ($spacer * 3);
   }
   .popover-content
   {
@@ -1259,7 +1259,7 @@ header.header-image
     position: absolute;
     top: 9px;
     z-index: ($zindex-popover + 1);
-    right: $spacer-x;
+    right: $spacer;
     color: $white;
     &:before
     {
@@ -1293,8 +1293,8 @@ header.header-image
   position: relative;
   display: block;
   background-color: $white;
-  padding: $spacer-y ($spacer-x * 2);
-  margin-bottom: ($spacer-y * 2);
+  padding: $spacer-y $spacer-x;
+  margin-bottom: $spacer-y;
   @extend .clearfix;
   @include media-breakpoint-down(xs)
   {
@@ -1325,13 +1325,13 @@ header.header-image
 fieldset
 {
   @include clearfix;
-  padding: $spacer-y ($spacer-x * 2);
-  margin-bottom: ($spacer-y * 2);
+  padding: $spacer-y $spacer-x;
+  margin-bottom: $spacer-y;
   background-color: $fieldset-bg;
   @include media-breakpoint-down(xs)
   {
-    padding-left: $spacer-x !important;
-    padding-right: $spacer-x !important;
+    padding-left: $spacer !important;
+    padding-right: $spacer !important;
   }
 }
 
@@ -1867,7 +1867,7 @@ select.form-control[multiple]
     .open a
     {
       border-right: 1px solid $nav-border-color;
-      padding-left: ($spacer-x * 2);
+      padding-left: $spacer-x;
       @include plain-hover-focus
       {
         color: $nav-pills-link-active-color;
@@ -1878,7 +1878,7 @@ select.form-control[multiple]
       {
         position: absolute;
         top: 8px;
-        left: $spacer-x;
+        left: $spacer;
         display: inline-block;
         font-family: FontAwesome;
         color: inherit;
@@ -2040,7 +2040,7 @@ select.form-control[multiple]
     text-align: inherit;
     text-transform: uppercase;
     transition: $transition-fade;
-    padding-right: ($spacer-x * 2);
+    padding-right: $spacer;
     border-left: 0;
     border-right: 0;
     @include hover-focus
@@ -2078,7 +2078,7 @@ select.form-control[multiple]
     }
     &.list-group-item-action
     {
-      padding-right: $spacer-x;
+      padding-right: $spacer;
       &:after
       {
         display: none;
@@ -2105,7 +2105,7 @@ select.form-control[multiple]
 // Card
 .card
 {
-  margin-bottom: ($spacer-y * 2);
+  margin-bottom: $spacer-y;
   .card-footer
   {
     display: flex !important;
@@ -2124,8 +2124,8 @@ select.form-control[multiple]
       text-align: left;
       padding-top: .45rem;
       padding-bottom: .45rem;
-      padding-left: $spacer-x;
-      padding-right: $spacer-x;
+      padding-left: $spacer;
+      padding-right: $spacer;
       text-decoration: none;
       margin-top: 0 !important;
       flex-grow: 1;
@@ -2141,7 +2141,7 @@ select.form-control[multiple]
           font-size: 18px !important;
           position: absolute;
           bottom: 8px;
-          right: $spacer-x;
+          right: $spacer;
           margin-left: 0;
           margin-right: 0;
         }
@@ -2163,14 +2163,15 @@ select.form-control[multiple]
 // card deck split
 .card-deck-split
 {
+  margin-bottom: $spacer-y;
   .card
   {
     flex: 1;
-    padding: $spacer-y ($spacer-x * 2);
+    padding: $spacer-y $spacer-x;
     @include media-breakpoint-down(xs)
     {
-      padding-left: $spacer-x !important;
-      padding-right: $spacer-x !important;
+      padding-left: $spacer !important;
+      padding-right: $spacer !important;
     }
     @include media-breakpoint-down(md)
     {
@@ -2217,7 +2218,7 @@ select.form-control[multiple]
         @extend .close-icon;
         position: absolute;
         top: 15px;
-        right: $spacer-x;
+        right: $spacer;
         z-index: ($zindex-modal + 1);
         margin: 0;
         color: $white;
@@ -2329,14 +2330,14 @@ select.form-control[multiple]
       {
         @include media-breakpoint-up(md)
         {
-          padding-left: ($spacer-x * 2);
-          padding-right: ($spacer-x * 2);
+          padding-left: $spacer;
+          padding-right: $spacer;
         }
         .modal-header-btn-group
         {
           position: absolute;
           top: 10px !important;
-          left: $spacer-x !important;
+          left: $spacer !important;
           .btn
           {
             @extend .btn-link;
@@ -2350,7 +2351,7 @@ select.form-control[multiple]
         @extend .inner-y;
         @include media-breakpoint-up(md)
         {
-          padding: ($spacer-y * 2) ($spacer-x * 2);
+          padding: $spacer-y $spacer-x;
         }
       }
     }
@@ -2411,13 +2412,13 @@ select.form-control[multiple]
       {
         @extend .h5;
         margin: 0;
-        padding: .625rem $spacer-x;
-        padding-right: ($spacer-x * 2);
+        padding: .625rem $spacer;
+        padding-right: $spacer;
       }
     }
     .card-block
     {
-      padding: $spacer-y $spacer-x;
+      padding: $spacer;
       border-bottom: 1px solid $component-bg-hover;
       p:last-child
       {
