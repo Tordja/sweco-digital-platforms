@@ -476,7 +476,7 @@ table
 {
   > .fa
   {
-    margin-right: 10px;
+    margin-right: ($spacer / 2);
     &.fa-angle-left,
     &.fa-angle-right
     {
@@ -490,7 +490,7 @@ table
 .fa-right
 {
   margin-right: 0 !important;
-  margin-left: 10px !important;
+  margin-left: ($spacer / 2) !important;
 }
 
 h1, h2, h3, h4, h5, h6,
@@ -498,7 +498,7 @@ h1, h2, h3, h4, h5, h6,
 {
   > .fa
   {
-    margin-right: 10px;
+    margin-right: ($spacer / 2);
   }
 }
 
@@ -556,10 +556,10 @@ h1, h2, h3, h4, h5, h6,
   .navbar-toggler
   {
     position: absolute;
-    top: 10px;
+    top: $spacer;
     left: calc(100% - 50px);
     z-index: $zindex-fixed-dropdown;
-    border-width: 2px;
+    border: 2px solid transparent;
     min-width: 50px;
     cursor: pointer;
     @include hover-focus
@@ -682,8 +682,12 @@ h1, h2, h3, h4, h5, h6,
     {
       position: absolute;
       top: 9px;
-      right: 60px;
+      right: ($spacer * 5);
       z-index: ($zindex-fixed-dropdown + 5);
+      @include media-breakpoint-down(md)
+      {
+        right: ($spacer * 4);
+      }
     }
   }
   &.navbar-south
@@ -2221,10 +2225,13 @@ select.form-control[multiple]
   .fa
   {
     @extend .fa-lg;
-    margin-right: 10px;
+    margin-right: ($spacer / 2);
+  }
+  code
+  {
+    background-color: inherit;
   }
 }
-
 
 // Modal
 .modal
