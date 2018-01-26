@@ -910,19 +910,25 @@
                   </div>
                 </div>
 
-                <div class="row">
+                <div class="form-group row">
                   <label class="col-4 col-form-label text-right">File browser</label>
                   <div class="col-8">
-                    <label class="custom-file">
-                      <input type="file" id="file" class="custom-file-input">
-                      <span class="custom-file-control"></span>
-                    </label>
+<!-- FILE BROWSER START -->
+                    <div class="file-browser input-group">
+                      <label class="input-group-prepend input-group-btn">
+                        <span class="btn btn-info">
+                          Browse&hellip; <input type="file" style="display: none;" multiple>
+                        </span>
+                      </label>
+                      <input type="text" class="form-control" readonly>
+                    </div>
+<!-- FILE BROWSER STOP -->
                   </div>
                 </div>
-
                 <div class="form-group row">
                   <label class="col-4 col-form-label text-right">Checkbox</label>
                   <div class="col-8">
+<!-- CHECKBOX START -->
                     <div class="check">
                       <input type="checkbox" id="check1" value="option1" checked><label for="check1">Checkbox one</label>
                     </div>
@@ -930,19 +936,20 @@
                       <input type="checkbox" id="check2" value="option2"><label for="check2">Checkbox two</label>
                     </div>
                     <div class="check">
-                      <input type="checkbox" id="blankCheckbox" value="option3" aria-label="...">
+                      <input type="checkbox" id="blankCheckbox" value="option3">
                       <label for="blankCheckbox"></label>
                     </div>
                     <div class="check disabled">
                       <input type="checkbox" id="check4" value="option4" disabled>
                       <label for="check4">Checkbox disabled</label>
                     </div>
+<!-- CHECKBOX STOP -->
                   </div>
                 </div>
-
                 <div class="form-group row">
                   <label class="col-4 col-form-label text-right">Radio</label>
-                  <div class="col-8">
+                  <div class="col-8 pb-3">
+<!-- RADIO START -->
                     <div class="radio">
                       <input type="radio" name="exampleRadios" id="exampleRadios1" value="option1" checked>
                       <label for="exampleRadios1">Radio one</label>
@@ -952,16 +959,16 @@
                       <label for="exampleRadios2">Radio two</label>
                     </div>
                     <div class="radio">
-                      <input type="radio" name="exampleRadios" id="exampleRadios3" value="option3" aria-label="...">
+                      <input type="radio" name="exampleRadios" id="exampleRadios3" value="option3">
                       <label for="exampleRadios3"></label>
                     </div>
                     <div class="radio disabled">
                       <input type="radio" name="exampleRadios" id="exampleRadios4" value="option4" disabled>
                       <label for="exampleRadios4">Radio disabled</label>
                     </div>
+<!-- RADIO STOP -->
                   </div>
                 </div>
-
                 <div class="form-group row">
                   <label for="readonlyTextInput" class="col-4 col-form-label text-right">Readonly input</label>
                   <div class="col-8">
@@ -1351,11 +1358,11 @@
               <h4 id="popover">Popovers</h4>
               <p>Read more about <a href="http://getbootstrap.com/docs/4.0/components/popovers/" target="_blank">popovers</a>.</p>
 
-              <button type="button" class="btn btn-info btn-block mb-2" data-container="body" data-toggle="popover" data-placement="top" title="Popover title" data-content="Vivamus sagittis lacus vel augue laoreet rutrum faucibus." {{action 'popover'}}>Popover on top</button>
-              <button type="button" class="btn btn-info btn-block mb-2" data-container="body" data-toggle="popover" data-placement="right" title="Popover title" data-content="Vivamus sagittis lacus vel augue laoreet rutrum faucibus." {{action 'popover'}}>Popover on right</button>
-              <button type="button" class="btn btn-info btn-block mb-2" data-container="body" data-toggle="popover" data-placement="left" title="Popover title" data-content="Vivamus sagittis lacus vel augue laoreet rutrum faucibus." {{action 'popover'}}>Popover on left</button>
+              <button type="button" class="btn btn-info btn-block mb-2" data-container="body" data-toggle="popover" data-placement="top" title="Popover title" data-content="Vivamus spagittis lacus vel augue laoreet rutrum faucibus." {{action 'popover'}}>Popover on top</button>
+              <button type="button" class="btn btn-info btn-block mb-2" data-container="body" data-toggle="popover" data-placement="right" title="Popover title" data-content="Vivamus spagittis lacus vel augue laoreet rutrum faucibus." {{action 'popover'}}>Popover on right</button>
+              <button type="button" class="btn btn-info btn-block mb-2" data-container="body" data-toggle="popover" data-placement="left" title="Popover title" data-content="Vivamus spagittis lacus vel augue laoreet rutrum faucibus." {{action 'popover'}}>Popover on left</button>
               <button type="button" class="btn btn-info btn-block mb-2" data-container="body" data-toggle="popover" data-placement="bottom" title="Popover title" data-content="Vivamus
-              sagittis lacus vel augue laoreet rutrum faucibus." {{action 'popover'}}>Popover on bottom</button>
+              spagittis lacus vel augue laoreet rutrum faucibus." {{action 'popover'}}>Popover on bottom</button>
 <!-- POPOVER STOP -->
             </div>
 
@@ -1431,9 +1438,8 @@
             <ul class="list-unstyled">
               <li><a href="https://getbootstrap.com/" target="_blank">Bootstrap 4</a></li>
               <li><a href="https://jquery.com/" target="_blank">jQuery</a></li>
-              <li><a href="https://popper.js.org/" target="_blank">Popper.js</a></li>
-              <li><a href="https://modernizr.com/" target="_blank">Modernizr</a></li>
               <li><a href="https://github.com/schickling/jquery-browser-detection" target="_blank">jQuery-browser-detection</a></li>
+              <li><a href="https://popper.js.org/" target="_blank">Popper.js</a></li>
               <li><a href="http://usablica.github.io/progress.js/" target="_blank">Progress.js</a></li>
               <li><a href="https://github.com/moment/moment" target="_blank">Moment with locales</a></li>
               <li><a href="http://eonasdan.github.io/bootstrap-datetimepicker/" target="_blank">Bootstrap datetimepicker</a></li>

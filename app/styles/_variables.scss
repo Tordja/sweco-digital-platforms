@@ -578,7 +578,7 @@ $custom-select-bg:                  $white;
 $custom-select-disabled-bg:         $disabled-bg;
 $custom-select-bg-size:             14px 12px; // In pixels because image dimensions
 $custom-select-indicator-color:     $text-color;
-$custom-select-indicator:           str-replace(url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='#{$custom-select-indicator-color}' d='M2 0L0 2h4zm0 5L0 3h4z'/%3E%3C/svg%3E"), "#", "%23");
+$custom-select-indicator:           url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiIHdpZHRoPSIxMy45cHgiIGhlaWdodD0iOC4xcHgiIHZpZXdCb3g9IjAgMCAxMy45IDguMSIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgMTMuOSA4LjE7IiB4bWw6c3BhY2U9InByZXNlcnZlIj48c3R5bGUgdHlwZT0idGV4dC9jc3MiPi5zdDB7ZmlsbDojM0EzQTNBO308L3N0eWxlPjx0aXRsZT5hbmdsZS1kb3duPC90aXRsZT48cGF0aCBjbGFzcz0ic3QwIiBkPSJNMTMuOSwxLjJjMCwwLjEsMCwwLjItMC4xLDAuM0w3LjMsOEM3LjIsOC4xLDcuMSw4LjEsNyw4LjFjLTAuMSwwLTAuMiwwLTAuMy0wLjFMMC4xLDEuNUMwLDEuNCwwLDEuMywwLDEuMnMwLTAuMiwwLjEtMC4zbDAuNy0wLjdDMC45LDAsMSwwLDEuMiwwczAuMiwwLDAuMywwLjFMNyw1LjZsNS41LTUuNUMxMi41LDAsMTIuNiwwLDEyLjgsMHMwLjIsMCwwLjMsMC4xbDAuNywwLjdDMTMuOSwwLjksMTMuOSwxLDEzLjksMS4yTDEzLjksMS4yeiIvPjwvc3ZnPg==);
 $custom-select-border-width:        $input-btn-border-width;
 $custom-select-border-color:        $input-border-color;
 $custom-select-border-radius:       0;
@@ -789,7 +789,7 @@ $tooltip-opacity:                   1;
 $tooltip-padding-y:                 5px;
 $tooltip-padding-x:                 10px;
 $tooltip-margin:                    1px;
-$tooltip-arrow-width:               5px;
+$tooltip-arrow-width:               10px;
 $tooltip-arrow-height:              5px;
 $tooltip-arrow-color:               $tooltip-bg;
 
@@ -807,13 +807,13 @@ $popover-header-color:              $white;
 $popover-header-padding-y:          9px;
 $popover-header-padding-x:          $spacer;
 
-$popover-body-color:                $white;
+$popover-body-color:                $text-color;
 $popover-body-padding-y:            $spacer;
 $popover-body-padding-x:            $spacer;
 $popover-body-max-height:           280px;
 
-$popover-arrow-width:               10px;
-$popover-arrow-height:              5px;
+$popover-arrow-width:               16px;
+$popover-arrow-height:              8px;
 $popover-arrow-color:               $white;
 $popover-arrow-outer-width:         9px;
 $popover-arrow-outer-color:         fade-in($popover-border-color, .05);

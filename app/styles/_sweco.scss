@@ -1245,8 +1245,6 @@ header.header-image
 // Popover
 .popover
 {
-  box-shadow: $popover-box-shadow;
-  border: 0;
   &.bs-popover-bottom
   {
     .arrow:after,
@@ -1261,7 +1259,7 @@ header.header-image
     position: relative;
     padding-right: ($spacer * 3);
   }
-  .popover-content
+  .popover-body
   {
     position: relative;
     font-size: $font-size-base;
@@ -1282,15 +1280,31 @@ header.header-image
   }
   &[x-placement^="top"] {
     @extend .bs-popover-top;
+    .arrow
+    {
+      top: 100%;
+    }
   }
   &[x-placement^="right"] {
     @extend .bs-popover-right;
+    .arrow
+    {
+      left: -8px;
+    }
   }
   &[x-placement^="bottom"] {
     @extend .bs-popover-bottom;
+    .arrow
+    {
+      top: -8px;
+    }
   }
   &[x-placement^="left"] {
     @extend .bs-popover-left;
+    .arrow
+    {
+      right: -8px;
+    }
   }
 }
 
@@ -1430,6 +1444,21 @@ fieldset
     line-height: $input-line-height;
     padding-left: $input-padding-x-sm;
     padding-right: $input-padding-x-sm;
+  }
+}
+
+// File browser
+.file-browser
+{
+  label
+  {
+    margin: 0;
+  }
+  .btn,
+  .form-control
+  {
+    height: 40px;
+    padding: $input-padding-y $input-padding-x;
   }
 }
 
