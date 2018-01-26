@@ -365,7 +365,11 @@ pre
 {
   background-color: $code-bg;
   padding: $code-padding-y $code-padding-x;
-  margin: $spacer-y 0;
+  margin: $spacer 0;
+  code
+  {
+    color: $code-color;
+  }
 }
 
 samp
@@ -2171,7 +2175,11 @@ select.form-control[multiple]
 {
   @extend .well;
   @extend .well-warning;
-  margin-bottom: $spacer-y;
+  margin-bottom: $spacer;
+  *
+  {
+    color: #fff;
+  }
   .fa
   {
     @extend .fa-lg;

@@ -1,6 +1,6 @@
 /*
  * Datetimepicker for Bootstrap
- * version : 4.7.14
+ * version : 4.17.47
  * https://github.com/Eonasdan/bootstrap-datetimepicker/
  */
 
@@ -15,13 +15,12 @@ $bs-datetimepicker-alternate-color: $disabled-color;
 {
   .input-group-addon
   {
-    cursor: pointer;
-    background-color: $btn-info-bg;
-    transition: $transition;
-    outline: 0 !important;
-    @include hover-focus
+    @extend .btn;
+    @extend .btn-info;
+    > i,
+    > .fa
     {
-      background-color: darken($btn-info-bg, 5%);
+      margin: 0;
     }
   }
 }
