@@ -452,7 +452,8 @@ table
     th,
     td
     {
-      font-size: $font-size-xs;
+      font-size: $font-size-sm;
+      line-height: $line-height-sm;
     }
   }
 }
