@@ -31,14 +31,6 @@ export default Ember.Controller.extend({
       this.set('isModalVisible', false);
     },
 
-    // Popover
-    popover: function() {
-      $('.popover-title').append('<button type="button" class="close"><i class="fa fa-times-circle"></i></button>');
-      $('.popover .close').click(function() {
-        $('.popover').popover('hide');
-      });
-    }
-
   }
 
 });

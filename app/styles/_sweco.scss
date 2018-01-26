@@ -361,6 +361,13 @@ label,
 }
 
 // Code
+* code
+{
+  background-color: $code-bg;
+  margin: $spacer 0;
+  padding: $code-padding-y $code-padding-x;
+}
+
 pre
 {
   background-color: $code-bg;
@@ -369,6 +376,8 @@ pre
   code
   {
     color: $code-color;
+    margin: 0;
+    padding: 0;
   }
 }
 
