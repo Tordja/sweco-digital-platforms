@@ -551,53 +551,45 @@
 <!-- PAGINATION STOP -->
 
             <h4>Accordion</h4>
+
 <!-- ACCORDION START -->
-            <div class="accordion" id="item-accordion" role="tablist" aria-multiselectable="true">
-<!-- ACCORDION 1 START -->
+            <div id="accordion" class="accordion">
+
               <div class="card">
-                <div class="card-header" role="tab" id="headingOne">
-                  <a data-toggle="collapse" data-parent="#item-accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">Lorem ipsum 1</a>
+                <div class="card-header" id="headingOne">
+                  <a class="" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">Collapsible Item 1</a>
                 </div>
-                <div id="collapseOne" class="collapse show" role="tabpanel" aria-labelledby="headingOne">
-                  <div class="card-block">
-<!-- ACCORDION CONTENT START -->
+                <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+                  <div class="card-body">
                     <p>Some quick lorem ipsum example text to build on the card title and make up the bulk of the card's content.</p>
-<!-- ACCORDION CONTENT STOP -->
                   </div>
                 </div>
               </div>
-<!-- ACCORDION 1 STOP -->
-<!-- ACCORDION 2 START -->
+
               <div class="card">
-                <div class="card-header" role="tab" id="headingTwo">
-                  <a data-toggle="collapse" data-parent="#item-accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Lorem ipsum 2</a>
+                <div class="card-header" id="headingTwo">
+                  <a class="collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Collapsible Item 2</a>
                 </div>
-                <div id="collapseTwo" class="collapse" role="tabpanel" aria-labelledby="headingTwo">
-                  <div class="card-block">
-<!-- ACCORDION CONTENT START -->
+                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+                  <div class="card-body">
                     <p>Some quick lorem ipsum example text to build on the card title and make up the bulk of the card's content.</p>
-<!-- ACCORDION CONTENT STOP -->
                   </div>
                 </div>
               </div>
-<!-- ACCORDION 2 STOP -->
-<!-- ACCORDION 3 START -->
+
               <div class="card">
-                <div class="card-header" role="tab" id="headingThree">
-                  <a class="collapsed" data-toggle="collapse" data-parent="#item-accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">Lorem ipsum 3</a>
+                <div class="card-header" id="headingThree">
+                  <a class="collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">Collapsible Item 3</a>
                 </div>
-                <div id="collapseThree" class="collapse" role="tabpanel" aria-labelledby="headingThree">
-                  <div class="card-block">
-<!-- ACCORDION CONTENT START -->
+                <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+                  <div class="card-body">
                     <p>Some quick lorem ipsum example text to build on the card title and make up the bulk of the card's content.</p>
-<!-- ACCORDION CONTENT STOP -->
                   </div>
                 </div>
               </div>
-<!-- ACCORDION 3 STOP -->
+              
             </div>
 <!-- ACCORDION STOP -->
-
           </div>
         </div>
 <!-- NAVIGATION STOP -->
