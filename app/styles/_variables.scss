@@ -271,29 +271,30 @@ $font-size-lg:                1.3rem;
 $font-size-sm:                .8rem;
 $font-size-xs:                .7rem;
 
+$line-height-base:            1.35;
+$line-height-xl:              1.6;
+$line-height-lg:              1.45;
+$line-height-sm:              1.2;
+$line-height-xs:              1.45;
+$line-height-computed:        1.25rem;
+
 $font-weight-light:           300;
 $font-weight-normal:          400;
 $font-weight-bold:            700;
 $font-weight-base:            $font-weight-normal;
 
-$line-height-base:            1.35;
-$line-height-lg:              1.5;
-$line-height-sm:              1.5;
-$line-height-xs:              1.45;
-$line-height-computed:        1.25rem;
-
-$h1-font-size:                $font-size-base * 2.2;
-$h2-font-size:                $font-size-base * 1.9;
-$h3-font-size:                $font-size-base * 1.6;
-$h4-font-size:                $font-size-base * 1.3;
+$h1-font-size:                $font-size-base * 2.36;
+$h2-font-size:                $font-size-base * 1.98;
+$h3-font-size:                $font-size-base * 1.65;
+$h4-font-size:                $font-size-base * 1.36;
 $h5-font-size:                $font-size-base;
 $h6-font-size:                $font-size-base * .8;
 
-$headings-line-height:        1.3;
+$headings-line-height:        1.26;
 $h1-line-height:              $headings-line-height;
-$h2-line-height:              1.34;
-$h3-line-height:              1.4;
-$h4-line-height:              1.45;
+$h2-line-height:              1.35;
+$h3-line-height:              1.2;
+$h4-line-height:              1.47;
 $h5-line-height:              1.35;
 $h6-line-height:              1.24;
 
@@ -336,7 +337,7 @@ $disabled-bg:                 $gray-superlight;
 $abbr-border-color:           $gray;
 
 $blockquote-small-color:      $text-muted;
-$blockquote-font-size:        ($font-size-base * 1.25);
+$blockquote-font-size:        $font-size-lg;
 
 // Hr
 $hr-border-color:             $border-color;
