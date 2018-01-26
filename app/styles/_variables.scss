@@ -388,11 +388,11 @@ $input-btn-padding-y-xs:      0;
 $input-btn-padding-x-xs:      .25rem;
 $input-btn-line-height-xs:    $line-height-xs;
 
-$input-btn-padding-y-sm:      .19rem;
+$input-btn-padding-y-sm:      .255rem;
 $input-btn-padding-x-sm:      .5rem;
 $input-btn-line-height-sm:    $line-height-sm;
 
-$input-btn-padding-y-lg:      .535rem;
+$input-btn-padding-y-lg:      .41rem;
 $input-btn-padding-x-lg:      1rem;
 $input-btn-line-height-lg:    $line-height-lg;
 
@@ -857,7 +857,7 @@ $modal-header-border-color:         $border-color;
 $modal-footer-border-color:         $modal-header-border-color;
 $modal-header-border-width:         $modal-content-border-width;
 $modal-footer-border-width:         $modal-header-border-width;
-$modal-header-padding:              $spacer;
+$modal-header-padding:              1.035rem $spacer;
 
 $modal-lg:                          800px;
 $modal-md:                          500px;
@@ -894,7 +894,7 @@ $list-group-border-color:           $border-color-light;
 $list-group-border-width:           $border-width;
 $list-group-border-radius:          0;
 
-$list-group-item-padding-y:         .6rem;
+$list-group-item-padding-y:         .565rem;
 $list-group-item-padding-x:         $spacer;
 
 $list-group-hover-bg:               $component-bg-hover;

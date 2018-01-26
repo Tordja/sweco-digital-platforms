@@ -968,6 +968,7 @@ header.header-image
 .btn-sm
 {
   font-size: $font-size-base;
+  line-height: $line-height-base;
 }
 // Btn Bootstrap 3 scss
 .btn-default
@@ -2201,8 +2202,8 @@ select.form-control[multiple]
       {
         @extend .close-icon;
         position: absolute;
-        top: 15px;
-        right: $spacer;
+        top: -1px;
+        right: 0;
         z-index: ($zindex-modal + 1);
         margin: 0;
         color: $white;
@@ -2220,15 +2221,14 @@ select.form-control[multiple]
       }
       @include media-breakpoint-down(xs)
       {
-        padding-top: 9px;
-        padding-bottom: 9px;
+        padding: 10px $spacer;
         .modal-title
         {
           font-size: $h5-font-size;
         }
         .close
         {
-          top: 8px;
+          top: -9px;
         }
       }
     }
@@ -2267,6 +2267,7 @@ select.form-control[multiple]
         text-align: center;
         margin: 0;
         border: 0;
+        min-height: 40px;
       }
       .btn + .btn
       {
