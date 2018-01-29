@@ -95,6 +95,7 @@ $grays: map-merge((
   "900": $gray-900
 ), $grays);
 
+/* BS 
 $indigo:  #6610f2;
 $purple:  #6f42c1;
 $orange:  #fd7e14;
@@ -118,7 +119,7 @@ $colors: map-merge((
   "gray":       $gray,
   "gray-dark":  $dark-gray
 ), $colors);
-
+*/
 $primary:       $dark-gray;
 $secondary:     $white;
 $info:          $blue-dark;
@@ -173,7 +174,7 @@ $yiq-contrasted-threshold:  150;
 $yiq-text-dark: $black-light;
 $yiq-text-light: $white;
 
-// Options
+// Bootstrap options
 $enable-caret:              true;
 $enable-rounded:            false;
 $enable-shadows:            true;
@@ -181,7 +182,6 @@ $enable-gradients:          false;
 $enable-transitions:        true;
 $enable-grid-classes:       true;
 $enable-print-styles:       true;
-
 
 // Spacing
 $spacer: .95rem;
@@ -218,7 +218,7 @@ $link-hover-color:            $pink-dark;
 $link-hover-decoration:       underline;
 
 // Paragraphs
-$paragraph-margin-bottom:     1rem;
+$paragraph-margin-bottom:     $spacer;
 
 // Grid columns
 $grid-columns:                12;
@@ -264,7 +264,6 @@ $font-family-heavy:           "SwecoSans-Bold", $font-family-sans-serif;
 $font-family-base:            $font-family-regular;
 
 // Font-size for scale all typography
-// $font-size-base:              1rem; // Assumes the browser default, typically `16px`
 $font-size-base:              .95rem;
 $font-size-xl:                1.6rem;
 $font-size-lg:                1.3rem;
@@ -380,20 +379,20 @@ $input-btn-focus-width:       .2rem;
 $input-btn-focus-color:       rgba($component-active-bg, .25);
 $input-btn-focus-box-shadow:  0 0 0 $input-btn-focus-width $input-btn-focus-color;
 
-$input-btn-padding-y:         .565rem;
-$input-btn-padding-x:         1rem;
+$input-btn-padding-y:         .625rem; // .565rem;
+$input-btn-padding-x:         $spacer;
 $input-btn-line-height:       $line-height-base;
 
-$input-btn-padding-y-xs:      0;
-$input-btn-padding-x-xs:      .25rem;
+$input-btn-padding-y-xs:      .065rem;
+$input-btn-padding-x-xs:      .275rem;
 $input-btn-line-height-xs:    $line-height-xs;
 
-$input-btn-padding-y-sm:      .255rem;
+$input-btn-padding-y-sm:      .32rem;
 $input-btn-padding-x-sm:      .5rem;
 $input-btn-line-height-sm:    $line-height-sm;
 
-$input-btn-padding-y-lg:      .41rem;
-$input-btn-padding-x-lg:      1rem;
+$input-btn-padding-y-lg:      .47rem;
+$input-btn-padding-x-lg:      $spacer;
 $input-btn-line-height-lg:    $line-height-lg;
 
 $input-btn-border-width:      $border-width;
@@ -467,19 +466,19 @@ $btn-danger-border:           $btn-danger-bg;
 $fieldset-bg:                           $gray-superlight;
 
 // Forms
-$input-padding-y:                       $input-btn-padding-y;
+$input-padding-y:                       ($input-btn-padding-y - .06rem);
 $input-padding-x:                       .75rem;
 $input-line-height:                     $input-btn-line-height;
 
-$input-padding-y-sm:                    $input-btn-padding-y-xs;
+$input-padding-y-sm:                    ($input-btn-padding-y-xs - .06rem);
 $input-padding-x-sm:                    $input-btn-padding-x-xs;
 $input-line-height-sm:                  $input-btn-line-height-xs;
 
-$input-padding-y-sm:                    $input-btn-padding-y-sm;
+$input-padding-y-sm:                    ($input-btn-padding-y-sm - .06rem);
 $input-padding-x-sm:                    $input-btn-padding-x-sm;
 $input-line-height-sm:                  $input-btn-line-height-sm;
 
-$input-padding-y-lg:                    $input-btn-padding-y-lg;
+$input-padding-y-lg:                    ($input-btn-padding-y-lg - .06rem);
 $input-padding-x-lg:                    $input-btn-padding-x-lg;
 $input-line-height-lg:                  $input-btn-line-height-lg;
 
@@ -528,16 +527,16 @@ $form-check-input-margin-x:             .25rem;
 $form-check-inline-margin-x:            .75rem;
 $form-check-inline-input-margin-x:      .3125rem;
 
-$form-group-margin-bottom:              1rem;
+$form-group-margin-bottom:              $spacer;
 
 $input-group-addon-color:               $white;
 $input-group-addon-bg:                  $gray;
 $input-group-addon-border-color:        $input-border-color;
 
 $custom-control-gutter:                         1.5rem;
-$custom-control-spacer-x:                       1rem;
+$custom-control-spacer-x:                       $spacer;
 
-$custom-control-indicator-size:                 1rem;
+$custom-control-indicator-size:                 $spacer;
 $custom-control-indicator-bg:                   $border-color;
 $custom-control-indicator-bg-size:              50% 50%;
 $custom-control-indicator-box-shadow:           inset 0 .25rem .25rem rgba($black, .1);
@@ -570,7 +569,7 @@ $custom-radio-indicator-icon-checked:           str-replace(url("data:image/svg+
 $custom-select-padding-y:           $input-padding-y;
 $custom-select-padding-x:           $input-padding-x;
 $custom-select-height:              $input-height;
-$custom-select-indicator-padding:   1rem; // Extra padding to account for the presence of the background-image based indicator
+$custom-select-indicator-padding:   $spacer; // Extra padding to account for the presence of the background-image based indicator
 $custom-select-line-height:         $input-btn-line-height;
 $custom-select-color:               $input-color;
 $custom-select-disabled-color:      $disabled-color;
@@ -578,7 +577,7 @@ $custom-select-bg:                  $white;
 $custom-select-disabled-bg:         $disabled-bg;
 $custom-select-bg-size:             14px 12px; // In pixels because image dimensions
 $custom-select-indicator-color:     $text-color;
-$custom-select-indicator:           url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiIHdpZHRoPSIxMy45cHgiIGhlaWdodD0iOC4xcHgiIHZpZXdCb3g9IjAgMCAxMy45IDguMSIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgMTMuOSA4LjE7IiB4bWw6c3BhY2U9InByZXNlcnZlIj48c3R5bGUgdHlwZT0idGV4dC9jc3MiPi5zdDB7ZmlsbDojM0EzQTNBO308L3N0eWxlPjx0aXRsZT5hbmdsZS1kb3duPC90aXRsZT48cGF0aCBjbGFzcz0ic3QwIiBkPSJNMTMuOSwxLjJjMCwwLjEsMCwwLjItMC4xLDAuM0w3LjMsOEM3LjIsOC4xLDcuMSw4LjEsNyw4LjFjLTAuMSwwLTAuMiwwLTAuMy0wLjFMMC4xLDEuNUMwLDEuNCwwLDEuMywwLDEuMnMwLTAuMiwwLjEtMC4zbDAuNy0wLjdDMC45LDAsMSwwLDEuMiwwczAuMiwwLDAuMywwLjFMNyw1LjZsNS41LTUuNUMxMi41LDAsMTIuNiwwLDEyLjgsMHMwLjIsMCwwLjMsMC4xbDAuNywwLjdDMTMuOSwwLjksMTMuOSwxLDEzLjksMS4yTDEzLjksMS4yeiIvPjwvc3ZnPg==);
+$custom-select-indicator:           url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iTGFnZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiIHdpZHRoPSIxM3B4IiBoZWlnaHQ9IjExcHgiIHZpZXdCb3g9Ii0yOTcgNDE1LjkgMTMgMTEiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgLTI5NyA0MTUuOSAxMyAxMTsiIHhtbDpzcGFjZT0icHJlc2VydmUiPjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+LnN0MHtmaWxsOiMzQTNBM0E7fTwvc3R5bGU+PHBhdGggY2xhc3M9InN0MCIgZD0iTS0yOTAuNCw0MjQuOWMwLjEsMCwwLjIsMCwwLjMtMC4xbDUuMS01LjZjMC4xLTAuMSwwLjEtMC4yLDAuMS0wLjNjMC0wLjEsMC0wLjItMC4xLTAuM2wtMC42LTAuNmMtMC4xLTAuMS0wLjItMC4xLTAuMy0wLjFjLTAuMSwwLTAuMiwwLTAuMywwLjFsLTQuMyw0LjdsLTQuMy00LjdjLTAuMS0wLjEtMC4yLTAuMS0wLjMtMC4xYy0wLjEsMC0wLjIsMC0wLjMsMC4xbC0wLjYsMC42Yy0wLjEsMC4xLTAuMSwwLjItMC4xLDAuM2MwLDAuMSwwLDAuMiwwLjEsMC4zbDUuMSw1LjZDLTI5MC42LDQyNC45LTI5MC41LDQyNC45LTI5MC40LDQyNC45eiIvPjwvc3ZnPg==");
 $custom-select-border-width:        $input-btn-border-width;
 $custom-select-border-color:        $input-border-color;
 $custom-select-border-radius:       0;
@@ -590,7 +589,7 @@ $custom-select-sm-padding-y:        .2rem;
 $custom-select-font-size-sm:        75%;
 $custom-select-height-sm:           $input-height-sm;
 
-$custom-select-font-size-lg:        125%;
+$custom-select-font-size-lg:        $font-size-lg;
 $custom-select-height-lg:           $input-height-lg;
 
 $custom-file-height:                $input-height;
@@ -622,7 +621,7 @@ $form-feedback-invalid-color:       theme-color("danger");
 $dropdown-min-width:                200px;
 $dropdown-max-height:               180px;
 $dropdown-padding-y:                1px;
-$dropdown-spacer:                   10px;
+$dropdown-spacer:                   $spacer;
 $dropdown-bg:                       $white;
 $dropdown-border-color:             $border-color;
 $dropdown-border-radius:            0;
@@ -640,7 +639,7 @@ $dropdown-link-active-hover-bg:     $component-active-hover-bg;
 
 $dropdown-link-disabled-color:      $disabled-color;
 
-$dropdown-item-padding-y:           5px;
+$dropdown-item-padding-y:           ($spacer / 3);
 $dropdown-item-padding-x:           $spacer;
 
 $dropdown-header-color:             $headings-color;
@@ -664,7 +663,7 @@ $zindex-lightbox:                   2040;
 
 // Navs
 $nav-link-padding-y:                .6rem;
-$nav-link-padding-x:                1rem;
+$nav-link-padding-x:                $spacer;
 
 $nav-link-color:                    $text-color;
 $nav-link-hover-color:              darken($text-color, 10%);
@@ -868,7 +867,7 @@ $modal-transition:                  transform .3s ease-out;
 // Alerts
 $alert-padding-y:                   .75rem;
 $alert-padding-x:                   1.25rem;
-$alert-margin-bottom:               1rem;
+$alert-margin-bottom:               $spacer;
 $alert-border-radius:               $border-radius;
 $alert-link-font-weight:            $font-weight-bold;
 $alert-border-width:                $border-width;
@@ -878,7 +877,7 @@ $alert-border-level:                -9;
 $alert-color-level:                 6;
 
 // Progress bars
-$progress-height:                   1rem;
+$progress-height:                   $spacer;
 $progress-font-size:                ($font-size-base * .75);
 $progress-bg:                       $disabled-bg;
 $progress-border-radius:            $border-radius;
@@ -964,7 +963,7 @@ $close-text-shadow:                 none;
 
 // Code
 $code-font-size:                    90%;
-$code-padding-y:                    .13rem;
+$code-padding-y:                    .065rem;
 $code-padding-x:                    .4rem;
 $code-color:                        $pink-dark;
 $code-bg:                           $gray-superlight;

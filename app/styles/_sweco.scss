@@ -361,11 +361,11 @@ label,
 }
 
 // Code
-* code
+code
 {
   background-color: $code-bg;
   margin: $spacer 0;
-  padding: $code-padding-y $code-padding-x;
+  padding: ($code-padding-y + .06rem) $code-padding-x;
 }
 
 pre
@@ -373,6 +373,7 @@ pre
   background-color: $code-bg;
   padding: $code-padding-y $code-padding-x;
   margin: $spacer 0;
+  overflow-y: hidden;
   code
   {
     color: $code-color;
@@ -387,7 +388,8 @@ samp
 }
 
 // White text
-.white-text
+.white-text,
+.text-color-white
 {
   color: $white;
   h1, h2, h3, h4, h5, h6,
@@ -624,7 +626,7 @@ h1, h2, h3, h4, h5, h6,
       }
       .fa
       {
-        margin-right: 10px;
+        margin-right: ($spacer / 2);
       }
     }
   }
@@ -670,8 +672,8 @@ h1, h2, h3, h4, h5, h6,
     {
       @extend .btn-info;
       margin-left: 0 !important;
-      padding-left: 15px;
-      padding-right: 14px;
+      padding-left: 14px;
+      padding-right: 15px;
       .fa
       {
         font-size: $font-size-lg;
@@ -835,6 +837,7 @@ header.header-image
   text-transform: uppercase;
   text-decoration: none;
   outline: 0 !important;
+  border-style: none;
   @include hover-focus
   {
     outline: 0 !important;
@@ -1503,24 +1506,26 @@ select.form-control:not([size]):not([multiple])
   text-overflow: "";
   &.form-control
   {
-    height: 2.5rem;
+    height: $input-height-inner;
   }
   &.form-control-sm
   {
-    height: 1.88rem;
+    height: $input-height-inner-sm;
     padding-top: .2rem;
     padding-bottom: .3rem;
   }
   &.form-control-lg
   {
-    height: 3.13rem;
+    line-height: $input-line-height-lg;
+    height: $input-height-inner-lg;
+    padding-top: .4rem;
   }
 }
 
 select.form-control[multiple]
 {
   @extend .inner-y;
-  max-height: 80px;
+  max-height: 90px;
 }
 
 // Custom-file
@@ -2229,7 +2234,7 @@ select.form-control[multiple]
   }
   code
   {
-    background-color: inherit;
+    background-color: rgba(255,255,255,.2);
   }
 }
 
@@ -2469,6 +2474,10 @@ select.form-control[multiple]
     display: block;
     position: relative;
     transition: $transition;
+    &:hover
+    {
+      cursor: pointer;
+    }
     @include hover-focus-active
     {
       outline: 0;
