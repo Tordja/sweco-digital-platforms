@@ -1,6 +1,6 @@
 'use strict';
 
-define('sweco-bootstrap/tests/app.lint-test', ['exports'], function (exports) {
+define('sweco-bootstrap/tests/app.lint-test', [], function () {
   'use strict';
 
   QUnit.module('ESLint | app');
@@ -65,61 +65,80 @@ define('sweco-bootstrap/tests/app.lint-test', ['exports'], function (exports) {
     assert.ok(true, 'transitions.js should pass ESLint\n\n');
   });
 });
-define('sweco-bootstrap/tests/helpers/destroy-app', ['exports', 'ember'], function (exports, _ember) {
-  exports['default'] = destroyApp;
+define('sweco-bootstrap/tests/helpers/destroy-app', ['exports'], function (exports) {
+  'use strict';
 
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = destroyApp;
   function destroyApp(application) {
-    _ember['default'].run(application, 'destroy');
+    Ember.run(application, 'destroy');
   }
 });
-define('sweco-bootstrap/tests/helpers/module-for-acceptance', ['exports', 'qunit', 'ember', 'sweco-bootstrap/tests/helpers/start-app', 'sweco-bootstrap/tests/helpers/destroy-app'], function (exports, _qunit, _ember, _swecoBootstrapTestsHelpersStartApp, _swecoBootstrapTestsHelpersDestroyApp) {
-  var Promise = _ember['default'].RSVP.Promise;
+define('sweco-bootstrap/tests/helpers/module-for-acceptance', ['exports', 'qunit', 'sweco-bootstrap/tests/helpers/start-app', 'sweco-bootstrap/tests/helpers/destroy-app'], function (exports, _qunit, _startApp, _destroyApp) {
+  'use strict';
 
-  exports['default'] = function (name) {
-    var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+
+  exports.default = function (name) {
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
     (0, _qunit.module)(name, {
       beforeEach: function beforeEach() {
-        this.application = (0, _swecoBootstrapTestsHelpersStartApp['default'])();
+        this.application = (0, _startApp.default)();
 
         if (options.beforeEach) {
           return options.beforeEach.apply(this, arguments);
         }
       },
-
       afterEach: function afterEach() {
         var _this = this;
 
         var afterEach = options.afterEach && options.afterEach.apply(this, arguments);
         return Promise.resolve(afterEach).then(function () {
-          return (0, _swecoBootstrapTestsHelpersDestroyApp['default'])(_this.application);
+          return (0, _destroyApp.default)(_this.application);
         });
       }
     });
   };
-});
-define('sweco-bootstrap/tests/helpers/resolver', ['exports', 'sweco-bootstrap/resolver', 'sweco-bootstrap/config/environment'], function (exports, _swecoBootstrapResolver, _swecoBootstrapConfigEnvironment) {
 
-  var resolver = _swecoBootstrapResolver['default'].create();
+  var Promise = Ember.RSVP.Promise;
+});
+define('sweco-bootstrap/tests/helpers/resolver', ['exports', 'sweco-bootstrap/resolver', 'sweco-bootstrap/config/environment'], function (exports, _resolver, _environment) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+
+
+  var resolver = _resolver.default.create();
 
   resolver.namespace = {
-    modulePrefix: _swecoBootstrapConfigEnvironment['default'].modulePrefix,
-    podModulePrefix: _swecoBootstrapConfigEnvironment['default'].podModulePrefix
+    modulePrefix: _environment.default.modulePrefix,
+    podModulePrefix: _environment.default.podModulePrefix
   };
 
-  exports['default'] = resolver;
+  exports.default = resolver;
 });
-define('sweco-bootstrap/tests/helpers/start-app', ['exports', 'ember', 'sweco-bootstrap/app', 'sweco-bootstrap/config/environment'], function (exports, _ember, _swecoBootstrapApp, _swecoBootstrapConfigEnvironment) {
-  exports['default'] = startApp;
+define('sweco-bootstrap/tests/helpers/start-app', ['exports', 'sweco-bootstrap/app', 'sweco-bootstrap/config/environment'], function (exports, _app, _environment) {
+  'use strict';
 
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = startApp;
   function startApp(attrs) {
-    var application = undefined;
+    var application = void 0;
 
-    var attributes = _ember['default'].merge({}, _swecoBootstrapConfigEnvironment['default'].APP);
-    attributes = _ember['default'].merge(attributes, attrs); // use defaults, but you can override;
+    var attributes = Ember.merge({}, _environment.default.APP);
+    attributes = Ember.merge(attributes, attrs); // use defaults, but you can override;
 
-    _ember['default'].run(function () {
-      application = _swecoBootstrapApp['default'].create(attributes);
+    Ember.run(function () {
+      application = _app.default.create(attributes);
       application.setupForTesting();
       application.injectTestHelpers();
     });
@@ -127,11 +146,12 @@ define('sweco-bootstrap/tests/helpers/start-app', ['exports', 'ember', 'sweco-bo
     return application;
   }
 });
-define('sweco-bootstrap/tests/test-helper', ['exports', 'sweco-bootstrap/tests/helpers/resolver', 'ember-qunit'], function (exports, _swecoBootstrapTestsHelpersResolver, _emberQunit) {
+define('sweco-bootstrap/tests/test-helper', ['sweco-bootstrap/tests/helpers/resolver', 'ember-qunit'], function (_resolver, _emberQunit) {
+  'use strict';
 
-  (0, _emberQunit.setResolver)(_swecoBootstrapTestsHelpersResolver['default']);
+  (0, _emberQunit.setResolver)(_resolver.default);
 });
-define('sweco-bootstrap/tests/tests.lint-test', ['exports'], function (exports) {
+define('sweco-bootstrap/tests/tests.lint-test', [], function () {
   'use strict';
 
   QUnit.module('ESLint | tests');
