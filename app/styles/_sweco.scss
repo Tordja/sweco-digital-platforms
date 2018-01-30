@@ -507,7 +507,17 @@ h1, h2, h3, h4, h5, h6,
 // Navbar
 .navbar
 {
-  background: $navbar-bg;
+  background: $brand-primary;
+  &.navbar-dark,
+  &.navbar-light
+  {
+    background: $brand-primary;
+  }
+  &.navbar-north,
+  &.navbar-south
+  {
+    background: $navbar-bg;
+  }
   .container,
   .container-fluid
   {
@@ -541,10 +551,10 @@ h1, h2, h3, h4, h5, h6,
       order: 2;
       .nav
       {
+        margin-bottom: $spacer;
         flex-direction: column !important;
         .nav-item
         {
-          margin-bottom: 15px;
           margin-left: 0 !important;
           .nav-link
           {
@@ -559,10 +569,11 @@ h1, h2, h3, h4, h5, h6,
   {
     position: absolute;
     top: $spacer;
-    left: calc(100% - 50px);
-    z-index: $zindex-fixed-dropdown;
+    left: calc(100% - 65px);
+    z-index: $zindex-navbar;
     border: 2px solid transparent;
     min-width: 50px;
+    color: $navbar-color;
     cursor: pointer;
     @include hover-focus
     {
@@ -578,10 +589,24 @@ h1, h2, h3, h4, h5, h6,
       right: $spacer;
     }
   }
-  // Dropdown
-  .dropdown-menu
+  // Navbar collapse
+  .navbar-collapse
   {
-    z-index: $zindex-fixed-dropdown;
+    padding: 0 $spacer $spacer;
+    .form-inline
+    {
+      display: block;
+    }
+    @include media-breakpoint-up(lg)
+    {
+      padding-bottom: 0;
+      display: flex;
+      justify-content: flex-end;
+      .form-inline
+      {
+        display: flex;
+      }
+    }
   }
   // Navbar navigation
   .nav
@@ -590,49 +615,145 @@ h1, h2, h3, h4, h5, h6,
     {
       margin-left: $spacer;
     }
-    .nav-link
+    .nav-item
     {
-      position: relative;
-      color: $white;
-      white-space: nowrap;
-      padding: 5px 0 2px !important;
-      min-height: 30px !important;
-      @include hover-focus-active
+      .nav-link
       {
+        position: relative;
         color: $white;
-        text-decoration: none;
-        background-color: transparent;
+        white-space: nowrap;
+        padding: 5px 0 2px !important;
+        min-height: 30px !important;
+        @include hover-focus-active
+        {
+          color: $white;
+          text-decoration: none;
+          background-color: transparent;
+        }
+        &.dropdown-toggle
+        {
+          padding-right: ($spacer * 1.5) !important;
+          &:after
+          {
+            right: 0;
+          }
+        }
+        &:before,
+        &:focus:before
+        {
+          position: absolute;
+          bottom: 0px;
+          left: 0;
+          width: 100%;
+          height: 1px;
+          background: $white;
+          content: '';
+          opacity: 0;
+          transition: height .2s, opacity .2s, transform .2s;
+          transform: translateY(-5px);
+        }
+        &:hover:before,
+        &:focus:before
+        {
+          height: 2px;
+          opacity: 1;
+          transform: translateY(0)
+        }
+        &.disabled
+        {
+          &:hover:before,
+          &:focus:before
+          {
+            display: none;
+          }
+        }
+        .fa
+        {
+          margin-right: ($spacer / 2);
+        }
       }
-      &:after,
-      &:focus:after
+      // Dropdown
+      .dropdown-menu
       {
-        position: absolute;
-        bottom: 0px;
-        left: 0;
-        width: 100%;
-        height: 1px;
-        background: $white;
-        content: '';
-        opacity: 0;
-        transition: height .2s, opacity .2s, transform .2s;
-        transform: translateY(-5px);
+        z-index: $zindex-fixed-dropdown;
+        left: auto;
+        right: 0;
+        &:after
+        {
+          left: auto;
+          right: $spacer;
+        }
+        &:before
+        {
+          left: auto;
+          right: $spacer;
+        }
+        @include media-breakpoint-down(md)
+        {
+          background-color: transparent;
+          box-shadow: none;
+          margin-top: 0;
+          margin-bottom: 0;
+          padding-left: $spacer;
+          .dropdown-item
+          {
+            position: relative;
+            color: $navbar-color;
+            padding-left: 0;
+            padding-right: 0;
+            &:hover,
+            &:focus
+            {
+              background-color: transparent;
+            }
+            &:before,
+            &:focus:before
+            {
+              position: absolute;
+              bottom: 0px;
+              left: 0;
+              width: 100%;
+              height: 1px;
+              background: $white;
+              content: '';
+              opacity: 0;
+              transition: height .2s, opacity .2s, transform .2s;
+              transform: translateY(-5px);
+            }
+            &:hover:before,
+            &:focus:before
+            {
+              height: 2px;
+              opacity: 1;
+              transform: translateY(0)
+            }
+          }
+        }
       }
-      &:hover:after,
-      &:focus:after
+      @include media-breakpoint-down(md)
       {
-        height: 2px;
-        opacity: 1;
-        transform: translateY(0)
-      }
-      .fa
-      {
-        margin-right: ($spacer / 2);
+        &.dropdown.show
+        {
+          .dropdown-menu
+          {
+            &:before,
+            &:after
+            {
+              display: none;
+            }
+          }
+        }
       }
     }
   }
   &.fixed-top
   {
     box-shadow: 0 5px $box-shadow-size $box-shadow;
+    // Navbar toggler
+    .navbar-toggler
+    {
+      z-index: $zindex-fixed-dropdown;
+    }
   }
   &.fixed-bottom
   {
@@ -646,6 +767,21 @@ h1, h2, h3, h4, h5, h6,
     {
       margin-left: -$spacer;
     }
+    // Navbar toggler
+    .navbar-toggler
+    {
+      left: calc(100% - 50px);
+    }
+    // Navbar collapse
+    .navbar-collapse
+    {
+      padding: 0;
+    }
+  }
+  .form-inline
+  {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
   }
   .search
   {
@@ -674,6 +810,7 @@ h1, h2, h3, h4, h5, h6,
       margin-left: 0 !important;
       padding-left: 14px;
       padding-right: 15px;
+      min-width: 50px;
       .fa
       {
         font-size: $font-size-lg;
@@ -1027,7 +1164,7 @@ header.header-image
 // Btn-collapse
 .btn-collapse
 {
-  padding-right: 30px !important;
+  padding-right: ($spacer * 2.5) !important;
   &[data-toggle="collapse"]
   {
     display: block;
@@ -1153,7 +1290,7 @@ header.header-image
 .dropdown-toggle
 {
   position: relative;
-  padding-right: 35px;
+  padding-right: ($spacer * 2.5);
   .caret
   {
     display: none;

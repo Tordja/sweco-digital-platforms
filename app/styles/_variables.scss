@@ -696,7 +696,7 @@ $navbar-north-height:               $navbar-height;
 $navbar-south-height:               $navbar-height;
 $navbar-padding-y:                  0;
 $navbar-padding-x:                  0;
-$navbar-nav-link-padding-x:         .5rem;
+$navbar-nav-link-padding-x:         ($spacer / 2);
 $navbar-brand-font-size:            $font-size-base;
 
 // Compute the navbar-brand padding-y so the navbar-brand will have the same height as navbar-text and nav-link
@@ -714,14 +714,14 @@ $navbar-dark-hover-color:           $white;
 $navbar-dark-active-color:          $white;
 $navbar-dark-disabled-color:        $disabled-color;
 $navbar-dark-toggler-icon-bg:       str-replace(url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='#{$navbar-dark-color}' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E"), "#", "%23");
-$navbar-dark-toggler-border-color:  $border-color;
+$navbar-dark-toggler-border-color:  transparent;
 
-$navbar-light-color:                $text-color;
-$navbar-light-hover-color:          $text-color;
-$navbar-light-active-color:         $text-color;
+$navbar-light-color:                $white;
+$navbar-light-hover-color:          $white;
+$navbar-light-active-color:         $white;
 $navbar-light-disabled-color:       $disabled-color;
 $navbar-light-toggler-icon-bg:      str-replace(url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='#{$navbar-light-color}' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E"), "#", "%23");
-$navbar-light-toggler-border-color: $border-color;
+$navbar-light-toggler-border-color: transparent;
 
 // Pagination
 $pagination-border-radius:          50%;
@@ -968,7 +968,7 @@ $code-padding-x:                    .4rem;
 $code-color:                        $pink-dark;
 $code-bg:                           $gray-superlight;
 
-$kbd-padding-y:                     .2rem;
+$kbd-padding-y:                     .125rem;
 $kbd-padding-x:                     .4rem;
 $kbd-font-size:                     $code-font-size;
 $kbd-color:                         $white;
