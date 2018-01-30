@@ -568,7 +568,7 @@ h1, h2, h3, h4, h5, h6,
   .navbar-toggler
   {
     position: absolute;
-    top: $spacer;
+    top: 14px;
     left: calc(100% - 65px);
     z-index: $zindex-navbar;
     border: 2px solid transparent;
@@ -808,8 +808,8 @@ h1, h2, h3, h4, h5, h6,
     {
       @extend .btn-info;
       margin-left: 0 !important;
-      padding-left: 14px;
-      padding-right: 15px;
+      padding-left: 15px;
+      padding-right: 14px;
       min-width: 50px;
       .fa
       {
