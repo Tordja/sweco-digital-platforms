@@ -71,55 +71,6 @@ $red:                   #821307;
 // Green, validation and states
 $green:                 #59854e;
 
-// Bootstrap color system
-$gray-100: #f8f9fa;
-$gray-200: #e9ecef;
-$gray-300: #dee2e6;
-$gray-400: #ced4da;
-$gray-500: #adb5bd;
-$gray-600: #6c757d;
-$gray-700: #495057;
-$gray-800: #343a40;
-$gray-900: #212529;
-
-$grays: ();
-$grays: map-merge((
-  "100": $gray-100,
-  "200": $gray-200,
-  "300": $gray-300,
-  "400": $gray-400,
-  "500": $gray-500,
-  "600": $gray-600,
-  "700": $gray-700,
-  "800": $gray-800,
-  "900": $gray-900
-), $grays);
-
-/* BS 
-$indigo:  #6610f2;
-$purple:  #6f42c1;
-$orange:  #fd7e14;
-$yellow:  #ffc107;
-$teal:    #20c997;
-$cyan:    #17a2b8;
-
-$colors: ();
-$colors: map-merge((
-  "blue":       $blue,
-  "indigo":     $indigo,
-  "purple":     $purple,
-  "pink":       $pink,
-  "red":        $red,
-  "orange":     $orange,
-  "yellow":     $yellow,
-  "green":      $green,
-  "teal":       $teal,
-  "cyan":       $cyan,
-  "white":      $white,
-  "gray":       $gray,
-  "gray-dark":  $dark-gray
-), $colors);
-*/
 $primary:       $dark-gray;
 $secondary:     $white;
 $info:          $blue-dark;
