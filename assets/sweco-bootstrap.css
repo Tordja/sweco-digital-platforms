@@ -9051,7 +9051,7 @@ h1 > .fa, h2 > .fa, h3 > .fa, h4 > .fa, h5 > .fa, h6 > .fa,
             display: inline-block; } }
   .navbar .navbar-toggler {
     position: absolute;
-    top: 0.95rem;
+    top: 14px;
     left: calc(100% - 65px);
     z-index: 1010;
     border: 2px solid transparent;
@@ -9307,8 +9307,8 @@ h1 > .fa, h2 > .fa, h3 > .fa, h4 > .fa, h5 > .fa, h6 > .fa,
       padding-right: 30px !important; }
     .navbar .search .btn-search {
       margin-left: 0 !important;
-      padding-left: 14px;
-      padding-right: 15px;
+      padding-left: 15px;
+      padding-right: 14px;
       min-width: 50px; }
       .navbar .search .btn-search .fa {
         font-size: 1.3rem;

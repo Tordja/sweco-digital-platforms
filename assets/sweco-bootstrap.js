@@ -690,6 +690,6 @@ catch(err) {
 });
 
 if (!runningTests) {
-  require("sweco-bootstrap/app")["default"].create({"name":"sweco-bootstrap","version":"4.0.0+6ceb02d8"});
+  require("sweco-bootstrap/app")["default"].create({"name":"sweco-bootstrap","version":"4.0.0+dbcad544"});
 }
 //# sourceMappingURL=sweco-bootstrap.map
