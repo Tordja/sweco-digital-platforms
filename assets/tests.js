@@ -181,6 +181,25 @@ define('sweco-bootstrap/tests/tests.lint-test', [], function () {
     assert.ok(true, 'test-helper.js should pass ESLint\n\n');
   });
 });
+define('sweco-bootstrap/config/environment', [], function() {
+  var prefix = 'sweco-bootstrap';
+try {
+  var metaName = prefix + '/config/environment';
+  var rawConfig = document.querySelector('meta[name="' + metaName + '"]').getAttribute('content');
+  var config = JSON.parse(unescape(rawConfig));
+
+  var exports = { 'default': config };
+
+  Object.defineProperty(exports, '__esModule', { value: true });
+
+  return exports;
+}
+catch(err) {
+  throw new Error('Could not read config from meta tag with name "' + metaName + '".');
+}
+
+});
+
 require('sweco-bootstrap/tests/test-helper');
 EmberENV.TESTS_FILE_LOADED = true;
 //# sourceMappingURL=tests.map
