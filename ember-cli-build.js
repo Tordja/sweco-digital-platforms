@@ -22,9 +22,9 @@ module.exports = function(defaults) {
       ]
     },
 
-    // Autoprefixer https://github.com/postcss/autoprefixer
+    // Postcss Autoprefixer https://github.com/postcss/autoprefixer#options
     autoprefixer: {
-      browsers: ['last 2 ios version'],
+      browsers: ['defaults'], // https://github.com/ai/browserslist#queries
       cascade: false
     }
 
