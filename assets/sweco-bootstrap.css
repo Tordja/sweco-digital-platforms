@@ -1,6 +1,6 @@
 @charset "UTF-8";
 /*!
- * Sweco Bootstrap v.4.1.1
+ * Sweco Bootstrap v.4.1.3
  */
 @font-face {
   font-family: 'SwecoSans-Regular';
@@ -2349,7 +2349,7 @@
   clip: auto; }
 
 /*!
- * Bootstrap v4.1.1 (https://getbootstrap.com/)
+ * Bootstrap v4.1.3 (https://getbootstrap.com/)
  * Copyright 2011-2018 The Bootstrap Authors
  * Copyright 2011-2018 Twitter, Inc.
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
@@ -2527,8 +2527,9 @@ img {
   vertical-align: middle;
   border-style: none; }
 
-svg:not(:root) {
-  overflow: hidden; }
+svg {
+  overflow: hidden;
+  vertical-align: middle; }
 
 table {
   border-collapse: collapse; }
@@ -3697,7 +3698,6 @@ pre {
 
 .table {
   width: 100%;
-  max-width: 100%;
   margin-bottom: 0.95rem;
   background-color: transparent; }
   .table th,
@@ -3915,6 +3915,7 @@ pre {
 .form-control {
   display: block;
   width: 100%;
+  height: calc(2.5325rem + 2px);
   padding: 0.565rem 0.75rem;
   font-size: 0.95rem;
   line-height: 1.35;
@@ -3959,9 +3960,6 @@ pre {
     background-color: #eee;
     opacity: 1; }
 
-select.form-control:not([size]):not([multiple]) {
-  height: calc(2.5325rem + 2px); }
-
 select.form-control:focus::-ms-value {
   color: #3a3a3a;
   background-color: #fff; }
@@ -4001,49 +3999,27 @@ select.form-control:focus::-ms-value {
   background-color: transparent;
   border: solid transparent;
   border-width: 1px 0; }
-  .form-control-plaintext.form-control-sm, .input-group-sm > .form-control-plaintext.form-control,
-  .input-group-sm > .input-group-prepend > .form-control-plaintext.input-group-text,
-  .input-group-sm > .input-group-append > .form-control-plaintext.input-group-text,
-  .input-group-sm > .input-group-prepend > .form-control-plaintext.btn, .datetimepicker .input-group-sm > .input-group-prepend > .form-control-plaintext.input-group-addon,
-  .input-group-sm > .input-group-append > .form-control-plaintext.btn, .datetimepicker .input-group-sm > .input-group-append > .form-control-plaintext.input-group-addon, .form-control-plaintext.form-control-lg, .input-group-lg > .form-control-plaintext.form-control,
-  .input-group-lg > .input-group-prepend > .form-control-plaintext.input-group-text,
-  .input-group-lg > .input-group-append > .form-control-plaintext.input-group-text,
-  .input-group-lg > .input-group-prepend > .form-control-plaintext.btn, .datetimepicker .input-group-lg > .input-group-prepend > .form-control-plaintext.input-group-addon,
-  .input-group-lg > .input-group-append > .form-control-plaintext.btn, .datetimepicker .input-group-lg > .input-group-append > .form-control-plaintext.input-group-addon {
+  .form-control-plaintext.form-control-sm, .form-control-plaintext.form-control-lg {
     padding-right: 0;
     padding-left: 0; }
 
-.form-control-sm, .input-group-sm > .form-control,
-.input-group-sm > .input-group-prepend > .input-group-text,
-.input-group-sm > .input-group-append > .input-group-text,
-.input-group-sm > .input-group-prepend > .btn, .datetimepicker .input-group-sm > .input-group-prepend > .input-group-addon,
-.input-group-sm > .input-group-append > .btn, .datetimepicker .input-group-sm > .input-group-append > .input-group-addon {
+.form-control-sm {
+  height: calc(1.6rem + 2px);
   padding: 0.26rem 0.5rem;
   font-size: 0.8rem;
   line-height: 1.2; }
 
-select.form-control-sm:not([size]):not([multiple]), .input-group-sm > select.form-control:not([size]):not([multiple]),
-.input-group-sm > .input-group-prepend > select.input-group-text:not([size]):not([multiple]),
-.input-group-sm > .input-group-append > select.input-group-text:not([size]):not([multiple]),
-.input-group-sm > .input-group-prepend > select.btn:not([size]):not([multiple]), .datetimepicker .input-group-sm > .input-group-prepend > select.input-group-addon:not([size]):not([multiple]),
-.input-group-sm > .input-group-append > select.btn:not([size]):not([multiple]), .datetimepicker .input-group-sm > .input-group-append > select.input-group-addon:not([size]):not([multiple]) {
-  height: calc(1.6rem + 2px); }
-
-.form-control-lg, .input-group-lg > .form-control,
-.input-group-lg > .input-group-prepend > .input-group-text,
-.input-group-lg > .input-group-append > .input-group-text,
-.input-group-lg > .input-group-prepend > .btn, .datetimepicker .input-group-lg > .input-group-prepend > .input-group-addon,
-.input-group-lg > .input-group-append > .btn, .datetimepicker .input-group-lg > .input-group-append > .input-group-addon {
+.form-control-lg {
+  height: calc(2.825rem + 2px);
   padding: 0.41rem 0.95rem;
   font-size: 1.3rem;
   line-height: 1.45; }
 
-select.form-control-lg:not([size]):not([multiple]), .input-group-lg > select.form-control:not([size]):not([multiple]),
-.input-group-lg > .input-group-prepend > select.input-group-text:not([size]):not([multiple]),
-.input-group-lg > .input-group-append > select.input-group-text:not([size]):not([multiple]),
-.input-group-lg > .input-group-prepend > select.btn:not([size]):not([multiple]), .datetimepicker .input-group-lg > .input-group-prepend > select.input-group-addon:not([size]):not([multiple]),
-.input-group-lg > .input-group-append > select.btn:not([size]):not([multiple]), .datetimepicker .input-group-lg > .input-group-append > select.input-group-addon:not([size]):not([multiple]) {
-  height: calc(2.825rem + 2px); }
+select.form-control[size], select.form-control[multiple] {
+  height: auto; }
+
+textarea.form-control {
+  height: auto; }
 
 .form-group {
   margin-bottom: 0.95rem; }
@@ -4108,13 +4084,12 @@ select.form-control-lg:not([size]):not([multiple]), .input-group-lg > select.for
   z-index: 5;
   display: none;
   max-width: 100%;
-  padding: .5rem;
+  padding: 5px 10px;
   margin-top: .1rem;
-  font-size: .875rem;
-  line-height: 1;
+  font-size: 0.8rem;
+  line-height: 1.35;
   color: #fff;
-  background-color: rgba(89, 133, 78, 0.8);
-  border-radius: .2rem; }
+  background-color: #59854e; }
 
 .was-validated .form-control:valid, .form-control.is-valid, .was-validated .custom-select:valid, .was-validated select.form-control:valid:not([size]):not([multiple]),
 .custom-select.is-valid,
@@ -4169,7 +4144,7 @@ select.is-valid.form-control:not([size]):not([multiple]) {
 
 .was-validated .custom-file-input:valid ~ .custom-file-label, .custom-file-input.is-valid ~ .custom-file-label {
   border-color: #59854e; }
-  .was-validated .custom-file-input:valid ~ .custom-file-label::before, .custom-file-input.is-valid ~ .custom-file-label::before {
+  .was-validated .custom-file-input:valid ~ .custom-file-label::after, .custom-file-input.is-valid ~ .custom-file-label::after {
     border-color: inherit; }
 
 .was-validated .custom-file-input:valid ~ .valid-feedback,
@@ -4194,13 +4169,12 @@ select.is-valid.form-control:not([size]):not([multiple]) {
   z-index: 5;
   display: none;
   max-width: 100%;
-  padding: .5rem;
+  padding: 5px 10px;
   margin-top: .1rem;
-  font-size: .875rem;
-  line-height: 1;
+  font-size: 0.8rem;
+  line-height: 1.35;
   color: #fff;
-  background-color: rgba(130, 19, 7, 0.8);
-  border-radius: .2rem; }
+  background-color: #821307; }
 
 .was-validated .form-control:invalid, .form-control.is-invalid, .was-validated .custom-select:invalid, .was-validated select.form-control:invalid:not([size]):not([multiple]),
 .custom-select.is-invalid,
@@ -4255,7 +4229,7 @@ select.is-invalid.form-control:not([size]):not([multiple]) {
 
 .was-validated .custom-file-input:invalid ~ .custom-file-label, .custom-file-input.is-invalid ~ .custom-file-label {
   border-color: #821307; }
-  .was-validated .custom-file-input:invalid ~ .custom-file-label::before, .custom-file-input.is-invalid ~ .custom-file-label::before {
+  .was-validated .custom-file-input:invalid ~ .custom-file-label::after, .custom-file-input.is-invalid ~ .custom-file-label::after {
     border-color: inherit; }
 
 .was-validated .custom-file-input:invalid ~ .invalid-feedback,
@@ -4380,7 +4354,6 @@ select.is-invalid.form-control:not([size]):not([multiple]) {
   .btn:not(:disabled):not(.disabled), .datetimepicker .input-group-addon:not(:disabled):not(.disabled) {
     cursor: pointer; }
   .btn:not(:disabled):not(.disabled):active, .datetimepicker .input-group-addon:not(:disabled):not(.disabled):active, .btn:not(:disabled):not(.disabled).active, .datetimepicker .input-group-addon:not(:disabled):not(.disabled).active {
-    background-image: none;
     -webkit-box-shadow: none;
     box-shadow: none; }
     .btn:not(:disabled):not(.disabled):active:focus, .datetimepicker .input-group-addon:not(:disabled):not(.disabled):active:focus, .btn:not(:disabled):not(.disabled).active:focus, .datetimepicker .input-group-addon:not(:disabled):not(.disabled).active:focus {
@@ -5212,11 +5185,6 @@ input[type="button"].btn-block {
     flex: 1 1 auto;
     width: 1%;
     margin-bottom: 0; }
-    .input-group > .form-control:focus,
-    .input-group > .custom-select:focus,
-    .input-group > select.form-control:focus:not([size]):not([multiple]),
-    .input-group > .custom-file:focus {
-      z-index: 3; }
     .input-group > .form-control + .form-control,
     .input-group > .form-control + .custom-select,
     .input-group > .form-control + select.form-control:not([size]):not([multiple]),
@@ -5234,6 +5202,13 @@ input[type="button"].btn-block {
     .input-group > .custom-file + select.form-control:not([size]):not([multiple]),
     .input-group > .custom-file + .custom-file {
       margin-left: -1px; }
+  .input-group > .form-control:focus,
+  .input-group > .custom-select:focus,
+  .input-group > select.form-control:focus:not([size]):not([multiple]),
+  .input-group > .custom-file .custom-file-input:focus ~ .custom-file-label {
+    z-index: 3; }
+  .input-group > .custom-file .custom-file-input:focus {
+    z-index: 4; }
   .input-group > .custom-file {
     display: -webkit-box;
     display: -ms-flexbox;
@@ -5304,10 +5279,34 @@ input[type="button"].btn-block {
   .input-group-text input[type="checkbox"] {
     margin-top: 0; }
 
+.input-group-lg > .form-control,
+.input-group-lg > .input-group-prepend > .input-group-text,
+.input-group-lg > .input-group-append > .input-group-text,
+.input-group-lg > .input-group-prepend > .btn,
+.datetimepicker .input-group-lg > .input-group-prepend > .input-group-addon,
+.input-group-lg > .input-group-append > .btn,
+.datetimepicker .input-group-lg > .input-group-append > .input-group-addon {
+  height: calc(2.825rem + 2px);
+  padding: 0.41rem 0.95rem;
+  font-size: 1.3rem;
+  line-height: 1.45; }
+
+.input-group-sm > .form-control,
+.input-group-sm > .input-group-prepend > .input-group-text,
+.input-group-sm > .input-group-append > .input-group-text,
+.input-group-sm > .input-group-prepend > .btn,
+.datetimepicker .input-group-sm > .input-group-prepend > .input-group-addon,
+.input-group-sm > .input-group-append > .btn,
+.datetimepicker .input-group-sm > .input-group-append > .input-group-addon {
+  height: calc(1.6rem + 2px);
+  padding: 0.26rem 0.5rem;
+  font-size: 0.8rem;
+  line-height: 1.2; }
+
 .custom-control {
   position: relative;
   display: block;
-  min-height: 1.35rem;
+  min-height: 1.2825rem;
   padding-left: 1.5rem; }
 
 .custom-control-inline {
@@ -5343,7 +5342,7 @@ input[type="button"].btn-block {
   margin-bottom: 0; }
   .custom-control-label::before {
     position: absolute;
-    top: 0.2rem;
+    top: 0.16625rem;
     left: -1.5rem;
     display: block;
     width: 0.95rem;
@@ -5359,7 +5358,7 @@ input[type="button"].btn-block {
     box-shadow: inset 0 0.25rem 0.25rem rgba(0, 0, 0, 0.1); }
   .custom-control-label::after {
     position: absolute;
-    top: 0.2rem;
+    top: 0.16625rem;
     left: -1.5rem;
     display: block;
     width: 0.95rem;
@@ -5413,14 +5412,16 @@ input[type="button"].btn-block {
   background-size: 14px 12px;
   border: 1px solid #a5a5a8;
   border-radius: 0;
+  -webkit-box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.075);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.075);
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none; }
   .custom-select:focus, select.form-control:focus:not([size]):not([multiple]) {
     border-color: #727275;
     outline: 0;
-    -webkit-box-shadow: none;
-    box-shadow: none; }
+    -webkit-box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.075), none;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.075), none; }
     .custom-select:focus::-ms-value, select.form-control:not([multiple]):not([size]):focus::-ms-value {
       color: #3a3a3a;
       background-color: #fff; }
@@ -5466,6 +5467,8 @@ input[type="button"].btn-block {
     box-shadow: 0 0 0 0.2rem rgba(77, 83, 90, 0.25); }
     .custom-file-input:focus ~ .custom-file-label::after {
       border-color: #727275; }
+  .custom-file-input:disabled ~ .custom-file-label {
+    background-color: #eee; }
   .custom-file-input:lang(en) ~ .custom-file-label::after {
     content: "Browse"; }
 
@@ -5507,6 +5510,13 @@ input[type="button"].btn-block {
   appearance: none; }
   .custom-range:focus {
     outline: none; }
+    .custom-range:focus::-webkit-slider-thumb {
+      -webkit-box-shadow: 0 0 0 1px #eee, 0 0 0 0.2rem rgba(77, 83, 90, 0.25);
+      box-shadow: 0 0 0 1px #eee, 0 0 0 0.2rem rgba(77, 83, 90, 0.25); }
+    .custom-range:focus::-moz-range-thumb {
+      box-shadow: 0 0 0 1px #eee, 0 0 0 0.2rem rgba(77, 83, 90, 0.25); }
+    .custom-range:focus::-ms-thumb {
+      box-shadow: 0 0 0 1px #eee, 0 0 0 0.2rem rgba(77, 83, 90, 0.25); }
   .custom-range::-moz-focus-outer {
     border: 0; }
   .custom-range::-webkit-slider-thumb {
@@ -5517,12 +5527,16 @@ input[type="button"].btn-block {
     border: 0;
     -webkit-box-shadow: 0 0.1rem 0.25rem rgba(0, 0, 0, 0.1);
     box-shadow: 0 0.1rem 0.25rem rgba(0, 0, 0, 0.1);
+    -webkit-transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, -webkit-box-shadow 0.15s ease-in-out;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, -webkit-box-shadow 0.15s ease-in-out;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, -webkit-box-shadow 0.15s ease-in-out;
     -webkit-appearance: none;
     appearance: none; }
-    .custom-range::-webkit-slider-thumb:focus {
-      outline: none;
-      -webkit-box-shadow: 0 0 0 1px #eee, 0 0 0 0.2rem rgba(77, 83, 90, 0.25);
-      box-shadow: 0 0 0 1px #eee, 0 0 0 0.2rem rgba(77, 83, 90, 0.25); }
+    @media screen and (prefers-reduced-motion: reduce) {
+      .custom-range::-webkit-slider-thumb {
+        -webkit-transition: none;
+        transition: none; } }
     .custom-range::-webkit-slider-thumb:active {
       background-color: #a6acb3; }
   .custom-range::-webkit-slider-runnable-track {
@@ -5540,11 +5554,16 @@ input[type="button"].btn-block {
     background-color: #4d535a;
     border: 0;
     box-shadow: 0 0.1rem 0.25rem rgba(0, 0, 0, 0.1);
+    -webkit-transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, -webkit-box-shadow 0.15s ease-in-out;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, -webkit-box-shadow 0.15s ease-in-out;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, -webkit-box-shadow 0.15s ease-in-out;
     -moz-appearance: none;
     appearance: none; }
-    .custom-range::-moz-range-thumb:focus {
-      outline: none;
-      box-shadow: 0 0 0 1px #eee, 0 0 0 0.2rem rgba(77, 83, 90, 0.25); }
+    @media screen and (prefers-reduced-motion: reduce) {
+      .custom-range::-moz-range-thumb {
+        -webkit-transition: none;
+        transition: none; } }
     .custom-range::-moz-range-thumb:active {
       background-color: #a6acb3; }
   .custom-range::-moz-range-track {
@@ -5558,13 +5577,21 @@ input[type="button"].btn-block {
   .custom-range::-ms-thumb {
     width: 1rem;
     height: 1rem;
+    margin-top: 0;
+    margin-right: 0.2rem;
+    margin-left: 0.2rem;
     background-color: #4d535a;
     border: 0;
     box-shadow: 0 0.1rem 0.25rem rgba(0, 0, 0, 0.1);
+    -webkit-transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, -webkit-box-shadow 0.15s ease-in-out;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, -webkit-box-shadow 0.15s ease-in-out;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, -webkit-box-shadow 0.15s ease-in-out;
     appearance: none; }
-    .custom-range::-ms-thumb:focus {
-      outline: none;
-      box-shadow: 0 0 0 1px #eee, 0 0 0 0.2rem rgba(77, 83, 90, 0.25); }
+    @media screen and (prefers-reduced-motion: reduce) {
+      .custom-range::-ms-thumb {
+        -webkit-transition: none;
+        transition: none; } }
     .custom-range::-ms-thumb:active {
       background-color: #a6acb3; }
   .custom-range::-ms-track {
@@ -5581,6 +5608,18 @@ input[type="button"].btn-block {
   .custom-range::-ms-fill-upper {
     margin-right: 15px;
     background-color: #dee2e6; }
+
+.custom-control-label::before,
+.custom-file-label, .custom-select, select.form-control:not([size]):not([multiple]) {
+  -webkit-transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, -webkit-box-shadow 0.15s ease-in-out;
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, -webkit-box-shadow 0.15s ease-in-out;
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, -webkit-box-shadow 0.15s ease-in-out; }
+  @media screen and (prefers-reduced-motion: reduce) {
+    .custom-control-label::before,
+    .custom-file-label, .custom-select, select.form-control:not([size]):not([multiple]) {
+      -webkit-transition: none;
+      transition: none; } }
 
 .nav {
   display: -webkit-box;
@@ -6743,12 +6782,12 @@ input[type="button"].btn-block {
   color: #a5a5a8;
   text-shadow: none;
   opacity: .5; }
-  .close:hover, .close:focus {
-    color: #a5a5a8;
-    text-decoration: none;
-    opacity: .75; }
   .close:not(:disabled):not(.disabled) {
     cursor: pointer; }
+    .close:not(:disabled):not(.disabled):hover, .close:not(:disabled):not(.disabled):focus {
+      color: #a5a5a8;
+      text-decoration: none;
+      opacity: .75; }
 
 button.close {
   padding: 0;
@@ -6758,6 +6797,9 @@ button.close {
 
 .modal-open {
   overflow: hidden; }
+  .modal-open .modal {
+    overflow-x: hidden;
+    overflow-y: auto; }
 
 .modal {
   position: fixed;
@@ -6769,9 +6811,6 @@ button.close {
   display: none;
   overflow: hidden;
   outline: 0; }
-  .modal-open .modal {
-    overflow-x: hidden;
-    overflow-y: auto; }
 
 .modal-dialog {
   position: relative;
@@ -6801,6 +6840,10 @@ button.close {
   -ms-flex-align: center;
   align-items: center;
   min-height: calc(100% - (10px * 2)); }
+  .modal-dialog-centered::before {
+    display: block;
+    height: calc(100vh - (10px * 2));
+    content: ""; }
 
 .modal-content {
   position: relative;
@@ -6890,6 +6933,8 @@ button.close {
     margin: 90px auto; }
   .modal-dialog-centered {
     min-height: calc(100% - (90px * 2)); }
+    .modal-dialog-centered::before {
+      height: calc(100vh - (90px * 2)); }
   .modal-content {
     -webkit-box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); }
@@ -7143,23 +7188,25 @@ button.close {
   -ms-flex-align: center;
   align-items: center;
   width: 100%;
-  -webkit-transition: -webkit-transform 0.6s ease;
-  transition: -webkit-transform 0.6s ease;
-  transition: transform 0.6s ease;
-  transition: transform 0.6s ease, -webkit-transform 0.6s ease;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   -webkit-perspective: 1000px;
   perspective: 1000px; }
-  @media screen and (prefers-reduced-motion: reduce) {
-    .carousel-item {
-      -webkit-transition: none;
-      transition: none; } }
 
 .carousel-item.active,
 .carousel-item-next,
 .carousel-item-prev {
-  display: block; }
+  display: block;
+  -webkit-transition: -webkit-transform 0.6s ease;
+  transition: -webkit-transform 0.6s ease;
+  transition: transform 0.6s ease;
+  transition: transform 0.6s ease, -webkit-transform 0.6s ease; }
+  @media screen and (prefers-reduced-motion: reduce) {
+    .carousel-item.active,
+    .carousel-item-next,
+    .carousel-item-prev {
+      -webkit-transition: none;
+      transition: none; } }
 
 .carousel-item-next,
 .carousel-item-prev {
@@ -11044,11 +11091,7 @@ fieldset {
     .form-control[disabled]:placeholder, .form-control[readonly]:placeholder,
     fieldset[disabled] .form-control:placeholder {
       color: #a5a5a8; }
-  .form-control.form-control-sm, .input-group-sm > .form-control,
-  .input-group-sm > .input-group-prepend > .form-control.input-group-text,
-  .input-group-sm > .input-group-append > .form-control.input-group-text,
-  .input-group-sm > .input-group-prepend > .form-control.btn, .datetimepicker .input-group-sm > .input-group-prepend > .form-control.input-group-addon,
-  .input-group-sm > .input-group-append > .form-control.btn, .datetimepicker .input-group-sm > .input-group-append > .form-control.input-group-addon {
+  .form-control.form-control-sm {
     min-height: 1.88rem;
     font-size: 0.95rem;
     line-height: 1.35;
@@ -11080,19 +11123,11 @@ select.form-control:not([size]):not([multiple]) {
   text-overflow: ""; }
   select.form-control:not([size]):not([multiple]).form-control {
     height: 2.5325rem; }
-  select.form-control:not([size]):not([multiple]).form-control-sm, .input-group-sm > select.form-control:not([size]):not([multiple]),
-  .input-group-sm > .input-group-prepend > select.form-control.input-group-text:not([size]):not([multiple]),
-  .input-group-sm > .input-group-append > select.form-control.input-group-text:not([size]):not([multiple]),
-  .input-group-sm > .input-group-prepend > select.form-control.btn:not([size]):not([multiple]), .datetimepicker .input-group-sm > .input-group-prepend > select.form-control.input-group-addon:not([size]):not([multiple]),
-  .input-group-sm > .input-group-append > select.form-control.btn:not([size]):not([multiple]), .datetimepicker .input-group-sm > .input-group-append > select.form-control.input-group-addon:not([size]):not([multiple]) {
+  select.form-control:not([size]):not([multiple]).form-control-sm {
     height: 1.6rem;
     padding-top: .2rem;
     padding-bottom: .3rem; }
-  select.form-control:not([size]):not([multiple]).form-control-lg, .input-group-lg > select.form-control:not([size]):not([multiple]),
-  .input-group-lg > .input-group-prepend > select.form-control.input-group-text:not([size]):not([multiple]),
-  .input-group-lg > .input-group-append > select.form-control.input-group-text:not([size]):not([multiple]),
-  .input-group-lg > .input-group-prepend > select.form-control.btn:not([size]):not([multiple]), .datetimepicker .input-group-lg > .input-group-prepend > select.form-control.input-group-addon:not([size]):not([multiple]),
-  .input-group-lg > .input-group-append > select.form-control.btn:not([size]):not([multiple]), .datetimepicker .input-group-lg > .input-group-append > select.form-control.input-group-addon:not([size]):not([multiple]) {
+  select.form-control:not([size]):not([multiple]).form-control-lg {
     line-height: 1.45;
     height: 2.825rem;
     padding-top: .4rem; }
