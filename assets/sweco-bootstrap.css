@@ -1,6 +1,6 @@
 @charset "UTF-8";
 /*!
- * Sweco Bootstrap v.4.1.3
+ * Sweco Bootstrap v.4.1.4
  */
 @font-face {
   font-family: 'SwecoSans-Regular';
@@ -10038,12 +10038,12 @@ label, .custom-file .custom-file-control:after,
   cursor: pointer; }
 
 code {
-  background-color: #eee;
+  background-color: #e2e0da;
   margin: 0.95rem 0;
   padding: 0.125rem 0.4rem; }
 
 pre {
-  background-color: #eee;
+  background-color: #e2e0da;
   padding: 0.065rem 0.4rem;
   margin: 0.95rem 0;
   overflow-y: hidden; }
@@ -10704,6 +10704,14 @@ header.header-image {
     .datetimepicker .show > .dropdown-toggle.btn-default.input-group-addon,
     .datetimepicker .show > .btn-secondary.dropdown-toggle.input-group-addon {
       background-color: #eee !important; }
+    .btn.btn-secondary.disabled, .btn.disabled.btn-default, .datetimepicker .disabled.btn-default.input-group-addon, .datetimepicker .btn-secondary.disabled.input-group-addon, .btn.btn-secondary[disabled], .btn.btn-default[disabled], .datetimepicker .btn-default.input-group-addon[disabled], .datetimepicker .btn-secondary.input-group-addon[disabled],
+    fieldset[disabled] .btn.btn-secondary,
+    fieldset[disabled] .btn.btn-default,
+    fieldset[disabled] .datetimepicker .btn-default.input-group-addon,
+    .datetimepicker fieldset[disabled] .btn-default.input-group-addon,
+    fieldset[disabled] .datetimepicker .btn-secondary.input-group-addon,
+    .datetimepicker fieldset[disabled] .btn-secondary.input-group-addon {
+      border: 0; }
   .btn.btn-warning, .datetimepicker .btn-warning.input-group-addon {
     color: #fff; }
     .btn.btn-warning:hover, .datetimepicker .btn-warning.input-group-addon:hover, .btn.btn-warning:focus, .datetimepicker .btn-warning.input-group-addon:focus {
@@ -10746,7 +10754,8 @@ header.header-image {
       opacity: 1 !important; }
   .btn.btn-outline-secondary, .datetimepicker .btn-outline-secondary.input-group-addon, .btn.btn-outline-primary, .datetimepicker .btn-outline-primary.input-group-addon, .btn.btn-outline-info, .datetimepicker .btn-outline-info.input-group-addon, .btn.btn-outline-warning, .datetimepicker .btn-outline-warning.input-group-addon, .btn.btn-outline-danger, .datetimepicker .btn-outline-danger.input-group-addon, .btn.btn-outline-success, .datetimepicker .btn-outline-success.input-group-addon {
     -webkit-transition: all 0.3s ease-in-out;
-    transition: all 0.3s ease-in-out; }
+    transition: all 0.3s ease-in-out;
+    border: 1px solid #a5a5a8; }
   .btn.btn-outline-secondary, .datetimepicker .btn-outline-secondary.input-group-addon {
     color: #3a3a3a;
     -webkit-box-shadow: inset 0 0 0 0 #4d535a;
@@ -10755,21 +10764,23 @@ header.header-image {
       color: #fff;
       -webkit-box-shadow: inset 400px 0 0 0 #4d535a;
       box-shadow: inset 400px 0 0 0 #4d535a;
-      border-color: #4d535a; }
+      border-color: #4d535a !important; }
   .btn.btn-outline-primary, .datetimepicker .btn-outline-primary.input-group-addon {
     -webkit-box-shadow: inset 0 0 0 0 #4d535a;
     box-shadow: inset 0 0 0 0 #4d535a; }
     .btn.btn-outline-primary:hover, .datetimepicker .btn-outline-primary.input-group-addon:hover, .btn.btn-outline-primary:focus, .datetimepicker .btn-outline-primary.input-group-addon:focus, .btn.btn-outline-primary:active, .datetimepicker .btn-outline-primary.input-group-addon:active {
       color: #fff;
       -webkit-box-shadow: inset 400px 0 0 0 #4d535a;
-      box-shadow: inset 400px 0 0 0 #4d535a; }
+      box-shadow: inset 400px 0 0 0 #4d535a;
+      border-color: #4d535a; }
   .btn.btn-outline-info, .datetimepicker .btn-outline-info.input-group-addon {
     -webkit-box-shadow: inset 0 0 0 0 #7e8dab;
     box-shadow: inset 0 0 0 0 #7e8dab; }
     .btn.btn-outline-info:hover, .datetimepicker .btn-outline-info.input-group-addon:hover, .btn.btn-outline-info:focus, .datetimepicker .btn-outline-info.input-group-addon:focus, .btn.btn-outline-info:active, .datetimepicker .btn-outline-info.input-group-addon:active {
       color: #fff;
       -webkit-box-shadow: inset 400px 0 0 0 #7e8dab;
-      box-shadow: inset 400px 0 0 0 #7e8dab; }
+      box-shadow: inset 400px 0 0 0 #7e8dab;
+      border-color: #7e8dab; }
   .btn.btn-outline-warning, .datetimepicker .btn-outline-warning.input-group-addon {
     -webkit-box-shadow: inset 0 0 0 0 #b586a4;
     box-shadow: inset 0 0 0 0 #b586a4; }
@@ -11044,7 +11055,7 @@ header.header-image {
 fieldset {
   padding: 1.9rem 1.9rem;
   margin-bottom: 1.9rem;
-  background-color: #eee; }
+  background-color: #e2e0da; }
   fieldset::after {
     display: block;
     clear: both;
