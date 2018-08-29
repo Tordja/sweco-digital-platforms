@@ -999,6 +999,24 @@ header.header-image
   {
     color: $btn-secondary-color;
     border: 1px solid $btn-secondary-border;
+    padding-top: ($input-btn-padding-y - .0625rem);
+    padding-bottom: ($input-btn-padding-y - .0625rem);
+    &.btn-xs
+    {
+      height: $input-height-xs;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+    &.btn-sm
+    {
+      padding-top: ($input-btn-padding-y-sm - .0625rem);
+      padding-bottom: ($input-btn-padding-y-sm - .0625rem);
+    }
+    &.btn-lg
+    {
+      padding-top: ($input-btn-padding-y-lg - .0625rem);
+      padding-bottom: ($input-btn-padding-y-lg - .0625rem);
+    }
     &:hover,
     &:focus,
     &:active,
@@ -1585,8 +1603,8 @@ fieldset
   &[type="datetime-local"]
   {
     -webkit-appearance: textfield;
-    min-height: $input-height;
-    padding: .48rem $input-padding-x;
+    // min-height: $input-height;
+    // padding: .48rem $input-padding-x;
   }
   &[disabled],
   &[readonly],
@@ -1600,11 +1618,25 @@ fieldset
   }
   &.form-control-sm
   {
-    min-height: 1.88rem;
     font-size: $font-size-base;
     line-height: $input-line-height;
+    padding-top: $input-padding-y-xs;
+    padding-bottom: $input-padding-y-xs;
     padding-left: $input-padding-x-sm;
     padding-right: $input-padding-x-sm;
+  }
+}
+
+.input-group
+{
+  &.input-group-sm
+  {
+    .btn,
+    .input-group-text
+    {
+      font-size: $font-size-base;
+      line-height: $input-line-height;
+    }
   }
 }
 
@@ -1618,8 +1650,17 @@ fieldset
   .btn,
   .form-control
   {
-    height: 40px;
+    height: $input-height;
     padding: $input-padding-y $input-padding-x;
+  }
+  &.file-browser-sm
+  {
+    .btn,
+    .form-control
+    {
+      height: $input-height-sm;
+      padding: $input-padding-y-sm $input-padding-x-sm;
+    }
   }
 }
 
@@ -1651,19 +1692,20 @@ select.form-control:not([size]):not([multiple])
   text-overflow: "";
   &.form-control
   {
-    height: $input-height-inner;
+    height: $input-height;
+    padding-top: .5rem;
   }
   &.form-control-sm
   {
-    height: $input-height-inner-sm;
-    padding-top: .2rem;
-    padding-bottom: .3rem;
+    height: $input-height-sm;
+    padding-top: .1rem;
+    padding-bottom: .15rem;
   }
   &.form-control-lg
   {
     line-height: $input-line-height-lg;
-    height: $input-height-inner-lg;
-    padding-top: .4rem;
+    height: $input-height-lg;
+    padding-top: .5rem;
   }
 }
 
@@ -1671,6 +1713,19 @@ select.form-control[multiple]
 {
   @extend .inner-y;
   max-height: 90px;
+}
+
+select
+{
+  &[disabled],
+  &[readonly],
+  fieldset[disabled] &
+  {
+    &:hover
+    {
+      cursor: default;
+    }
+  }
 }
 
 // Custom-file
