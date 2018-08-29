@@ -22,7 +22,10 @@ gxLjksNTguMiAxODUuMiwzOS40IDE5My41LDM5LjQgMTk3LDU4LjIgMjAwLjIsMzkuNCAyMDYuNywzOS
 .logotype-white,
 .logotype-black
 {
-  @include text-hide();
+  font: 0/0 a;
+  color: transparent;
+  text-shadow: none;
+  border: 0;
   display: block;
   background-size: contain;
   background-repeat: no-repeat;
