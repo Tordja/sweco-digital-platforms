@@ -1,6 +1,6 @@
 @charset "UTF-8";
 /*!
- * Sweco Bootstrap v.4.1.4
+ * Sweco Bootstrap v.4.1.5
  */
 @font-face {
   font-family: 'SwecoSans-Regular';
@@ -3915,8 +3915,8 @@ pre {
 .form-control {
   display: block;
   width: 100%;
-  height: calc(2.5325rem + 2px);
-  padding: 0.565rem 0.75rem;
+  height: 2.5025rem;
+  padding: 0.625rem 0.75rem;
   font-size: 0.95rem;
   line-height: 1.35;
   color: #3a3a3a;
@@ -3970,29 +3970,29 @@ select.form-control:focus::-ms-value {
   width: 100%; }
 
 .col-form-label {
-  padding-top: calc(0.565rem + 1px);
-  padding-bottom: calc(0.565rem + 1px);
+  padding-top: calc(0.625rem + 1px);
+  padding-bottom: calc(0.625rem + 1px);
   margin-bottom: 0;
   font-size: inherit;
   line-height: 1.35; }
 
 .col-form-label-lg {
-  padding-top: calc(0.41rem + 1px);
-  padding-bottom: calc(0.41rem + 1px);
+  padding-top: calc(0.625rem + 1px);
+  padding-bottom: calc(0.625rem + 1px);
   font-size: 1.3rem;
   line-height: 1.45; }
 
 .col-form-label-sm {
-  padding-top: calc(0.26rem + 1px);
-  padding-bottom: calc(0.26rem + 1px);
+  padding-top: calc(0.315rem + 1px);
+  padding-bottom: calc(0.315rem + 1px);
   font-size: 0.8rem;
   line-height: 1.2; }
 
 .form-control-plaintext {
   display: block;
   width: 100%;
-  padding-top: 0.565rem;
-  padding-bottom: 0.565rem;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
   margin-bottom: 0;
   line-height: 1.35;
   color: #3a3a3a;
@@ -4004,14 +4004,14 @@ select.form-control:focus::-ms-value {
     padding-left: 0; }
 
 .form-control-sm {
-  height: calc(1.6rem + 2px);
-  padding: 0.26rem 0.5rem;
+  height: 1.8825rem;
+  padding: 0.315rem 0.5rem;
   font-size: 0.8rem;
   line-height: 1.2; }
 
 .form-control-lg {
-  height: calc(2.825rem + 2px);
-  padding: 0.41rem 0.95rem;
+  height: 3.135rem;
+  padding: 0.625rem 0.95rem;
   font-size: 1.3rem;
   line-height: 1.45; }
 
@@ -4815,13 +4815,13 @@ fieldset:disabled .datetimepicker a.input-group-addon,
     pointer-events: none; }
 
 .btn-lg, .btn-group-lg > .btn, .datetimepicker .btn-group-lg > .input-group-addon {
-  padding: 0.47rem 0.95rem;
+  padding: 0.625rem 0.95rem;
   font-size: 1.3rem;
   line-height: 1.45;
   border-radius: 0; }
 
 .btn-sm, .btn-group-sm > .btn, .datetimepicker .btn-group-sm > .input-group-addon, .btn-xs, .card .card-footer .btn, .card .card-footer .datetimepicker .input-group-addon, .datetimepicker .card .card-footer .input-group-addon, .bootstrap-datetimepicker-widget table td .btn, .bootstrap-datetimepicker-widget table td .datetimepicker .input-group-addon, .datetimepicker .bootstrap-datetimepicker-widget table td .input-group-addon {
-  padding: 0.32rem 0.5rem;
+  padding: 0.315rem 0.5rem;
   font-size: 0.8rem;
   line-height: 1.2;
   border-radius: 0; }
@@ -5265,7 +5265,7 @@ input[type="button"].btn-block {
   -webkit-box-align: center;
   -ms-flex-align: center;
   align-items: center;
-  padding: 0.565rem 0.75rem;
+  padding: 0.625rem 0.75rem;
   margin-bottom: 0;
   font-size: 0.95rem;
   font-weight: 400;
@@ -5286,8 +5286,8 @@ input[type="button"].btn-block {
 .datetimepicker .input-group-lg > .input-group-prepend > .input-group-addon,
 .input-group-lg > .input-group-append > .btn,
 .datetimepicker .input-group-lg > .input-group-append > .input-group-addon {
-  height: calc(2.825rem + 2px);
-  padding: 0.41rem 0.95rem;
+  height: 3.135rem;
+  padding: 0.625rem 0.95rem;
   font-size: 1.3rem;
   line-height: 1.45; }
 
@@ -5298,8 +5298,8 @@ input[type="button"].btn-block {
 .datetimepicker .input-group-sm > .input-group-prepend > .input-group-addon,
 .input-group-sm > .input-group-append > .btn,
 .datetimepicker .input-group-sm > .input-group-append > .input-group-addon {
-  height: calc(1.6rem + 2px);
-  padding: 0.26rem 0.5rem;
+  height: 1.8825rem;
+  padding: 0.315rem 0.5rem;
   font-size: 0.8rem;
   line-height: 1.2; }
 
@@ -5403,8 +5403,8 @@ input[type="button"].btn-block {
 .custom-select, select.form-control:not([size]):not([multiple]) {
   display: inline-block;
   width: 100%;
-  height: calc(2.5325rem + 2px);
-  padding: 0.565rem 1.7rem 0.565rem 0.75rem;
+  height: 2.5025rem;
+  padding: 0.625rem 1.7rem 0.625rem 0.75rem;
   line-height: 1.35;
   color: #3a3a3a;
   vertical-align: middle;
@@ -5436,29 +5436,29 @@ input[type="button"].btn-block {
     opacity: 0; }
 
 .custom-select-sm {
-  height: calc(1.6rem + 2px);
-  padding-top: 0.565rem;
-  padding-bottom: 0.565rem;
+  height: 1.8825rem;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
   font-size: 75%; }
 
 .custom-select-lg {
-  height: calc(2.825rem + 2px);
-  padding-top: 0.565rem;
-  padding-bottom: 0.565rem;
+  height: 3.135rem;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
   font-size: 1.3rem; }
 
 .custom-file {
   position: relative;
   display: inline-block;
   width: 100%;
-  height: calc(2.5325rem + 2px);
+  height: 2.5025rem;
   margin-bottom: 0; }
 
 .custom-file-input {
   position: relative;
   z-index: 2;
   width: 100%;
-  height: calc(2.5325rem + 2px);
+  height: 2.5025rem;
   margin: 0;
   opacity: 0; }
   .custom-file-input:focus ~ .custom-file-label {
@@ -5478,7 +5478,7 @@ input[type="button"].btn-block {
   right: 0;
   left: 0;
   z-index: 1;
-  height: calc(2.5325rem + 2px);
+  height: 2.5025rem;
   padding: 0.625rem 0.95rem;
   line-height: 1.35;
   color: #3a3a3a;
@@ -9747,7 +9747,6 @@ a.text-dark:hover, a.text-dark:focus {
   font: 0/0 a;
   color: transparent;
   text-shadow: none;
-  background-color: transparent;
   border: 0;
   display: block;
   background-size: contain;
@@ -10697,7 +10696,19 @@ header.header-image {
     border-color: #617295; }
   .btn.btn-secondary, .btn.btn-default, .datetimepicker .btn-default.input-group-addon, .datetimepicker .btn-secondary.input-group-addon {
     color: #3a3a3a;
-    border: 1px solid #a5a5a8; }
+    border: 1px solid #a5a5a8;
+    padding-top: 0.5625rem;
+    padding-bottom: 0.5625rem; }
+    .btn.btn-secondary.btn-xs, .btn.btn-xs.btn-default, .datetimepicker .btn-xs.btn-default.input-group-addon, .datetimepicker .btn-secondary.btn-xs.input-group-addon {
+      height: calc(1.145rem + 2px);
+      padding-top: 0 !important;
+      padding-bottom: 0 !important; }
+    .btn.btn-secondary.btn-sm, .btn-group-sm > .btn.btn-secondary, .btn-group-sm > .btn.btn-default, .datetimepicker .btn-group-sm > .btn-default.input-group-addon, .datetimepicker .btn-group-sm > .btn-secondary.input-group-addon, .btn.btn-sm.btn-default, .btn.btn-default.btn-xs, .datetimepicker .btn-default.btn-xs.input-group-addon, .card .card-footer .btn.btn-default, .card .card-footer .datetimepicker .btn-default.input-group-addon, .datetimepicker .card .card-footer .btn-default.input-group-addon, .datetimepicker .btn-sm.btn-default.input-group-addon, .bootstrap-datetimepicker-widget table td .btn.btn-default, .bootstrap-datetimepicker-widget table td .datetimepicker .btn-default.input-group-addon, .datetimepicker .bootstrap-datetimepicker-widget table td .btn-default.input-group-addon, .btn.btn-secondary.btn-xs, .datetimepicker .btn-secondary.btn-xs.input-group-addon, .card .card-footer .btn.btn-secondary, .card .card-footer .datetimepicker .btn-secondary.input-group-addon, .datetimepicker .card .card-footer .btn-secondary.input-group-addon, .datetimepicker .btn-secondary.btn-sm.input-group-addon, .bootstrap-datetimepicker-widget table td .btn.btn-secondary, .bootstrap-datetimepicker-widget table td .datetimepicker .btn-secondary.input-group-addon, .datetimepicker .bootstrap-datetimepicker-widget table td .btn-secondary.input-group-addon {
+      padding-top: 0.2525rem;
+      padding-bottom: 0.2525rem; }
+    .btn.btn-secondary.btn-lg, .btn-group-lg > .btn.btn-secondary, .btn-group-lg > .btn.btn-default, .datetimepicker .btn-group-lg > .btn-default.input-group-addon, .datetimepicker .btn-group-lg > .btn-secondary.input-group-addon, .btn.btn-lg.btn-default, .datetimepicker .btn-lg.btn-default.input-group-addon, .datetimepicker .btn-secondary.btn-lg.input-group-addon {
+      padding-top: 0.5625rem;
+      padding-bottom: 0.5625rem; }
     .btn.btn-secondary:hover, .btn.btn-default:hover, .datetimepicker .btn-default.input-group-addon:hover, .datetimepicker .btn-secondary.input-group-addon:hover, .btn.btn-secondary:focus, .btn.btn-default:focus, .datetimepicker .btn-default.input-group-addon:focus, .datetimepicker .btn-secondary.input-group-addon:focus, .btn.btn-secondary:active, .btn.btn-default:active, .datetimepicker .btn-default.input-group-addon:active, .datetimepicker .btn-secondary.input-group-addon:active, .btn.btn-secondary.focus, .btn.focus.btn-default, .datetimepicker .focus.btn-default.input-group-addon, .datetimepicker .btn-secondary.focus.input-group-addon, .btn.btn-secondary.active, .btn.active.btn-default, .datetimepicker .active.btn-default.input-group-addon, .datetimepicker .btn-secondary.active.input-group-addon,
     .show > .btn.btn-secondary.dropdown-toggle,
     .show > .btn.dropdown-toggle.btn-default,
@@ -11093,9 +11104,7 @@ fieldset {
   transition: all 0.3s ease-in-out;
   font-family: "SwecoSans-Regular", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
   .form-control[type="date"], .form-control[type="month"], .form-control[type="week"], .form-control[type="time"], .form-control[type="datetime-local"] {
-    -webkit-appearance: textfield;
-    min-height: calc(2.5325rem + 2px);
-    padding: 0.48rem 0.75rem; }
+    -webkit-appearance: textfield; }
   .form-control[disabled], .form-control[readonly],
   fieldset[disabled] .form-control {
     background-clip: border-box !important; }
@@ -11103,19 +11112,30 @@ fieldset {
     fieldset[disabled] .form-control:placeholder {
       color: #a5a5a8; }
   .form-control.form-control-sm {
-    min-height: 1.88rem;
     font-size: 0.95rem;
     line-height: 1.35;
+    padding-top: 0.065rem;
+    padding-bottom: 0.065rem;
     padding-left: 0.5rem;
     padding-right: 0.5rem; }
+
+.input-group.input-group-sm .btn, .input-group.input-group-sm .datetimepicker .input-group-addon, .datetimepicker .input-group.input-group-sm .input-group-addon,
+.input-group.input-group-sm .input-group-text {
+  font-size: 0.95rem;
+  line-height: 1.35; }
 
 .file-browser label, .file-browser .custom-file .custom-file-control:after, .custom-file .file-browser .custom-file-control:after {
   margin: 0; }
 
 .file-browser .btn, .file-browser .datetimepicker .input-group-addon, .datetimepicker .file-browser .input-group-addon,
 .file-browser .form-control {
-  height: 40px;
-  padding: 0.565rem 0.75rem; }
+  height: 2.5025rem;
+  padding: 0.625rem 0.75rem; }
+
+.file-browser.file-browser-sm .btn, .file-browser.file-browser-sm .datetimepicker .input-group-addon, .datetimepicker .file-browser.file-browser-sm .input-group-addon,
+.file-browser.file-browser-sm .form-control {
+  height: 1.8825rem;
+  padding: 0.315rem 0.5rem; }
 
 .form-check-input,
 input[type="checkbox"],
@@ -11133,18 +11153,23 @@ select.form-control:not([size]):not([multiple]) {
   text-indent: 0.01px;
   text-overflow: ""; }
   select.form-control:not([size]):not([multiple]).form-control {
-    height: 2.5325rem; }
+    height: 2.5025rem;
+    padding-top: .5rem; }
   select.form-control:not([size]):not([multiple]).form-control-sm {
-    height: 1.6rem;
-    padding-top: .2rem;
-    padding-bottom: .3rem; }
+    height: 1.8825rem;
+    padding-top: .1rem;
+    padding-bottom: .15rem; }
   select.form-control:not([size]):not([multiple]).form-control-lg {
     line-height: 1.45;
-    height: 2.825rem;
-    padding-top: .4rem; }
+    height: 3.135rem;
+    padding-top: .5rem; }
 
 select.form-control[multiple] {
   max-height: 90px; }
+
+select[disabled]:hover, select[readonly]:hover,
+fieldset[disabled] select:hover {
+  cursor: default; }
 
 .custom-file {
   width: 100%; }
