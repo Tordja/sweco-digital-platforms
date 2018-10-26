@@ -64489,7 +64489,7 @@ e=document.activeElement,f=d.is(e),g=d.has(e).length>0,b.isMsie()&&(f||g)&&(a.pr
     var validator = (0, _validators.resolveValidator)(type);
 
     return (0, _validators.makeValidator)('arrayOf(' + validator + ')', function (value) {
-      return Array.isArray(value) && value.every(validator);
+      return Ember.isArray(value) && value.every(validator);
     });
   }
 });
