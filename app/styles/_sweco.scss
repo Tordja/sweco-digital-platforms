@@ -1199,18 +1199,18 @@ header.header-image
     &:after
     {
       position: absolute;
-      top: 6px;
-      right: 20px;
-      display: inline-block;
-      font-family: FontAwesome;
-      color: inherit;
-      font-size: $font-size-lg;
-      width: 1px;
-      height: 1px;
-      content: "\f105";
-      vertical-align: text-top;
-      margin: 0;
+      top: ($spacer * .8);
+      right: ($spacer * .5);
+      content: '';
+      display: block;
+      width: 16px !important;
+      height: 16px !important;
+      background-image: $custom-select-indicator-white;
+      background-repeat: no-repeat;
+      background-position: 1px 2px;
+      background-size: $custom-select-bg-size;
       transition: $transition;
+      transform: rotate(-90deg);
     }
     &[aria-expanded="true"]
     {
@@ -1218,9 +1218,8 @@ header.header-image
       background-color: $component-active-bg !important;
       &:after
       {
-        transform: rotate(90deg);
-        top: 17px;
-        right: 4px;
+        background-image: $custom-select-indicator-white;
+        transform: rotate(0deg);
       }
     }
   }
@@ -1285,6 +1284,15 @@ header.header-image
       bottom: -19px !important;
     }
   }
+  &.dropdown-menu-right
+  {
+    &:before,
+    &:after
+    {
+      left: auto;
+      right: $spacer;
+    }
+  }
   .dropdown-item
   {
     padding: $dropdown-item-padding-y $dropdown-item-padding-x;
@@ -1308,7 +1316,7 @@ header.header-image
   > div
   {
     @extend .inner-y;
-    max-height: $dropdown-max-height;
+    max-height: $dropdown-scroll-max-height;
   }
 }
 
@@ -1316,7 +1324,7 @@ header.header-image
 .dropdown-toggle
 {
   position: relative;
-  padding-right: ($spacer * 2.5);
+  padding-right: ($spacer * 2);
   .caret
   {
     display: none;
@@ -1324,15 +1332,60 @@ header.header-image
   &:after
   {
     position: absolute;
-    top: 50%;
-    right: 15px;
-    font-family: FontAwesome;
-    color: inherit;
-    font-size: $font-size-lg;
-    width: 12px !important;
-    content: "\f107" !important;
-    border: 0 !important;
-    margin: -13px 0 16px 0 !important;
+    top: ($spacer * .8);
+    right: ($spacer * .5);
+    content: '';
+    display: block;
+    width: 16px !important;
+    height: 16px !important;
+    border: 0;
+    background-image: $custom-select-indicator;
+    background-repeat: no-repeat;
+    background-position: 1px 2px;
+    background-size: $custom-select-bg-size;
+    transition: $transition;
+    transform: rotate(-90deg);
+  }
+  &[aria-expanded="true"]
+  {
+    background-color: $component-bg-hover;
+    &:after
+    {
+      transform: rotate(0);
+      background-image: $custom-select-indicator;
+    }
+  }
+  &.btn-primary,
+  &.btn-info,
+  &.btn-warning,
+  &.btn-danger,
+  &.btn-success
+  {
+    &:after
+    {
+      background-image: $custom-select-indicator-white;
+    }
+    &[aria-expanded="true"]
+    {
+      &:after
+      {
+        background-image: $custom-select-indicator-white;
+      }
+    }
+  }
+  &.btn-sm
+  {
+    &:after
+    {
+      top: ($spacer * .45);
+    }
+  }
+  &.btn-lg
+  {
+    &:after
+    {
+      top: ($spacer * 1.135);
+    }
   }
 }
 
@@ -1350,8 +1403,14 @@ header.header-image
   {
     &:after
     {
-      content: "\f106" !important;
       border: 0 !important;
+    }
+    &[aria-expanded="true"]
+    {
+      &:after
+      {
+        transform: rotate(-180deg) !important;
+      }
     }
   }
   .dropdown-menu
@@ -1388,6 +1447,117 @@ header.header-image
   }
 }
 
+// Dropdown-menu multilevel
+.dropdown-menu-multilevel
+{
+  ul
+  {
+    @include list-unstyled;
+    margin: 0;
+    overflow: hidden;
+    li
+    {
+      position: relative;
+      ul
+      {
+        .dropdown-item
+        {
+          padding-left: ($spacer * 2);
+        }
+      }
+    }
+  }
+  a[data-toggle="collapse"]
+  {
+    padding-right: ($spacer * 3);
+    position: relative;
+    transition: $transition;
+    &:hover
+    {
+      cursor: pointer;
+    }
+    @include hover-focus-active
+    {
+      outline: 0;
+      text-decoration: none;
+      background-color: $component-bg-hover;
+    }
+    &:after
+    {
+      position: absolute;
+      top: ($spacer * .5);
+      right: ($spacer * .5);
+      content: '';
+      display: block;
+      width: 16px !important;
+      height: 16px !important;
+      background-image: $custom-select-indicator;
+      background-repeat: no-repeat;
+      background-position: 1px 2px;
+      background-size: $custom-select-bg-size;
+      transition: $transition;
+      transform: rotate(-90deg);
+    }
+    &[aria-expanded="true"]
+    {
+      background-color: $component-bg-hover;
+      &:after
+      {
+        transform: rotate(0);
+      }
+    }
+  }
+}
+
+.dropdown-menu-check
+{
+  .check
+  {
+    position: absolute;
+    top: 4px;
+    left: $spacer;
+    label
+    {
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      margin: 0 !important;
+      padding: 0 0 0 30px !important;
+      min-height: auto;
+      text-transform: none;
+    }
+    input + label:before
+    {
+      top: 3px;
+    }
+    input + label:after
+    {
+      top: -5px;
+    }
+  }
+  .dropdown-item
+  {
+    padding-left: ($spacer * 3);
+  }
+  ul
+  {
+    li
+    {
+      position: relative;
+      ul
+      {
+        .check
+        {
+          left: ($spacer * 2);
+        }
+        .dropdown-item
+        {
+          padding-left: ($spacer * 4);
+        }
+      }
+    }
+  }
+}
 
 // Close
 .close
@@ -2034,6 +2204,34 @@ select
         cursor: $cursor-disabled;
         color: $nav-disabled-link-color !important;
       }
+      &.dropdown-toggle
+      {
+        &:after
+        {
+          position: absolute;
+          top: ($spacer * .42);
+          right: ($spacer * .5);
+          content: '';
+          display: block;
+          width: 16px !important;
+          height: 16px !important;
+          border: 0;
+          background-image: $custom-select-indicator-white;
+          background-repeat: no-repeat;
+          background-position: 1px 2px;
+          background-size: $custom-select-bg-size;
+          transition: $transition;
+          transform: rotate(-90deg);
+        }
+        &[aria-expanded="true"]
+        {
+          &:after
+          {
+            transform: rotate(0);
+            background-image: $custom-select-indicator-white;
+          }
+        }
+      }
     }
   }
   &.nav-tabs
@@ -2288,18 +2486,26 @@ select
     &:after
     {
       position: absolute;
-      top: 6px;
-      right: 10px;
-      font-family: FontAwesome;
-      color: inherit;
-      font-size: $font-size-lg;
-      width: 12px !important;
-      content: "\f105" !important;
-      border: 0 !important;
+      top: ($spacer * .8);
+      right: ($spacer * .5);
+      content: '';
+      display: block;
+      width: 16px !important;
+      height: 16px !important;
+      background-image: $custom-select-indicator;
+      background-repeat: no-repeat;
+      background-position: 1px 2px;
+      background-size: $custom-select-bg-size;
+      transition: $transition;
+      transform: rotate(-90deg);
     }
     &.active
     {
       color: $component-active-color;
+      &:after
+      {
+        background-image: $custom-select-indicator-white;
+      }
       .list-group-item-heading
       {
         color: $component-active-color;
@@ -2687,27 +2893,26 @@ select
     &:after
     {
       position: absolute;
-      top: 5px;
-      right: 8px;
-      display: inline-block;
-      font-family: FontAwesome;
-      color: inherit;
-      font-size: $font-size-lg;
+      top: ($spacer * .8);
+      right: ($spacer * .5);
+      content: '';
+      display: block;
       width: 16px !important;
       height: 16px !important;
-      content: "\f105" !important;
-      vertical-align: text-top;
-      margin: 0;
+      background-image: $custom-select-indicator;
+      background-repeat: no-repeat;
+      background-position: 1px 2px;
+      background-size: $custom-select-bg-size;
       transition: $transition;
+      transform: rotate(-90deg);
     }
     &[aria-expanded="true"]
     {
-      color: $component-active-color !important;
-      background-color: $component-active-bg;
+      color: $nav-link-color !important;
+      background-color: $component-bg-hover;
       &:after
       {
-        transform: rotate(90deg);
-        top: 18px;
+        transform: rotate(0);
       }
     }
   }
